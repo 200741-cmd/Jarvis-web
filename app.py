@@ -8,6 +8,7 @@ st.caption("Advanced Assistant powered by Groq")
 
 # 2. Secure API Key Initialization
 # This automatically looks for a secret variable named "GROQ_API_KEY"
+
 try:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except Exception:
