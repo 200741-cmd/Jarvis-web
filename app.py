@@ -1,45 +1,64 @@
 import streamlit as st
 from groq import Groq
 
-# J.A.R.V.I.S. Interface Settings
-st.set_page_config(page_title="J.A.R.V.I.S. Terminal", page_icon="🛡️")
-st.title("🛡️ J.A.R.V.I.S. Online")
+# 1. Page Configuration & Styling
+st.set_page_config(page_title="Jarvis AI", page_icon="🤖", layout="centered")
+st.title("🤖 Jarvis AI")
+st.caption("Advanced Assistant powered by Groq")
 
-# --- THE KEY IS NOW EMBEDDED DIRECTLY ---
-# Note: In a professional app, we'd use secrets, but this ensures it works for you right now!
-client = Groq(api_key="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")
+# 2. Secure API Key Initialization
+# This automatically looks for a secret variable named "GROQ_API_KEY"
+try:
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+except Exception:
+    st.error("❌ GROQ_API_KEY missing! Please add it to your Streamlit Secrets.")
+    st.stop()
 
+# 3. Initialize Conversation History
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [
+        {"role": "system", "content": "You are Jarvis, a highly intelligent, witty, and helpful AI assistant."}
+    ]
 
-# Show previous chat history
+# 4. Display Existing Chat Messages
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    if message["role"] != "system":
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-# User input area
-if prompt := st.chat_input("What are your orders, Sir?"):
-    # Add user message to history
-    st.session_state.messages.append({"role": "user", "content": prompt})
+# 5. Handle User Input
+if user_prompt := st.chat_input("How can I help you, sir?"):
+    
+    # Display user message
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_prompt)
+    
+    # Append to history
+    st.session_state.messages.append({"role": "user", "content": user_prompt})
 
-    # J.A.R.V.I.S. Response Logic
+    # 6. Generate AI Response
     with st.chat_message("assistant"):
+        response_placeholder = st.empty()
+        full_response = ""
+        
         try:
-            response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": "You are J.A.R.V.I.S., a witty, British AI assistant. Call the user Sir. You are an expert in geometry, Prisma3D, and iron man suit projects."
-                    },
-                    *st.session_state.messages
-                ]
+            # Call Groq API using the reliable llama3-8b-8192 model
+            completion = client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=st.session_state.messages,
+                stream=True,
             )
-            msg = response.choices[0].message.content
-            st.markdown(msg)
-            # Add assistant response to history
-            st.session_state.messages.append({"role": "assistant", "content": msg})
+            
+            # Stream the response chunk by chunk for a smooth typing effect
+            for chunk in completion:
+                chunk_text = chunk.choices[0].delta.content or ""
+                full_response += chunk_text
+                response_placeholder.markdown(full_response + "▌")
+                
+            response_placeholder.markdown(full_response)
+            
+            # Append assistant response to history
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            
         except Exception as e:
-            st.error(f"Sir, I've encountered an error: {e}")
+            st.error(f"An error occurred: {e}")
