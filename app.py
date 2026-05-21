@@ -3,52 +3,85 @@ from groq import Groq
 import os
 
 # 1. Page Configuration
-st.set_page_config(page_title="JARVIS // HUD", page_icon="🤖", layout="centered")
+st.set_page_config(page_title="JARVIS // CORE HUD", page_icon="🤖", layout="centered")
 
-# 2. Modernized Stark-Tech UI Styling (Using st.html to prevent style errors)
+# 2. Maximum Sci-Fi Visual Styling (Animated Overlay, Scanning Laser, Glitch Text)
 st.html("""
     <style>
-    /* Dark Sci-Fi Background */
+    /* Digital Grid Matrix Overlay + Scanline Animation */
     .stApp {
-        background: radial-gradient(circle, #0d1117 0%, #07090e 100%);
+        background: 
+            linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+            linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)),
+            radial-gradient(circle at 50% 50%, #0d1a2d 0%, #030712 100%);
+        background-size: 100% 4px, 6px 100%, 100% 100%;
         color: #00f0ff;
         font-family: 'Courier New', Courier, monospace;
     }
     
-    /* Glowing Titles & Headers */
+    /* Moving Laser Scan Bar */
+    .stApp::before {
+        content: " ";
+        display: block;
+        position: fixed;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 0%, rgba(0, 240, 255, 0.05) 10%, rgba(18, 16, 16, 0) 11%);
+        opacity: 0.8;
+        z-index: 99999;
+        pointer-events: none;
+        animation: laserScan 8s linear infinite;
+    }
+    
+    @keyframes laserScan {
+        from { background-position: 0 0; }
+        to { background-position: 0 100vh; }
+    }
+
+    /* Pulsing Core Header */
     h1 {
         color: #00f0ff !important;
-        text-shadow: 0 0 10px rgba(0, 240, 255, 0.6), 0 0 20px rgba(0, 240, 255, 0.4);
+        text-shadow: 0 0 8px rgba(0, 240, 255, 0.7), 0 0 20px rgba(0, 240, 255, 0.3);
         font-weight: bold;
-        letter-spacing: 2px;
+        letter-spacing: 4px;
         text-align: center;
+        animation: corePulse 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes corePulse {
+        from { text-shadow: 0 0 8px rgba(0, 240, 255, 0.6); }
+        to { text-shadow: 0 0 22px rgba(0, 240, 255, 0.9), 0 0 35px rgba(0, 240, 255, 0.4); color: #80f7ff !important; }
     }
     
     .stCaption {
-        color: #8a99ad !important;
+        color: #a3b8cc !important;
         text-align: center;
         text-transform: uppercase;
         font-size: 0.8rem;
-        letter-spacing: 3px;
+        letter-spacing: 4px;
     }
 
-    /* Holographic Custom Chat Containers */
+    /* Holographic Angled Chat Containers */
     div[data-testid="stChatMessage"] {
-        background: rgba(6, 18, 36, 0.6) !important;
+        background: rgba(8, 24, 48, 0.4) !important;
         border: 1px solid #00f0ff !important;
-        box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
-        border-radius: 10px !important;
+        border-left: 4px solid #00f0ff !important;
+        box-shadow: inset 0 0 12px rgba(0, 240, 255, 0.15), 0 0 8px rgba(0, 240, 255, 0.1);
+        border-radius: 4px !important;
         padding: 15px !important;
-        margin-bottom: 12px !important;
+        margin-bottom: 15px !important;
+        backdrop-filter: blur(3px);
     }
 
-    /* System Status Bar Styling */
+    /* Error Alert Redlines */
     .status-bar {
-        border-left: 3px solid #ff0055;
-        background: rgba(255, 0, 85, 0.05);
-        padding: 10px;
+        border: 1px solid #ff0055;
+        background: rgba(255, 0, 85, 0.1);
+        box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        padding: 12px;
         border-radius: 4px;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+        font-weight: bold;
+        letter-spacing: 1px;
     }
     </style>
     """)
@@ -61,23 +94,14 @@ elif os.path.exists("key.txt"):
     with open("key.txt", "r") as f:
         api_key = f.read().strip()
 
-
-# 3. Secure API Key Initialization
-api_key = None
-if "GROQ_API_KEY" in st.secrets:
-    api_key = st.secrets["GROQ_API_KEY"]
-elif os.path.exists("key.txt"):
-    with open("key.txt", "r") as f:
-        api_key = f.read().strip()
-
 # Main Header Interface
-st.title("🤖 JARVIS : AI USER INTERFACE")
-st.caption("SYSTEM STATUS: ONLINE // SECURE NODE LINKED")
+st.title("🤖 JARVIS : MAINFRAME")
+st.caption("TACTICAL HUD ACTIVATED // V.4.0 // LINK SECURE")
 
 if api_key:
     client = Groq(api_key=api_key)
 else:
-    st.markdown('<div class="status-bar">❌ <b>CRITICAL ERROR:</b> ACCESS DENIED. GROQ_API_KEY CORE IS MISSING. PLUG KEY INTO STREAMLIT SECRETS OVERRIDE.</div>', unsafe_allowed_html=True)
+    st.markdown('<div class="status-bar">⚠️ COLD BOOT ABORTED: GROQ INTERFACE ACCESS KEY OFFLINE. CONFIG SECRETS MANUAL INJECTION REQUIRED.</div>', unsafe_allowed_html=True)
     st.stop()
 
 # 4. Memory / Chat History Setup
@@ -93,7 +117,7 @@ for message in st.session_state.messages:
             st.markdown(f"**{message['role'].upper()}:** {message['content']}")
 
 # 5. Command Input Terminal
-if user_prompt := st.chat_input("ENTER COMMAND OR INSTRUCTION..."):
+if user_prompt := st.chat_input("TRANSMIT INSTRUCTION TO MAINFRAME..."):
     with st.chat_message("user"):
         st.markdown(f"**USER:** {user_prompt}")
     
@@ -119,4 +143,4 @@ if user_prompt := st.chat_input("ENTER COMMAND OR INSTRUCTION..."):
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             
         except Exception as e:
-            st.error(f"// TERMINAL CORE INTERRUPT: {e}")
+            st.error(f"// ACCESS OVERRIDE FAILURE: {e}")
