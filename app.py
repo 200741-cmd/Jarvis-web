@@ -2,15 +2,9 @@ import streamlit as st
 from groq import Groq
 import random
 import time
+import os
 
-# --- 1. INITIALIZE GROQ CLIENT ---
-try:
-    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-except Exception as e:
-    st.error("Missing Groq API Key! Please configure GROQ_API_KEY in your Streamlit secrets.")
-    st.stop()
-
-# --- 2. CONFIGURATION & HOLOGRAPHIC GRID BACKGROUND STYLING ---
+# --- 1. CONFIGURATION & HOLOGRAPHIC GRID BACKGROUND STYLING ---
 st.set_page_config(page_title="J.A.R.V.I.S. Mainframe", page_icon="🤖", layout="wide")
 
 st.markdown("""
@@ -21,19 +15,19 @@ st.markdown("""
         background-image: 
             linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
             linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
-        background-size: 30px 30px; /* Size of the backdrop grid squares */
+        background-size: 30px 30px;
         color: #00E5FF;
         font-family: 'Courier New', Courier, monospace;
     }
     
     /* Transparent blur for the metric boxes so the background grid peeks through */
     div[data-testid="column"] {
-        background: rgba(6, 9, 19, 0.75) !important;
+        background: rgba(6, 9, 19, 0.8) !important;
         border: 1px solid rgba(0, 229, 255, 0.3) !important;
         border-radius: 6px;
         padding: 15px;
         margin-bottom: 10px;
-        backdrop-filter: blur(4px); /* Frost effect over background grid */
+        backdrop-filter: blur(4px);
         box-shadow: 0 0 15px rgba(0, 229, 255, 0.05);
     }
     
@@ -53,7 +47,7 @@ st.markdown("""
     }
     
     .stChatMessage {
-        background-color: rgba(6, 9, 19, 0.85) !important;
+        background-color: rgba(6, 9, 19, 0.9) !important;
         border: 1px solid rgba(0, 229, 255, 0.25) !important;
         backdrop-filter: blur(4px);
         color: #00E5FF !important;
@@ -67,6 +61,20 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- 2. FAILSAFE KEY CHECKER ENGINE ---
+# This looks everywhere for your key automatically so the public doesn't have to provide one
+SECRET_KEY = None
+
+# Check 1: Streamlit Cloud Secrets (Capitalized)
+if "GROQ_API_KEY" in st.secrets:
+    SECRET_KEY = st.secrets["GROQ_API_KEY"]
+# Check 2: Streamlit Cloud Secrets (Lowercase)
+elif "groq_api_key" in st.secrets:
+    SECRET_KEY = st.secrets["groq_api_key"]
+# Check 3: System Environment Variables
+elif os.environ.get("GROQ_API_KEY"):
+    SECRET_KEY = os.environ.get("GROQ_API_KEY")
+
 # --- 3. STATE INITIALIZATION ---
 if 'armor_durability' not in st.session_state:
     st.session_state.armor_durability = 100
@@ -75,7 +83,10 @@ if 'reactor_temp' not in st.session_state:
 if 'system_logs' not in st.session_state:
     st.session_state.system_logs = ["Mainframe online.", "Holographic backdrop grid projected."]
 if 'messages' not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Grid telemetry projection complete, sir. Ready for input."}]
+    if SECRET_KEY:
+        st.session_state.messages = [{"role": "assistant", "content": "Mainframe linked successfully, sir. Global access active."}]
+    else:
+        st.session_state.messages = [{"role": "assistant", "content": "🚨 WARNING: Security token missing from hosting dashboard. Mainframe locked."}]
 
 def log_event(message):
     timestamp = time.strftime("%H:%M:%S")
@@ -105,15 +116,18 @@ with master_left:
         st.write(f"Core Temp: **{st.session_state.reactor_temp}°C**")
         st.progress(min(1.0, st.session_state.reactor_temp / 100))
         
-    # ROW 2: Maintenance & Log Readouts
+    # ROW 2: System Status & Log Readouts
     box_col3, box_col4 = st.columns(2)
     with box_col3:
-        st.markdown("#### 🔧 UTILITIES")
-        if st.button("♻️ Optimize Cache", use_container_width=True):
-            log_event("CLEAN: Memory buffers flushed.")
-            st.rerun()
-            
-        if st.button("🛠️ Run Calibration", use_container_width=True):
+        st.markdown("#### 🌐 LINK STATUS")
+        if SECRET_KEY:
+            st.success("🟢 SECURE LINK")
+            st.caption("Mainframe encrypted. Key hidden safely behind firewall.")
+        else:
+            st.error("🔴 DISCONNECTED")
+            st.caption("Please configure GROQ_API_KEY in cloud dashboard.")
+        
+        if st.button("🛠️ Reset Systems", use_container_width=True):
             st.session_state.armor_durability = 100
             log_event("REPAIR: Structural parameters reset.")
             st.rerun()
@@ -127,15 +141,26 @@ with master_left:
 with master_right:
     st.write("### 📡 SECURE COMM-LINK")
     
+    # Render chat interface history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
             
+    # Watch for user messages
     if user_prompt := st.chat_input("Enter mainframe command..."):
         st.session_state.messages.append({"role": "user", "content": user_prompt})
         with st.chat_message("user"):
             st.write(user_prompt)
             
+        # Halt execution right away if the key isn't provided behind the scenes
+        if not SECRET_KEY:
+            with st.chat_message("assistant"):
+                st.error("🚨 Transmission aborted: This public app doesn't have a valid API Key linked to it.")
+            st.session_state.messages.append({"role": "assistant", "content": "Link drop. Please contact the administrator."})
+            log_event("REJECT: Unauthenticated traffic.")
+            st.rerun()
+            
+        # Compile Stark Industries system context guidelines
         system_prompt = (
             "You are J.A.R.V.I.S., the ultra-intelligent AI assistant built by Tony Stark. "
             "You always address the user as 'sir'. Respond with scientific, high-tech, and helpful language. "
@@ -151,6 +176,9 @@ with master_right:
         with st.chat_message("assistant"):
             response_placeholder = st.empty()
             try:
+                # Fire request to the server cloud using hidden master key token
+                client = Groq(api_key=SECRET_KEY)
+                
                 chat_completion = client.chat.completions.create(
                     messages=api_messages,
                     model="llama3-8b-8192", 
@@ -163,8 +191,8 @@ with master_right:
                 log_event("COMM: Inbound transmission processed.")
                 
             except Exception as api_err:
-                error_msg = f"API Link Error: {str(api_err)}"
+                error_msg = f"🚨 Network Link Dropped. Raw Error details: {str(api_err)}"
                 response_placeholder.write(error_msg)
-                log_event("ERROR: Link drop.")
+                log_event("ERROR: Backend connection refused.")
                 
         st.rerun()
