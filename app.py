@@ -5,8 +5,8 @@ import os
 # 1. Page Configuration
 st.set_page_config(page_title="JARVIS // HUD", page_icon="🤖", layout="centered")
 
-# 2. Futuristic Stark-Tech UI Styling (Custom CSS)
-st.markdown("""
+# 2. Modernized Stark-Tech UI Styling (Using st.html to prevent style errors)
+st.html("""
     <style>
     /* Dark Sci-Fi Background */
     .stApp {
@@ -51,7 +51,16 @@ st.markdown("""
         margin-bottom: 20px;
     }
     </style>
-    """, unsafe_allowed_html=True)
+    """)
+
+# 3. Secure API Key Initialization
+api_key = None
+if "GROQ_API_KEY" in st.secrets:
+    api_key = st.secrets["GROQ_API_KEY"]
+elif os.path.exists("key.txt"):
+    with open("key.txt", "r") as f:
+        api_key = f.read().strip()
+
 
 # 3. Secure API Key Initialization
 api_key = None
