@@ -100,13 +100,6 @@ hr {
     0% { transform: rotateY(0deg); }
     100% { transform: rotateY(360deg); }
 }
-.suit-part {
-    position: absolute;
-    background: rgba(0, 229, 255, 0.15);
-    border: 2px solid rgba(0, 229, 255, 0.6);
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.2);
-    transform-style: preserve-3d;
-}
 .suit-head {
     width: 60px;
     height: 70px;
@@ -259,9 +252,7 @@ st.markdown("""
 <div class="suit-leg-right"></div>
 </div>
 </div>
-<div style="text-align: center; color: #00E5FF; margin-top: 10px; font-size: 14px; letter-spacing: 2px;">
-⚡ IRON MAN SUIT HOLOGRAM ⚡
-</div>
+<div style="text-align: center; color: #00E5FF; margin-top: 10px; font-size: 14px; letter-spacing: 2px;">⚡ IRON MAN SUIT HOLOGRAM ⚡</div>
 ", unsafe_allow_html=True)
 
 master_left, master_right = st.columns([5, 7])
@@ -304,8 +295,11 @@ with master_left:
             
     with box_col4:
         st.markdown("#### 💾 LOG STREAM")
-        log_box = "
-".join(st.session_state.system_logs[:5])
+        log_box = ""
+        for i in range(min(5, len(st.session_state.system_logs))):
+            log_box = log_box + st.session_state.system_logs[i]
+            if i < min(4, len(st.session_state.system_logs) - 1):
+                log_box = log_box + chr(10)
         st.code(log_box, language="bash")
 
 with master_right:
