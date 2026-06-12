@@ -82,117 +82,182 @@ hr {
     background: linear-gradient(90deg, rgba(0,229,255,0.4), rgba(0,229,255,1));
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.8);
 }
+
+/* 3D HOLOGRAM IRON MAN SUIT */
 .suit-container {
     position: relative;
-    width: 300px;
-    height: 400px;
+    width: 280px;
+    height: 420px;
     margin: 40px auto;
     perspective: 1000px;
 }
+
 .suit-hologram {
     width: 100%;
     height: 100%;
     position: relative;
     transform-style: preserve-3d;
-    animation: suitRotate 8s linear infinite;
+    animation: suitRotate 10s linear infinite;
 }
+
 @keyframes suitRotate {
     0% { transform: rotateY(0deg); }
     100% { transform: rotateY(360deg); }
 }
+
+/* Head - helmet style */
 .suit-head {
-    width: 60px;
-    height: 70px;
+    width: 70px;
+    height: 85px;
     top: 0px;
-    left: 120px;
-    transform: rotateX(10deg);
-    background: rgba(0, 229, 255, 0.2);
+    left: 105px;
+    background: rgba(0, 229, 255, 0.15);
+    border: 2px solid rgba(0, 229, 255, 0.7);
+    border-radius: 35px 35px 40px 40px;
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.5), inset 0 0 15px rgba(0, 229, 255, 0.2);
 }
+
 .suit-head:before {
-    content: "◈";
+    content: "";
     position: absolute;
-    top: 20px;
-    left: 15px;
-    font-size: 30px;
-    color: #00E5FF;
-    text-shadow: 0 0 15px #00E5FF;
+    top: 30px;
+    left: 10px;
+    width: 50px;
+    height: 12px;
+    background: rgba(0, 229, 255, 0.9);
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 1);
 }
+
+/* Torso - chest plate */
 .suit-torso {
-    width: 100px;
-    height: 120px;
-    top: 65px;
-    left: 100px;
+    width: 110px;
+    height: 130px;
+    top: 80px;
+    left: 85px;
     background: rgba(0, 229, 255, 0.18);
+    border: 2px solid rgba(0, 229, 255, 0.7);
+    border-radius: 20px 20px 30px 30px;
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.5), inset 0 0 20px rgba(0, 229, 255, 0.2);
 }
+
+/* Arc Reactor */
 .suit-reactor {
-    width: 30px;
-    height: 30px;
-    top: 105px;
-    left: 135px;
-    background: radial-gradient(circle, rgba(0,229,255,1) 0%, rgba(0,229,255,0.4) 50%, transparent 70%);
+    width: 35px;
+    height: 35px;
+    top: 115px;
+    left: 122px;
+    background: radial-gradient(circle, rgba(0,229,255,1) 0%, rgba(0,229,255,0.6) 40%, rgba(0,229,255,0.2) 70%, transparent 100%);
     border-radius: 50%;
-    box-shadow: 0 0 40px rgba(0,229,255,1), 0 0 60px rgba(0,229,255,0.8);
+    border: 2px solid rgba(0, 229, 255, 0.8);
+    box-shadow: 0 0 50px rgba(0,229,255,1), 0 0 80px rgba(0,229,255,0.8);
     animation: reactorPulse 1.5s ease-in-out infinite;
 }
+
 @keyframes reactorPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(0,229,255,1); }
-    50% { transform: scale(1.2); box-shadow: 0 0 70px rgba(0,229,255,1); }
+    0%, 100% { transform: scale(1); box-shadow: 0 0 50px rgba(0,229,255,1), 0 0 80px rgba(0,229,255,0.8); }
+    50% { transform: scale(1.15); box-shadow: 0 0 70px rgba(0,229,255,1), 0 0 100px rgba(0,229,255,0.9); }
 }
+
+/* Left Arm - shoulder to hand */
 .suit-arm-left {
-    width: 40px;
-    height: 140px;
-    top: 70px;
-    left: 55px;
+    width: 45px;
+    height: 160px;
+    top: 85px;
+    left: 45px;
+    background: rgba(0, 229, 255, 0.16);
+    border: 2px solid rgba(0, 229, 255, 0.7);
+    border-radius: 22px;
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.2);
     animation: leftArmRed 30s linear infinite;
 }
+
 @keyframes leftArmRed {
-    0%, 83% { background: rgba(0, 229, 255, 0.18); border-color: rgba(0, 229, 255, 0.6); }
-    85%, 91% { background: rgba(255, 68, 68, 0.3); border-color: rgba(255, 68, 68, 1); box-shadow: 0 0 30px rgba(255,68,68,0.8); }
-    93%, 100% { background: rgba(0, 229, 255, 0.18); border-color: rgba(0, 229, 255, 0.6); }
+    0%, 83% { background: rgba(0, 229, 255, 0.16); border-color: rgba(0, 229, 255, 0.7); box-shadow: 0 0 25px rgba(0, 229, 255, 0.4); }
+    85%, 91% { background: rgba(255, 68, 68, 0.3); border-color: rgba(255, 68, 68, 1); box-shadow: 0 0 40px rgba(255,68,68,0.9); }
+    93%, 100% { background: rgba(0, 229, 255, 0.16); border-color: rgba(0, 229, 255, 0.7); box-shadow: 0 0 25px rgba(0, 229, 255, 0.4); }
 }
+
+/* Right Arm */
 .suit-arm-right {
-    width: 40px;
-    height: 140px;
-    top: 70px;
-    left: 205px;
+    width: 45px;
+    height: 160px;
+    top: 85px;
+    left: 190px;
+    background: rgba(0, 229, 255, 0.16);
+    border: 2px solid rgba(0, 229, 255, 0.7);
+    border-radius: 22px;
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.2);
 }
+
+/* Left Leg */
 .suit-leg-left {
-    width: 45px;
-    height: 150px;
-    top: 180px;
-    left: 95px;
+    width: 50px;
+    height: 170px;
+    top: 200px;
+    left: 80px;
+    background: rgba(0, 229, 255, 0.17);
+    border: 2px solid rgba(0, 229, 255, 0.7);
+    border-radius: 10px 10px 25px 25px;
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.2);
 }
+
+/* Right Leg */
 .suit-leg-right {
-    width: 45px;
-    height: 150px;
-    top: 180px;
-    left: 155px;
+    width: 50px;
+    height: 170px;
+    top: 200px;
+    left: 150px;
+    background: rgba(0, 229, 255, 0.17);
+    border: 2px solid rgba(0, 229, 255, 0.7);
+    border-radius: 10px 10px 25px 25px;
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.2);
 }
+
+/* Glow effect */
 .suit-glow {
     position: absolute;
-    width: 320px;
-    height: 420px;
+    width: 300px;
+    height: 440px;
     top: -10px;
     left: -10px;
-    background: radial-gradient(ellipse, rgba(0,229,255,0.15) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(0,229,255,0.12) 0%, rgba(0,229,255,0.05) 50%, transparent 70%);
     animation: glowPulse 3s ease-in-out infinite;
 }
+
 @keyframes glowPulse {
     0%, 100% { opacity: 0.5; }
     50% { opacity: 1; }
 }
+
+/* Scan lines */
 .suit-scan {
     position: absolute;
-    width: 300px;
-    height: 400px;
+    width: 280px;
+    height: 420px;
     top: 0;
     left: 0;
-    background: repeating-linear-gradient(0deg, rgba(0,229,255,0.05) 0px, rgba(0,229,255,0.05) 1px, transparent 1px, transparent 3px);
+    background: repeating-linear-gradient(0deg, rgba(0,229,255,0.04) 0px, rgba(0,229,255,0.04) 1px, transparent 1px, transparent 4px);
     animation: scanMove 4s linear infinite;
 }
+
 @keyframes scanMove {
     0% { transform: translateY(0); }
     100% { transform: translateY(4px); }
+}
+
+/* Wireframe grid overlay */
+.suit-wireframe {
+    position: absolute;
+    width: 280px;
+    height: 420px;
+    top: 0;
+    left: 0;
+    background: 
+        linear-gradient(rgba(0,229,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
 }
 </style>
 """
@@ -242,6 +307,7 @@ holo_html = """<div class="suit-container">
 <div class="suit-hologram">
 <div class="suit-glow"></div>
 <div class="suit-scan"></div>
+<div class="suit-wireframe"></div>
 <div class="suit-head"></div>
 <div class="suit-torso"></div>
 <div class="suit-reactor"></div>
@@ -251,7 +317,7 @@ holo_html = """<div class="suit-container">
 <div class="suit-leg-right"></div>
 </div>
 </div>
-<div style="text-align: center; color: #00E5FF; margin-top: 10px; font-size: 14px; letter-spacing: 2px;">⚡ IRON MAN SUIT HOLOGRAM ⚡</div>"""
+<div style="text-align: center; color: #00E5FF; margin-top: 15px; font-size: 14px; letter-spacing: 3px;">⚡ IRON MAN MK-85 HOLOGRAM ⚡</div>"""
 
 st.markdown(holo_html, unsafe_allow_html=True)
 
