@@ -7,73 +7,65 @@ import os
 # --- 1. CONFIGURATION & HOLOGRAPHIC UI ---
 st.set_page_config(page_title="J.A.R.V.I.S. Mainframe", page_icon="🤖", layout="wide")
 
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #060913;
-        background-image: 
-            linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
-        background-size: 30px 30px;
-        color: #00E5FF;
-        font-family: 'Courier New', Courier, monospace;
-    }
-    
-    div[data-testid="column"] {
-        background: rgba(6, 9, 19, 0.8) !important;
-        border: 1px solid rgba(0, 229, 255, 0.4) !important;
-        border-radius: 8px;
-        padding: 18px;
-        margin-bottom: 12px;
-        backdrop-filter: blur(6px);
-        box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
-    }
-    
-    div[data-testid="stColumn"]:nth-child(2) {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0px;
-    }
-    
-    h1, h2, h3, h4 {
-        color: #00E5FF !important;
-        text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
-        letter-spacing: 3px;
-        margin-top: 0px;
-        font-weight: 600;
-    }
-    
-    h1 { font-size: 2.8em !important; animation: glowPulse 2s infinite; }
-    @keyframes glowPulse {
-        0%, 100% { text-shadow: 0 0 10px rgba(0, 229, 255, 0.8); }
-        50% { text-shadow: 0 0 20px rgba(0, 229, 255, 1); }
-    }
-    
-    .stChatMessage {
-        background-color: rgba(6, 9, 19, 0.9) !important;
-        border: 1px solid rgba(0, 229, 255, 0.3) !important;
-        color: #00E5FF !important;
-    }
-    
-    hr {
-        border: 0;
-        height: 2px;
-        background-image: linear-gradient(to right, rgba(0,229,255,0), rgba(0,229,255,0.8), rgba(0,229,255,0));
-        margin: 20px 0;
-    }
-    
-    .stButton > button {
-        background: rgba(0, 229, 255, 0.15) !important;
-        border: 1px solid rgba(0, 229, 255, 0.5) !important;
-        color: #00E5FF !important;
-    }
-    
-    .status-ok { color: #00FF88; }
-    .status-warning { color: #FFAA00; }
-    .status-critical { color: #FF4444; }
-    </style>
-""", unsafe_allow_html=True)
+st.markdown(
+    "<style>"
+    ".stApp {"
+    "background-color: #060913;"
+    "background-image: linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),"
+    "linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);"
+    "background-size: 30px 30px;"
+    "color: #00E5FF;"
+    "font-family: 'Courier New', Courier, monospace;"
+    "}"
+    "div[data-testid='column'] {"
+    "background: rgba(6, 9, 19, 0.8);"
+    "border: 1px solid rgba(0, 229, 255, 0.4);"
+    "border-radius: 8px;"
+    "padding: 18px;"
+    "margin-bottom: 12px;"
+    "backdrop-filter: blur(6px);"
+    "box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);"
+    "}"
+    "div[data-testid='stColumn']:nth-child(2) {"
+    "background: transparent;"
+    "border: none;"
+    "box-shadow: none;"
+    "padding: 0px;"
+    "}"
+    "h1, h2, h3, h4 {"
+    "color: #00E5FF;"
+    "text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);"
+    "letter-spacing: 3px;"
+    "margin-top: 0px;"
+    "font-weight: 600;"
+    "}"
+    "h1 { font-size: 2.8em; animation: glowPulse 2s infinite; }"
+    "@keyframes glowPulse {"
+    "0%, 100% { text-shadow: 0 0 10px rgba(0, 229, 255, 0.8); }"
+    "50% { text-shadow: 0 0 20px rgba(0, 229, 255, 1); }"
+    "}"
+    ".stChatMessage {"
+    "background-color: rgba(6, 9, 19, 0.9);"
+    "border: 1px solid rgba(0, 229, 255, 0.3);"
+    "color: #00E5FF;"
+    "}"
+    "hr {"
+    "border: 0;"
+    "height: 2px;"
+    "background-image: linear-gradient(to right, rgba(0,229,255,0), rgba(0,229,255,0.8), rgba(0,229,255,0));"
+    "margin: 20px 0;"
+    "}"
+    ".stButton > button {"
+    "background: rgba(0, 229, 255, 0.15);"
+    "border: 1px solid rgba(0, 229, 255, 0.5);"
+    "color: #00E5FF;"
+    "}"
+    ".status-ok { color: #00FF88; }"
+    ".status-warning { color: #FFAA00; }"
+    ".status-critical { color: #FF4444; }"
+    "</style>",
+    unsafe_allow_html=True
+)
 
 # --- 2. API KEY CHECKER ---
 SECRET_KEY = None
@@ -102,14 +94,20 @@ st.session_state.reactor_temp = random.randint(39, 45)
 
 # --- 4. STATUS COLORS ---
 def get_armor_status(durability):
-    if durability >= 80: return "status-ok", "OPTIMAL"
-    elif durability >= 50: return "status-warning", "DEGRADED"
-    else: return "status-critical", "CRITICAL"
+    if durability >= 80:
+        return "status-ok", "OPTIMAL"
+    elif durability >= 50:
+        return "status-warning", "DEGRADED"
+    else:
+        return "status-critical", "CRITICAL"
 
 def get_reactor_status(temp):
-    if temp <= 45: return "status-ok", "STABLE"
-    elif temp <= 55: return "status-warning", "RISING"
-    else: return "status-critical", "OVERHEAT"
+    if temp <= 45:
+        return "status-ok", "STABLE"
+    elif temp <= 55:
+        return "status-warning", "RISING"
+    else:
+        return "status-critical", "OVERHEAT"
 
 armor_status, armor_level = get_armor_status(st.session_state.armor_durability)
 reactor_status, reactor_level = get_reactor_status(st.session_state.reactor_temp)
@@ -126,17 +124,19 @@ with master_left:
     box_col1, box_col2 = st.columns(2)
     with box_col1:
         st.markdown("#### 🛡️ SUIT INTEGRITY")
-        st.write(f"Armor: **<span class='{armor_status}'>{st.session_state.armor_durability}%</span>** ({armor_level})")
+        armor_text = f"Armor: **{st.session_state.armor_durability}%** ({armor_level})"
+        st.write(armor_text)
         st.progress(st.session_state.armor_durability / 100)
         if st.session_state.armor_durability < 50:
-            st.markdown("<span class='status-warning'>⚠️ Integrity compromised, sir</span>", unsafe_allow_html=True)
+            st.warning("⚠️ Integrity compromised, sir")
         
     with box_col2:
         st.markdown("#### 🌡️ ARC REACTOR")
-        st.write(f"Temp: **<span class='{reactor_status}'>{st.session_state.reactor_temp}°C</span>** ({reactor_level})")
+        temp_text = f"Temp: **{st.session_state.reactor_temp}°C** ({reactor_level})"
+        st.write(temp_text)
         st.progress(min(1.0, st.session_state.reactor_temp / 100))
         if st.session_state.reactor_temp > 50:
-            st.markdown("<span class='status-warning'>⚠️ Temperature rising, sir</span>", unsafe_allow_html=True)
+            st.warning("⚠️ Temperature rising, sir")
             
     box_col3, box_col4 = st.columns(2)
     with box_col3:
@@ -155,7 +155,6 @@ with master_left:
             
     with box_col4:
         st.markdown("#### 💾 LOG STREAM")
-        # FIXED LINE 169 - removed the f before the string
         log_box = "
 ".join(st.session_state.system_logs[:4])
         st.code(log_box, language="bash")
