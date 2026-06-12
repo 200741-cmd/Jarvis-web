@@ -82,75 +82,152 @@ hr {
     background: linear-gradient(90deg, rgba(0,229,255,0.4), rgba(0,229,255,1));
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.8);
 }
-.suit-hologram { text-align: center; margin: 30px 0; position: relative; }
-.armor-body {
-    font-size: 120px;
-    color: #00E5FF;
-    text-shadow: 0 0 30px rgba(0,229,255,0.8);
-    animation: armorFloat 3s ease-in-out infinite;
-    display: inline-block;
+
+/* 3D HOLOGRAM SUIT */
+.suit-container {
+    position: relative;
+    width: 300px;
+    height: 400px;
+    margin: 40px auto;
+    perspective: 1000px;
 }
-@keyframes armorFloat {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+
+.suit-hologram {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: suitRotate 8s linear infinite;
 }
-.armor-left-arm {
-    font-size: 120px;
-    color: #00E5FF;
-    text-shadow: 0 0 30px rgba(0,229,255,0.8);
+
+@keyframes suitRotate {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+}
+
+.suit-part {
     position: absolute;
-    left: -60px;
-    top: 10px;
-    animation: leftArmAlarm 30s linear infinite;
+    background: rgba(0, 229, 255, 0.15);
+    border: 2px solid rgba(0, 229, 255, 0.6);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.2);
+    transform-style: preserve-3d;
 }
-@keyframes leftArmAlarm {
-    0%, 83% { color: #00E5FF; text-shadow: 0 0 30px rgba(0,229,255,0.8); }
-    85%, 91% { color: #FF4444; text-shadow: 0 0 40px rgba(255,68,68,1); }
-    93%, 100% { color: #00E5FF; text-shadow: 0 0 30px rgba(0,229,255,0.8); }
+
+/* Head */
+.suit-head {
+    width: 60px;
+    height: 70px;
+    top: 0px;
+    left: 120px;
+    transform: rotateX(10deg);
+    background: rgba(0, 229, 255, 0.2);
 }
-.armor-right-arm {
-    font-size: 120px;
+
+.suit-head:before {
+    content: "◈";
+    position: absolute;
+    top: 20px;
+    left: 15px;
+    font-size: 30px;
     color: #00E5FF;
-    text-shadow: 0 0 30px rgba(0,229,255,0.8);
-    position: absolute;
-    right: -60px;
-    top: 10px;
+    text-shadow: 0 0 15px #00E5FF;
 }
-.hud-circle {
-    width: 150px;
-    height: 150px;
-    border: 3px solid rgba(0, 229, 255, 0.3);
+
+/* Torso */
+.suit-torso {
+    width: 100px;
+    height: 120px;
+    top: 65px;
+    left: 100px;
+    background: rgba(0, 229, 255, 0.18);
+}
+
+/* Arc Reactor */
+.suit-reactor {
+    width: 30px;
+    height: 30px;
+    top: 105px;
+    left: 135px;
+    background: radial-gradient(circle, rgba(0,229,255,1) 0%, rgba(0,229,255,0.4) 50%, transparent 70%);
     border-radius: 50%;
-    margin: 20px auto;
-    animation: hudRotate 4s linear infinite;
-}
-.hud-circle:before {
-    content: "";
-    position: absolute;
-    top: -5px;
-    left: 50%;
-    width: 10px;
-    height: 10px;
-    background: #00E5FF;
-    border-radius: 50%;
-    box-shadow: 0 0 20px #00E5FF;
-}
-@keyframes hudRotate {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-.reactor-core {
-    width: 80px;
-    height: 80px;
-    background: radial-gradient(circle, rgba(0,229,255,1) 0%, rgba(0,229,255,0.3) 50%, transparent 70%);
-    border-radius: 50%;
-    margin: 20px auto;
+    box-shadow: 0 0 40px rgba(0,229,255,1), 0 0 60px rgba(0,229,255,0.8);
     animation: reactorPulse 1.5s ease-in-out infinite;
-    box-shadow: 0 0 50px rgba(0,229,255,0.8);
 }
+
 @keyframes reactorPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 50px rgba(0,229,255,0.8); }
-    50% { transform: scale(1.1); box-shadow: 0 0 80px rgba(0,229,255,1); }
+    0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(0,229,255,1); }
+    50% { transform: scale(1.2); box-shadow: 0 0 70px rgba(0,229,255,1); }
+}
+
+/* Left Arm */
+.suit-arm-left {
+    width: 40px;
+    height: 140px;
+    top: 70px;
+    left: 55px;
+    animation: leftArmRed 30s linear infinite;
+}
+
+@keyframes leftArmRed {
+    0%, 83% { background: rgba(0, 229, 255, 0.18); border-color: rgba(0, 229, 255, 0.6); }
+    85%, 91% { background: rgba(255, 68, 68, 0.3); border-color: rgba(255, 68, 68, 1); box-shadow: 0 0 30px rgba(255,68,68,0.8); }
+    93%, 100% { background: rgba(0, 229, 255, 0.18); border-color: rgba(0, 229, 255, 0.6); }
+}
+
+/* Right Arm */
+.suit-arm-right {
+    width: 40px;
+    height: 140px;
+    top: 70px;
+    left: 205px;
+}
+
+/* Left Leg */
+.suit-leg-left {
+    width: 45px;
+    height: 150px;
+    top: 180px;
+    left: 95px;
+}
+
+/* Right Leg */
+.suit-leg-right {
+    width: 45px;
+    height: 150px;
+    top: 180px;
+    left: 155px;
+}
+
+/* Glow effect */
+.suit-glow {
+    position: absolute;
+    width: 320px;
+    height: 420px;
+    top: -10px;
+    left: -10px;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.15) 0%, transparent 70%);
+    animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Scan lines */
+.suit-scan {
+    position: absolute;
+    width: 300px;
+    height: 400px;
+    top: 0;
+    left: 0;
+    background: repeating-linear-gradient(0deg, rgba(0,229,255,0.05) 0px, rgba(0,229,255,0.05) 1px, transparent 1px, transparent 3px);
+    animation: scanMove 4s linear infinite;
+}
+
+@keyframes scanMove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(4px); }
 }
 </style>
 """
@@ -170,9 +247,9 @@ if "armor_durability" not in st.session_state:
 if "reactor_temp" not in st.session_state:
     st.session_state.reactor_temp = 42
 if "system_logs" not in st.session_state:
-    st.session_state.system_logs = ["[12:00:00] Mainframe online.", "[12:00:01] Grid projected."]
+    st.session_state.system_logs = ["[12:00:00] Mainframe online.", "[12:00:01] 3D hologram projected."]
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Good day, sir. J.A.R.V.I.S. operational. Ready, sir."}]
+    st.session_state.messages = [{"role": "assistant", "content": "Good day, sir. J.A.R.V.I.S. operational. 3D suit hologram active. Ready, sir."}]
 
 def log_event(message):
     timestamp = time.strftime("%H:%M:%S")
@@ -196,16 +273,25 @@ reactor_status, reactor_level = get_reactor_status(st.session_state.reactor_temp
 st.title("⚙️ J.A.R.V.I.S. // DIAGNOSTICS MAINFRAME")
 st.markdown("<hr>", unsafe_allow_html=True)
 
+# 3D HOLOGRAM SUIT
 st.markdown("""
+<div class="suit-container">
 <div class="suit-hologram">
-<div class="armor-left-arm">🦾</div>
-<div class="armor-body">🤖</div>
-<div class="armor-right-arm">🦾</div>
-<div style="text-align: center; color: #00E5FF; margin-top: 10px; font-size: 14px;">⚡ ARC REACTOR ACTIVE ⚡</div>
-<div class="reactor-core"></div>
-<div class="hud-circle"></div>
+<div class="suit-glow"></div>
+<div class="suit-scan"></div>
+<div class="suit-head"></div>
+<div class="suit-torso"></div>
+<div class="suit-reactor"></div>
+<div class="suit-arm-left"></div>
+<div class="suit-arm-right"></div>
+<div class="suit-leg-left"></div>
+<div class="suit-leg-right"></div>
 </div>
-""", unsafe_allow_html=True)
+</div>
+<div style="text-align: center; color: #00E5FF; margin-top: 10px; font-size: 14px; letter-spacing: 2px;">
+⚡ IRON MAN SUIT HOLOGRAM ⚡
+</div>
+", unsafe_allow_html=True)
 
 master_left, master_right = st.columns([5, 7])
 
