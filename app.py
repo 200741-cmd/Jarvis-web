@@ -82,8 +82,6 @@ hr {
     background: linear-gradient(90deg, rgba(0,229,255,0.4), rgba(0,229,255,1));
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.8);
 }
-
-/* 3D HOLOGRAM SUIT */
 .suit-container {
     position: relative;
     width: 300px;
@@ -91,7 +89,6 @@ hr {
     margin: 40px auto;
     perspective: 1000px;
 }
-
 .suit-hologram {
     width: 100%;
     height: 100%;
@@ -99,12 +96,10 @@ hr {
     transform-style: preserve-3d;
     animation: suitRotate 8s linear infinite;
 }
-
 @keyframes suitRotate {
     0% { transform: rotateY(0deg); }
     100% { transform: rotateY(360deg); }
 }
-
 .suit-part {
     position: absolute;
     background: rgba(0, 229, 255, 0.15);
@@ -112,8 +107,6 @@ hr {
     box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.2);
     transform-style: preserve-3d;
 }
-
-/* Head */
 .suit-head {
     width: 60px;
     height: 70px;
@@ -122,7 +115,6 @@ hr {
     transform: rotateX(10deg);
     background: rgba(0, 229, 255, 0.2);
 }
-
 .suit-head:before {
     content: "◈";
     position: absolute;
@@ -132,8 +124,6 @@ hr {
     color: #00E5FF;
     text-shadow: 0 0 15px #00E5FF;
 }
-
-/* Torso */
 .suit-torso {
     width: 100px;
     height: 120px;
@@ -141,8 +131,6 @@ hr {
     left: 100px;
     background: rgba(0, 229, 255, 0.18);
 }
-
-/* Arc Reactor */
 .suit-reactor {
     width: 30px;
     height: 30px;
@@ -153,13 +141,10 @@ hr {
     box-shadow: 0 0 40px rgba(0,229,255,1), 0 0 60px rgba(0,229,255,0.8);
     animation: reactorPulse 1.5s ease-in-out infinite;
 }
-
 @keyframes reactorPulse {
     0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(0,229,255,1); }
     50% { transform: scale(1.2); box-shadow: 0 0 70px rgba(0,229,255,1); }
 }
-
-/* Left Arm */
 .suit-arm-left {
     width: 40px;
     height: 140px;
@@ -167,38 +152,29 @@ hr {
     left: 55px;
     animation: leftArmRed 30s linear infinite;
 }
-
 @keyframes leftArmRed {
     0%, 83% { background: rgba(0, 229, 255, 0.18); border-color: rgba(0, 229, 255, 0.6); }
     85%, 91% { background: rgba(255, 68, 68, 0.3); border-color: rgba(255, 68, 68, 1); box-shadow: 0 0 30px rgba(255,68,68,0.8); }
     93%, 100% { background: rgba(0, 229, 255, 0.18); border-color: rgba(0, 229, 255, 0.6); }
 }
-
-/* Right Arm */
 .suit-arm-right {
     width: 40px;
     height: 140px;
     top: 70px;
     left: 205px;
 }
-
-/* Left Leg */
 .suit-leg-left {
     width: 45px;
     height: 150px;
     top: 180px;
     left: 95px;
 }
-
-/* Right Leg */
 .suit-leg-right {
     width: 45px;
     height: 150px;
     top: 180px;
     left: 155px;
 }
-
-/* Glow effect */
 .suit-glow {
     position: absolute;
     width: 320px;
@@ -208,13 +184,10 @@ hr {
     background: radial-gradient(ellipse, rgba(0,229,255,0.15) 0%, transparent 70%);
     animation: glowPulse 3s ease-in-out infinite;
 }
-
 @keyframes glowPulse {
     0%, 100% { opacity: 0.5; }
     50% { opacity: 1; }
 }
-
-/* Scan lines */
 .suit-scan {
     position: absolute;
     width: 300px;
@@ -224,7 +197,6 @@ hr {
     background: repeating-linear-gradient(0deg, rgba(0,229,255,0.05) 0px, rgba(0,229,255,0.05) 1px, transparent 1px, transparent 3px);
     animation: scanMove 4s linear infinite;
 }
-
 @keyframes scanMove {
     0% { transform: translateY(0); }
     100% { transform: translateY(4px); }
@@ -273,7 +245,6 @@ reactor_status, reactor_level = get_reactor_status(st.session_state.reactor_temp
 st.title("⚙️ J.A.R.V.I.S. // DIAGNOSTICS MAINFRAME")
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# 3D HOLOGRAM SUIT
 st.markdown("""
 <div class="suit-container">
 <div class="suit-hologram">
@@ -333,9 +304,8 @@ with master_left:
             
     with box_col4:
         st.markdown("#### 💾 LOG STREAM")
-        log_box = ""
-        for log in st.session_state.system_logs[:5]:
-            log_box = log_box + log + chr(10)
+        log_box = "
+".join(st.session_state.system_logs[:5])
         st.code(log_box, language="bash")
 
 with master_right:
