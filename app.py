@@ -22,6 +22,11 @@ div[data-testid='column'] {
     padding: 20px;
     margin-bottom: 15px;
     box-shadow: 0 0 20px rgba(0, 229, 255, 0.08);
+    animation: hologramPulse 3s ease-in-out infinite;
+}
+@keyframes hologramPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(0, 229, 255, 0.08); }
+    50% { box-shadow: 0 0 40px rgba(0, 229, 255, 0.15); }
 }
 div[data-testid='stColumn']:nth-child(2) {
     background: transparent;
@@ -33,6 +38,11 @@ h1, h2, h3, h4 {
     text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
     letter-spacing: 4px;
     font-weight: 700;
+    animation: titleGlow 2s ease-in-out infinite;
+}
+@keyframes titleGlow {
+    0%, 100% { text-shadow: 0 0 10px rgba(0, 229, 255, 0.8); }
+    50% { text-shadow: 0 0 25px rgba(0, 229, 255, 1); }
 }
 h1 { font-size: 3em; }
 .stChatMessage {
@@ -72,7 +82,40 @@ hr {
     background: linear-gradient(90deg, rgba(0,229,255,0.4), rgba(0,229,255,1));
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.8);
 }
-.suit-hologram { text-align: center; margin: 30px 0; }
+.suit-hologram { text-align: center; margin: 30px 0; position: relative; }
+.armor-body {
+    font-size: 120px;
+    color: #00E5FF;
+    text-shadow: 0 0 30px rgba(0,229,255,0.8);
+    animation: armorFloat 3s ease-in-out infinite;
+    display: inline-block;
+}
+@keyframes armorFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+.armor-left-arm {
+    font-size: 120px;
+    color: #00E5FF;
+    text-shadow: 0 0 30px rgba(0,229,255,0.8);
+    position: absolute;
+    left: -60px;
+    top: 10px;
+    animation: leftArmAlarm 30s linear infinite;
+}
+@keyframes leftArmAlarm {
+    0%, 83% { color: #00E5FF; text-shadow: 0 0 30px rgba(0,229,255,0.8); }
+    85%, 91% { color: #FF4444; text-shadow: 0 0 40px rgba(255,68,68,1); }
+    93%, 100% { color: #00E5FF; text-shadow: 0 0 30px rgba(0,229,255,0.8); }
+}
+.armor-right-arm {
+    font-size: 120px;
+    color: #00E5FF;
+    text-shadow: 0 0 30px rgba(0,229,255,0.8);
+    position: absolute;
+    right: -60px;
+    top: 10px;
+}
 .hud-circle {
     width: 150px;
     height: 150px;
@@ -95,6 +138,19 @@ hr {
 @keyframes hudRotate {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+.reactor-core {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(0,229,255,1) 0%, rgba(0,229,255,0.3) 50%, transparent 70%);
+    border-radius: 50%;
+    margin: 20px auto;
+    animation: reactorPulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 50px rgba(0,229,255,0.8);
+}
+@keyframes reactorPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 50px rgba(0,229,255,0.8); }
+    50% { transform: scale(1.1); box-shadow: 0 0 80px rgba(0,229,255,1); }
 }
 </style>
 """
@@ -142,8 +198,11 @@ st.markdown("<hr>", unsafe_allow_html=True)
 
 st.markdown("""
 <div class="suit-hologram">
-<div style="text-align: center; font-size: 100px; color: #00E5FF; text-shadow: 0 0 30px rgba(0,229,255,0.8);">🤖</div>
+<div class="armor-left-arm">🦾</div>
+<div class="armor-body">🤖</div>
+<div class="armor-right-arm">🦾</div>
 <div style="text-align: center; color: #00E5FF; margin-top: 10px; font-size: 14px;">⚡ ARC REACTOR ACTIVE ⚡</div>
+<div class="reactor-core"></div>
 <div class="hud-circle"></div>
 </div>
 """, unsafe_allow_html=True)
@@ -163,7 +222,7 @@ with master_left:
         
     with box_col2:
         st.markdown("#### 🌡️ ARC REACTOR")
-        st.write("Temp: **" + reactor_status + ">" + str(st.session_state.reactor_temp) + "°C</" + reactor_status + "** (" + reactor_level + ")")
+        st.write("Temp: **" + reactor_status + ">" + str(st.session_state.reactor_temp) + "C</" + reactor_status + "** (" + reactor_level + ")")
         st.progress(min(1.0, st.session_state.reactor_temp / 100))
         if st.session_state.reactor_temp > 50:
             st.error("⚠️ WARNING: Temperature rising, sir")
