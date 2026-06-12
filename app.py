@@ -4,7 +4,7 @@ import random
 import time
 import os
 
-# --- 1. CONFIGURATION & ENHANCED HOLOGRAPHIC UI ---
+# --- 1. CONFIGURATION & HOLOGRAPHIC UI ---
 st.set_page_config(page_title="J.A.R.V.I.S. Mainframe", page_icon="🤖", layout="wide")
 
 st.markdown("""
@@ -27,11 +27,6 @@ st.markdown("""
         margin-bottom: 12px;
         backdrop-filter: blur(6px);
         box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
-        transition: all 0.3s ease;
-    }
-    
-    div[data-testid="column"]:hover {
-        box-shadow: 0 0 25px rgba(0, 229, 255, 0.2);
     }
     
     div[data-testid="stColumn"]:nth-child(2) {
@@ -49,11 +44,7 @@ st.markdown("""
         font-weight: 600;
     }
     
-    h1 {
-        font-size: 2.8em !important;
-        animation: glowPulse 2s ease-in-out infinite;
-    }
-    
+    h1 { font-size: 2.8em !important; animation: glowPulse 2s infinite; }
     @keyframes glowPulse {
         0%, 100% { text-shadow: 0 0 10px rgba(0, 229, 255, 0.8); }
         50% { text-shadow: 0 0 20px rgba(0, 229, 255, 1); }
@@ -62,7 +53,6 @@ st.markdown("""
     .stChatMessage {
         background-color: rgba(6, 9, 19, 0.9) !important;
         border: 1px solid rgba(0, 229, 255, 0.3) !important;
-        backdrop-filter: blur(6px);
         color: #00E5FF !important;
     }
     
@@ -77,12 +67,11 @@ st.markdown("""
         background: rgba(0, 229, 255, 0.15) !important;
         border: 1px solid rgba(0, 229, 255, 0.5) !important;
         color: #00E5FF !important;
-        font-family: 'Courier New', monospace !important;
     }
     
-    .status-ok { color: #00FF88; text-shadow: 0 0 8px rgba(0, 255, 136, 0.6); }
-    .status-warning { color: #FFAA00; text-shadow: 0 0 8px rgba(255, 170, 0, 0.6); }
-    .status-critical { color: #FF4444; text-shadow: 0 0 8px rgba(255, 68, 68, 0.6); }
+    .status-ok { color: #00FF88; }
+    .status-warning { color: #FFAA00; }
+    .status-critical { color: #FF4444; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -103,7 +92,7 @@ if 'reactor_temp' not in st.session_state:
 if 'system_logs' not in st.session_state:
     st.session_state.system_logs = ["Mainframe online.", "Holographic grid projected."]
 if 'messages' not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Good day, sir. J.A.R.V.I.S. systems fully operational. Ready for your command, sir."}]
+    st.session_state.messages = [{"role": "assistant", "content": "Good day, sir. J.A.R.V.I.S. systems operational. Ready for command, sir."}]
 
 def log_event(message):
     timestamp = time.strftime("%H:%M:%S")
@@ -153,21 +142,22 @@ with master_left:
     with box_col3:
         st.markdown("#### 🔧 UTILITIES")
         if st.button("♻️ Optimize Cache", use_container_width=True):
-            log_event("CLEAN: Memory buffers flushed.")
+            log_event("CLEAN: Memory flushed.")
             st.rerun()
         if st.button("🛠️ Run Calibration", use_container_width=True):
             st.session_state.armor_durability = 100
-            log_event("REPAIR: Structural reset.")
+            log_event("REPAIR: Reset.")
             st.rerun()
         if st.button("🔄 Refresh Metrics", use_container_width=True):
             st.session_state.reactor_temp = random.randint(39, 45)
-            log_event("UPDATE: Telemetry refreshed.")
+            log_event("UPDATE: Refreshed.")
             st.rerun()
             
     with box_col4:
         st.markdown("#### 💾 LOG STREAM")
-        log_box = "".join([f"{log}
-" for log in st.session_state.system_logs[:4]])
+        # FIXED LINE 169 - removed the f before the string
+        log_box = "
+".join(st.session_state.system_logs[:4])
         st.code(log_box, language="bash")
 
 with master_right:
@@ -192,17 +182,13 @@ with master_right:
         system_prompt = (
             "You are J.A.R.V.I.S., Tony Stark's AI assistant. Address user as 'sir'.
 "
-            "Speak formally with British precision, dry wit, and calm logic.
-"
-            "Avoid contractions. Be proactive & protective.
+            "Speak formally with British precision, dry wit, calm logic. Avoid contractions.
 
 "
             f"METRICS: Suit={st.session_state.armor_durability}%, Reactor={st.session_state.reactor_temp}°C
 
 "
-            "If armor<50%, warn & suggest calibration. If reactor>50°C, warn of overheating.
-"
-            "End with 'Further assistance, sir?' Always stay in character."
+            "Warn if armor<50% or reactor>50°C. End with 'Further assistance, sir?' Stay in character."
         )
         
         api_messages = [{"role": "system", "content": system_prompt}]
