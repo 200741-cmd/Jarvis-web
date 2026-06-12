@@ -238,8 +238,7 @@ reactor_status, reactor_level = get_reactor_status(st.session_state.reactor_temp
 st.title("⚙️ J.A.R.V.I.S. // DIAGNOSTICS MAINFRAME")
 st.markdown("<hr>", unsafe_allow_html=True)
 
-st.markdown("""
-<div class="suit-container">
+holo_html = """<div class="suit-container">
 <div class="suit-hologram">
 <div class="suit-glow"></div>
 <div class="suit-scan"></div>
@@ -252,8 +251,9 @@ st.markdown("""
 <div class="suit-leg-right"></div>
 </div>
 </div>
-<div style="text-align: center; color: #00E5FF; margin-top: 10px; font-size: 14px; letter-spacing: 2px;">⚡ IRON MAN SUIT HOLOGRAM ⚡</div>
-", unsafe_allow_html=True)
+<div style="text-align: center; color: #00E5FF; margin-top: 10px; font-size: 14px; letter-spacing: 2px;">⚡ IRON MAN SUIT HOLOGRAM ⚡</div>"""
+
+st.markdown(holo_html, unsafe_allow_html=True)
 
 master_left, master_right = st.columns([5, 7])
 
