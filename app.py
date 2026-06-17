@@ -87,7 +87,6 @@ with col2:
         st.session_state.messages.append({"role": "user", "content": user_prompt})
             
         with st.chat_message("assistant"):
-            # Check Streamlit Cloud's built-in secrets dashboard directly
             if "GEMINI_API_KEY" not in st.secrets:
                 error_msg = "🚨 Mainframe offline. Please input your GEMINI_API_KEY within the Streamlit Cloud Settings panel, sir."
                 st.error(error_msg)
@@ -114,10 +113,12 @@ with col2:
                         history=formatted_history
                     )
                     
+                    # FIXED: Utilizing the correct send_message_stream function
                     def stream_gemini():
-                        response_stream = chat.send_message(user_prompt, stream=True)
+                        response_stream = chat.send_message_stream(user_prompt)
                         for chunk in response_stream:
-                            yield chunk.text
+                            if chunk.text:
+                                yield chunk.text
 
                     ai_reply = st.write_stream(stream_gemini())
                     st.session_state.messages.append({"role": "model", "content": ai_reply})
