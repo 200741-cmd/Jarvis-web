@@ -91,7 +91,6 @@ with col2:
                 st.session_state.messages.append({"role": "model", "content": error_msg})
             else:
                 try:
-                    # Initialize client using native SDK parameters
                     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
                     
                     sys_prompt = f"You are J.A.R.V.I.S., the AI consciousness created by Tony Stark. Address the user exclusively as sir. Use impeccable British precision, a formal tone, and subtle dry wit. Avoid informal contractions. Current Suit Integrity: {st.session_state.armor_durability}%. Current Reactor Temp: {st.session_state.reactor_temp}°C. Keep your response concise, elegant, and directly in character."
@@ -102,13 +101,12 @@ with col2:
                             types.Content(role=m["role"], parts=[types.Part.from_text(text=m["content"])])
                         )
                     
-                    # SYSTEM TWEAK: Swapping to the 'pro' tier endpoint which uses 
-                    # alternative server routes less prone to cloud hosting blocks.
+                    # FIXED: Using gemini-2.5-flash to get high free-tier quotas
                     chat = client.chats.create(
-                        model="gemini-2.5-pro",
+                        model="gemini-2.5-flash",
                         config=types.GenerateContentConfig(
                             system_instruction=sys_prompt,
-                            temperature=0.6
+                            temperature=0.65
                         ),
                         history=formatted_history
                     )
@@ -124,3 +122,4 @@ with col2:
                     
                 except Exception as e:
                     st.error(f"Neural link corrupted: {str(e)}")
+                    
