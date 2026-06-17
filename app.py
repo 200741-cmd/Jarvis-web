@@ -1,75 +1,150 @@
 import streamlit as st
+from groq import Groq
 import random
+import time
 import os
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="J.A.R.V.I.S. // Interface", page_icon="🤖", layout="wide")
+st.set_page_config(
+    page_title="J.A.R.V.I.S. Mainframe v2.0", 
+    page_icon="🤖", 
+    layout="wide"
+)
 
-# --- ADVANCED HOLOGRAM CSS ---
+# --- COMPLETE HIGH-FIDELITY HUD CSS ---
 css_style = """
 <style>
-.stApp { background-color: #030508; color: #00E5FF; }
+/* Base Theme */
+.stApp {
+    background-color: #030508;
+    background-image: linear-gradient(rgba(0, 229, 255, 0.02) 1px, transparent 1px), 
+                      linear-gradient(90deg, rgba(0, 229, 255, 0.02) 1px, transparent 1px);
+    background-size: 30px 30px;
+    color: #00E5FF;
+    font-family: 'Courier New', Courier, monospace;
+}
 
-/* Hologram Field */
-.field { perspective: 1000px; width: 300px; height: 400px; margin: auto; }
-.suit { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; animation: spin 20s infinite linear; }
-@keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+/* 3D Wireframe Hologram */
+.field { 
+    perspective: 1000px; 
+    width: 100%; 
+    height: 380px; 
+    margin: 20px auto; 
+    position: relative;
+}
+.suit { 
+    position: relative; 
+    width: 200px; 
+    height: 320px; 
+    margin: 0 auto;
+    transform-style: preserve-3d; 
+    animation: spin 15s infinite linear; 
+}
+@keyframes spin { 
+    from { transform: rotateY(0deg); } 
+    to { transform: rotateY(360deg); } 
+}
 
-/* Hologram Components */
-.suit div { position: absolute; border: 1px solid #00E5FF; background: rgba(0, 229, 255, 0.05); }
-.head { width: 50px; height: 60px; left: 125px; border-radius: 50% 50% 10% 10%; }
-.chest { width: 100px; height: 120px; top: 65px; left: 100px; clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%); }
-.arc { width: 30px; height: 30px; top: 100px; left: 135px; border-radius: 50%; background: radial-gradient(#00E5FF, transparent); box-shadow: 0 0 20px #00E5FF; }
-.arm { width: 30px; height: 100px; top: 70px; }
-.left { left: 60px; transform: rotate(15deg); }
-.right { left: 210px; transform: rotate(-15deg); }
+/* Hologram Vectors */
+.suit div { 
+    position: absolute; 
+    border: 1px solid rgba(0, 229, 255, 0.6); 
+    background: rgba(0, 229, 255, 0.03); 
+    box-shadow: inset 0 0 12px rgba(0, 229, 255, 0.2);
+}
+.head { 
+    width: 44px; 
+    height: 52px; 
+    left: 78px; 
+    top: 0px;
+    border-radius: 22px 22px 10px 10px; 
+}
+.chest { 
+    width: 90px; 
+    height: 110px; 
+    top: 58px; 
+    left: 55px; 
+    clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%); 
+    transform: translateZ(15px);
+}
+.arc { 
+    width: 24px; 
+    height: 24px; 
+    top: 90px; 
+    left: 88px; 
+    border-radius: 50%; 
+    background: radial-gradient(circle, #ffffff 0%, #00E5FF 60%, transparent 100%); 
+    box-shadow: 0 0 25px #00E5FF, 0 0 10px #00E5FF; 
+    transform: translateZ(22px);
+    border: 1px solid #ffffff !important;
+}
+.arm { width: 26px; height: 110px; top: 62px; }
+.left { left: 22px; transform: rotate(10deg) translateZ(5px); }
+.right { left: 152px; transform: rotate(-10deg) translateZ(5px); }
+.legs { 
+    width: 76px; 
+    height: 120px; 
+    top: 174px; 
+    left: 62px; 
+    clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%); 
+}
 
-/* Data HUD Overlay */
-.hud-text { font-family: 'Courier New', monospace; font-size: 10px; color: #00E5FF; text-transform: uppercase; }
+/* HUD Scan Line Overlay */
+.scan-line {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 12px #00E5FF;
+    animation: scanMove 4s infinite linear;
+    pointer-events: none;
+    z-index: 10;
+}
+@keyframes scanMove { 0% { top: 0%; } 100% { top: 100%; } }
+
+/* Chat Customization */
+.stChatMessage { 
+    background: rgba(3, 5, 8, 0.85) !important; 
+    border: 1px solid rgba(0, 229, 255, 0.3) !important; 
+}
+.stChatInput div { background: rgba(3, 5, 8, 0.9) !important; border: 1px solid rgba(0, 229, 255, 0.4) !important; }
+.stButton button {
+    background: rgba(0, 229, 255, 0.05);
+    border: 1px solid rgba(0, 229, 255, 0.4);
+    color: #00E5FF;
+    width: 100%;
+}
+.stButton button:hover {
+    background: rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+    border-color: #00E5FF;
+}
 </style>
 """
 st.markdown(css_style, unsafe_allow_html=True)
 
-# --- UI LAYOUT ---
-st.title("⚙️ J.A.R.V.I.S. // MAINFRAME")
+# --- BACKEND KEYS & STATE SETUP ---
+SECRET_KEY = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY"))
 
-col1, col2 = st.columns([1, 2])
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "assistant", "content": "Good day, sir. J.A.R.V.I.S. operational. Diagnostic wireframes loaded."}]
+if "armor_durability" not in st.session_state:
+    st.session_state.armor_durability = 100
+if "reactor_temp" not in st.session_state:
+    st.session_state.reactor_temp = 41
+
+# --- APPLICATION INTERFACE ---
+st.title("⚙️ J.A.R.V.I.S. // DIAGNOSTICS MAINFRAME")
+st.divider()
+
+col1, col2 = st.columns([5, 7])
 
 with col1:
+    st.write("### 🎛️ CORE TELEMETRY")
+    
+    # Hologram Window
     st.markdown("""
     <div class="field">
+        <div class="scan-line"></div>
         <div class="suit">
-            <div class="head"></div>
-            <div class="chest"></div>
-            <div class="arc"></div>
-            <div class="arm left"></div>
-            <div class="arm right"></div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.divider()
-    st.metric("System Core", "STABLE", delta="0.04%")
-    if st.button("RECALIBRATE SENSORS"):
-        st.toast("Recalibrating...", icon="🔄")
-
-with col2:
-    st.subheader("System Telemetry")
-    chat_container = st.container(height=400)
-    
-    if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Diagnostics complete, sir. Systems are at 100% efficiency."}]
-    
-    for msg in st.session_state.messages:
-        with chat_container.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-            
-    if prompt := st.chat_input("Input command..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with chat_container.chat_message("user"):
-            st.markdown(prompt)
-        
-        # Simulated response
-        reply = "Processing request via localized neural link, sir."
-        st.session_state.messages.append({"role": "assistant", "content": reply})
-        chat_container.chat_message("assistant").markdown(reply)
+            <div class
