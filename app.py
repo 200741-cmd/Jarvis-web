@@ -88,7 +88,6 @@ with col2:
             if "GEMINI_API_KEY" not in st.secrets:
                 error_msg = "🚨 Mainframe offline. Please input your GEMINI_API_KEY within the Streamlit Cloud Settings panel, sir."
                 st.error(error_msg)
-                st.session_state.messages.append({"role": "model", "content": error_msg})
             else:
                 try:
                     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
@@ -101,7 +100,6 @@ with col2:
                             types.Content(role=m["role"], parts=[types.Part.from_text(text=m["content"])])
                         )
                     
-                    # FIXED: Using gemini-2.5-flash to get high free-tier quotas
                     chat = client.chats.create(
                         model="gemini-2.5-flash",
                         config=types.GenerateContentConfig(
@@ -121,5 +119,12 @@ with col2:
                     st.session_state.messages.append({"role": "model", "content": ai_reply})
                     
                 except Exception as e:
-                    st.error(f"Neural link corrupted: {str(e)}")
-                    
+                    # SMART CAPTURE: If Google blocks the cloud IP with a 403, provide the escape hatch
+                    if "403" in str(e) or "PERMISSION_DENIED" in str(e):
+                        st.error("🚨 Google Cloud Firewall has throttled the hosted server's IP address.")
+                        st.info("💡 **Sir, to bypass this cloud network restriction instantly:**\n\n"
+                                "1. Click the **three dots (...)** in the upper right corner of your running Streamlit Cloud App page.\n"
+                                "2. Select **Reboot app**.\n\n"
+                                "This forces Streamlit to rebuild your app container on a completely different server rack, giving your mainframe a clean IP address that isn't blacklisted by Google.")
+                    else:
+                        st.error(f"Neural link corrupted: {str(e)}")
