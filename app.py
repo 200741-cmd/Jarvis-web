@@ -118,33 +118,4 @@ css_style = """
     background: rgba(0, 229, 255, 0.2);
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
     border-color: #00E5FF;
-}
-</style>
-"""
-st.markdown(css_style, unsafe_allow_html=True)
-
-# --- BACKEND KEYS & STATE SETUP ---
-SECRET_KEY = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY"))
-
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Good day, sir. J.A.R.V.I.S. operational. Diagnostic wireframes loaded."}]
-if "armor_durability" not in st.session_state:
-    st.session_state.armor_durability = 100
-if "reactor_temp" not in st.session_state:
-    st.session_state.reactor_temp = 41
-
-# --- APPLICATION INTERFACE ---
-st.title("⚙️ J.A.R.V.I.S. // DIAGNOSTICS MAINFRAME")
-st.divider()
-
-col1, col2 = st.columns([5, 7])
-
-with col1:
-    st.write("### 🎛️ CORE TELEMETRY")
     
-    # Hologram Window
-    st.markdown("""
-    <div class="field">
-        <div class="scan-line"></div>
-        <div class="suit">
-            <div class
