@@ -62,7 +62,6 @@ with col1:
     st.write("### 🎛️ CORE TELEMETRY")
     st.write("---")
     
-    # System Controls & Live Stats
     st.metric(label="🛡️ ARMOR INTEGRITY", value=f"{st.session_state.armor_durability}%")
     st.metric(label="🌡️ ARC REACTOR", value=f"{st.session_state.reactor_temp}°C")
     
@@ -75,7 +74,6 @@ with col1:
 with col2:
     st.write("### 📡 SECURE COMM-LINK")
     
-    # Render historical messages up to this point
     for msg in st.session_state.messages:
         display_role = "assistant" if msg["role"] == "model" else "user"
         with st.chat_message(display_role):
@@ -93,29 +91,28 @@ with col2:
                 st.session_state.messages.append({"role": "model", "content": error_msg})
             else:
                 try:
-                    # Initialize native Google SDK client
+                    # Initialize client using native SDK parameters
                     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
                     
                     sys_prompt = f"You are J.A.R.V.I.S., the AI consciousness created by Tony Stark. Address the user exclusively as sir. Use impeccable British precision, a formal tone, and subtle dry wit. Avoid informal contractions. Current Suit Integrity: {st.session_state.armor_durability}%. Current Reactor Temp: {st.session_state.reactor_temp}°C. Keep your response concise, elegant, and directly in character."
                     
-                    # Package structural history arrays for processing
                     formatted_history = []
                     for m in st.session_state.messages[:-1]:
                         formatted_history.append(
                             types.Content(role=m["role"], parts=[types.Part.from_text(text=m["content"])])
                         )
                     
-                    # TARGETED REVISION: Reverting to the globally unrestricted stable endpoint
+                    # SYSTEM TWEAK: Swapping to the 'pro' tier endpoint which uses 
+                    # alternative server routes less prone to cloud hosting blocks.
                     chat = client.chats.create(
-                        model="gemini-2.5-flash",
+                        model="gemini-2.5-pro",
                         config=types.GenerateContentConfig(
                             system_instruction=sys_prompt,
-                            temperature=0.65
+                            temperature=0.6
                         ),
                         history=formatted_history
                     )
                     
-                    # Process current token generation streams
                     def stream_gemini():
                         response_stream = chat.send_message_stream(user_prompt)
                         for chunk in response_stream:
@@ -127,4 +124,3 @@ with col2:
                     
                 except Exception as e:
                     st.error(f"Neural link corrupted: {str(e)}")
-                    
