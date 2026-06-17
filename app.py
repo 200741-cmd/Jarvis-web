@@ -93,21 +93,21 @@ with col2:
                 st.session_state.messages.append({"role": "model", "content": error_msg})
             else:
                 try:
-                    # Initialize client using the native Google SDK
+                    # Initialize native Google SDK client
                     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
                     
                     sys_prompt = f"You are J.A.R.V.I.S., the AI consciousness created by Tony Stark. Address the user exclusively as sir. Use impeccable British precision, a formal tone, and subtle dry wit. Avoid informal contractions. Current Suit Integrity: {st.session_state.armor_durability}%. Current Reactor Temp: {st.session_state.reactor_temp}°C. Keep your response concise, elegant, and directly in character."
                     
-                    # Package structural history arrays for native processing
+                    # Package structural history arrays for processing
                     formatted_history = []
                     for m in st.session_state.messages[:-1]:
                         formatted_history.append(
                             types.Content(role=m["role"], parts=[types.Part.from_text(text=m["content"])])
                         )
                     
-                    # Initializing conversation via stable production-tier model
+                    # UPDATED: Switching to the active flagship model target
                     chat = client.chats.create(
-                        model="gemini-1.5-flash",
+                        model="gemini-3.5-flash",
                         config=types.GenerateContentConfig(
                             system_instruction=sys_prompt,
                             temperature=0.65
@@ -115,7 +115,7 @@ with col2:
                         history=formatted_history
                     )
                     
-                    # Process native Google generator data streaming output blocks
+                    # Process current token generation streams
                     def stream_gemini():
                         response_stream = chat.send_message_stream(user_prompt)
                         for chunk in response_stream:
