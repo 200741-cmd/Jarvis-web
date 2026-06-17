@@ -46,7 +46,9 @@ css_style = """
 st.markdown(css_style, unsafe_allow_html=True)
 
 # --- BACKEND KEYS & STATE SETUP ---
-SECRET_KEY = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY"))
+# Look for key in secrets, then environment, then fallback to sidebar input if empty
+env_key = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
+SECRET_KEY = st.sidebar.text_input("J.A.R.V.I.S. Access Key", value=env_key, type="password")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "assistant", "content": "Good day, sir. J.A.R.V.I.S. operational. Core systems active."}]
@@ -89,23 +91,26 @@ with col2:
                 st.markdown(msg["content"])
                 
     if user_prompt := st.chat_input("Enter strategic command..."):
+        # 1. Store and display user input immediately
         st.session_state.messages.append({"role": "user", "content": user_prompt})
-        with chat_box.chat_message("user"):
-            st.markdown(user_prompt)
-            
-        with chat_box.chat_message("assistant"):
+        st.rerun()
+
+# This structure prevents the stream processing logic from breaking widget indexing
+if st.session_state.messages[-1]["role"] == "user":
+    with chat_box:
+        with st.chat_message("assistant"):
             if not SECRET_KEY:
-                error_msg = "🚨 API key missing. Please verify your config files, sir."
+                error_msg = "🚨 Access key required. Please input your Groq API key in the sidebar, sir."
                 st.error(error_msg)
                 st.session_state.messages.append({"role": "assistant", "content": error_msg})
             else:
                 try:
                     client = Groq(api_key=SECRET_KEY)
                     
-                    # Single line system prompt configuration
                     sys_prompt = f"You are J.A.R.V.I.S., the AI consciousness created by Tony Stark. Address the user exclusively as sir. Use impeccable British precision, a formal tone, and subtle dry wit. Avoid informal contractions. Current Suit Integrity: {st.session_state.armor_durability}%. Current Reactor Temp: {st.session_state.reactor_temp}°C. Keep your response concise, elegant, and directly in character."
                     
                     api_messages = [{"role": "system", "content": sys_prompt}]
+                    # Keep history window clean
                     for msg in st.session_state.messages[-8:]:
                         api_messages.append({"role": msg["role"], "content": msg["content"]})
                     
@@ -121,3 +126,5 @@ with col2:
                     
                 except Exception as e:
                     st.error(f"Link corrupted: {str(e)}")
+                    
+    st.rerun()
