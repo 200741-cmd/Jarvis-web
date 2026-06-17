@@ -105,9 +105,9 @@ with col2:
                             types.Content(role=m["role"], parts=[types.Part.from_text(text=m["content"])])
                         )
                     
-                    # UPDATED: Switching to the active flagship model target
+                    # TARGETED REVISION: Reverting to the globally unrestricted stable endpoint
                     chat = client.chats.create(
-                        model="gemini-3.5-flash",
+                        model="gemini-2.5-flash",
                         config=types.GenerateContentConfig(
                             system_instruction=sys_prompt,
                             temperature=0.65
@@ -127,3 +127,4 @@ with col2:
                     
                 except Exception as e:
                     st.error(f"Neural link corrupted: {str(e)}")
+                    
