@@ -1,7 +1,6 @@
 import streamlit as st
 from groq import Groq
 import random
-import time
 import os
 
 # --- PAGE CONFIG ---
@@ -46,7 +45,6 @@ css_style = """
 st.markdown(css_style, unsafe_allow_html=True)
 
 # --- BACKEND KEYS & STATE SETUP ---
-# Look for key in secrets, then environment, then fallback to sidebar input if empty
 env_key = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
 SECRET_KEY = st.sidebar.text_input("J.A.R.V.I.S. Access Key", value=env_key, type="password")
 
@@ -76,28 +74,21 @@ with col1:
         st.session_state.reactor_temp = random.randint(38, 45)
         st.session_state.armor_durability = 100
         st.toast("Systems calibrated, sir.", icon="⚡")
-        time.sleep(0.5)
-        st.rerun()
 
 with col2:
     st.write("### 📡 SECURE COMM-LINK")
     
-    # Fixed height container for cleaner chat flow
-    chat_box = st.container(height=500)
-    
-    with chat_box:
-        for msg in st.session_state.messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
+    # Render historical messages up to this point
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
                 
     if user_prompt := st.chat_input("Enter strategic command..."):
-        # 1. Store and display user input immediately
+        # Display the user's message immediately on screen
+        with st.chat_message("user"):
+            st.markdown(user_prompt)
         st.session_state.messages.append({"role": "user", "content": user_prompt})
-        st.rerun()
-
-# This structure prevents the stream processing logic from breaking widget indexing
-if st.session_state.messages[-1]["role"] == "user":
-    with chat_box:
+            
         with st.chat_message("assistant"):
             if not SECRET_KEY:
                 error_msg = "🚨 Access key required. Please input your Groq API key in the sidebar, sir."
@@ -110,7 +101,6 @@ if st.session_state.messages[-1]["role"] == "user":
                     sys_prompt = f"You are J.A.R.V.I.S., the AI consciousness created by Tony Stark. Address the user exclusively as sir. Use impeccable British precision, a formal tone, and subtle dry wit. Avoid informal contractions. Current Suit Integrity: {st.session_state.armor_durability}%. Current Reactor Temp: {st.session_state.reactor_temp}°C. Keep your response concise, elegant, and directly in character."
                     
                     api_messages = [{"role": "system", "content": sys_prompt}]
-                    # Keep history window clean
                     for msg in st.session_state.messages[-8:]:
                         api_messages.append({"role": msg["role"], "content": msg["content"]})
                     
@@ -121,10 +111,9 @@ if st.session_state.messages[-1]["role"] == "user":
                         stream=True
                     )
                     
+                    # Capture stream output smoothly
                     ai_reply = st.write_stream(completion_stream)
                     st.session_state.messages.append({"role": "assistant", "content": ai_reply})
                     
                 except Exception as e:
                     st.error(f"Link corrupted: {str(e)}")
-                    
-    st.rerun()
