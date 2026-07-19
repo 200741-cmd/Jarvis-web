@@ -14,17 +14,13 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom injection for glowing blue neon theme
 st.markdown("""
 <style>
-    /* Main Dark Theme */
     .stApp {
         background-color: #060b13;
         color: #8bb2d9;
         font-family: 'Consolas', 'Courier New', monospace;
     }
-    
-    /* Neon Blue Title Header */
     .cyber-title {
         color: #00a2ff;
         font-family: 'Orbitron', sans-serif;
@@ -32,8 +28,6 @@ st.markdown("""
         font-weight: 800;
         letter-spacing: 2px;
     }
-    
-    /* Tactical Data Cards */
     .terminal-card {
         background: rgba(0, 162, 255, 0.04);
         border: 1px solid #0055ff;
@@ -41,15 +35,11 @@ st.markdown("""
         border-radius: 6px;
         box-shadow: 0 0 12px rgba(0, 85, 255, 0.2);
     }
-    
-    /* Subheadings styling */
     h3 {
         color: #00d2ff !important;
         border-bottom: 1px dashed #0055ff;
         padding-bottom: 5px;
     }
-    
-    /* Customize progress bars to neon blue spectrum */
     .stProgress > div > div > div > div {
         background-color: #00a2ff !important;
     }
@@ -60,10 +50,8 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# Fetch key securely from Streamlit App Settings -> Secrets panel
 api_key = st.secrets.get("API_KEY", "")
 
-# Initialize the Gemini Client if key is available
 if api_key:
     client = genai.Client(api_key=api_key)
 else:
@@ -103,12 +91,14 @@ def process_jarvis_logic(query_text):
         return f"Localized time stream reads: {current_time}, Sir."
         
     else:
-        # --- THE NEURAL UPDATE GATE ---
+        # --- THE FRONTIER NEURAL UPDATE GATE ---
         if client:
             try:
                 system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
+                
+                # Upgraded to the latest frontier model definition
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.5-flash', 
                     contents=query_text,
                     config={'system_instruction': system_instruction}
                 )
@@ -118,23 +108,21 @@ def process_jarvis_logic(query_text):
         else:
             return "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."
 
-# 5. USER FRONTEND INTERFACE MATRIX (COLUMNS ARCHITECTURE)
+# 5. USER FRONTEND INTERFACE MATRIX
 st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION SYSTEM INTEGRATED")
+st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 3.5 ONLINE")
 st.write("---")
 
-# Visual layout division
 left_col, right_col = st.columns([2, 1], gap="large")
 
 with left_col:
     st.subheader("🖥️ Operations Control Array")
     
-    # Custom colored container card for voice interface
     st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
     recorded_audio = st.audio_input("Open Microscopic Frequency Receiver")
     st.markdown("</div>", unsafe_allow_html=True)
     
-    st.write("") # Spacer
+    st.write("")
     text_override = st.chat_input("Feed manual string command line interface...")
     
     active_query = None
@@ -150,7 +138,6 @@ with left_col:
         jarvis_reply = process_jarvis_logic(active_query)
         st.session_state.chat_history.append({"user": active_query, "jarvis": jarvis_reply})
 
-    # Display the visual running response queue
     for log in reversed(st.session_state.chat_history):
         with st.chat_message("user", avatar="👤"):
             st.write(log["user"])
@@ -162,9 +149,8 @@ with right_col:
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Cyan Matrix Engine Valid")
+        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini 3.5 Flash Active")
         
-        # Pull live host metrics
         cpu = psutil.cpu_percent()
         ram = psutil.virtual_memory().percent
         
@@ -172,7 +158,7 @@ with right_col:
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
         st.markdown("</div>", unsafe_allow_html=True)
         
-    st.write("") # Spacer
+    st.write("")
     st.subheader("🛠️ Core Resets")
     if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
