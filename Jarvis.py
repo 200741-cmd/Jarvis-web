@@ -2,10 +2,10 @@ import streamlit as st
 import speech_recognition as sr
 import datetime
 import wikipedia
-import webbrowser
 import psutil
 import io
 from google import genai
+import json
 
 # 1. SCI-FI TERMINAL STYLING & HEADERS (NEON BLUE COMMAND DECK)
 st.set_page_config(
@@ -49,6 +49,10 @@ st.markdown("""
 # 2. STATE PERSISTENCE & MEMORY ENGINE
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "ui_mode" not in st.session_state:
+    st.session_state.ui_mode = "IDLE"
+if "voice_feed" not in st.session_state:
+    st.session_state.voice_feed = "AWAITING INPUT"
 
 api_key = st.secrets.get("API_KEY", "")
 
@@ -91,12 +95,9 @@ def process_jarvis_logic(query_text):
         return f"Localized time stream reads: {current_time}, Sir."
         
     else:
-        # --- THE FRONTIER NEURAL UPDATE GATE ---
         if client:
             try:
                 system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
-                
-                # Upgraded to the latest frontier model definition
                 response = client.models.generate_content(
                     model='gemini-3.5-flash', 
                     contents=query_text,
@@ -108,7 +109,98 @@ def process_jarvis_logic(query_text):
         else:
             return "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."
 
-# 5. USER FRONTEND INTERFACE MATRIX
+# 5. DYNAMIC GRAPHIC CANVAS COMPONENT
+cpu = psutil.cpu_percent()
+ram = psutil.virtual_memory().percent
+core_temp = 31 # Standard base representation
+
+# Collect history logs for the overlay widget
+recent_logs = ["> A.R.C. CORES ACTIVE", "> LINKED TO STREAMLIT OS"]
+for item in st.session_state.chat_history[-3:]:
+    user_line = f"> INCOMING: {item['user'].upper()[:22]}"
+    recent_logs.append(user_line)
+
+hud_data = {
+    "mode": st.session_state.ui_mode,
+    "voice": st.session_state.voice_feed,
+    "cpu": int(cpu),
+    "ram": int(ram),
+    "temp": core_temp,
+    "logs": recent_logs[-6:] # Keep the display panel bounded cleanly
+}
+
+# Embedded interface visual matrix inside the body structure
+hud_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }}
+        body {{
+            background-color: #060b13;
+            background-image: 
+                linear-gradient(rgba(0,162,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,162,255,0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: #ffffff;
+            height: 380px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            overflow: hidden;
+        }}
+        .grid-canvas {{ display: flex; justify-content: space-between; align-items: center; height: 100%; position: relative; }}
+        .terminal-overlay {{ background: rgba(15, 17, 22, 0.6); border: 1px solid rgba(0, 162, 255, 0.2); padding: 12px; width: 230px; font-family: monospace; font-size: 11px; color: #a5b4fc; opacity: 0.8; line-height: 1.6; border-radius: 4px; }}
+        .core-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }}
+        .mode-pill {{ background: #060b13; border: 2px solid #00e5ff; border-radius: 20px; padding: 3px 15px; font-size: 11px; font-weight: bold; margin-bottom: -15px; box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); z-index: 10; font-family: monospace; }}
+        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed rgba(0, 229, 255, 0.4); display: flex; align-items: center; justify-content: center; position: relative; }}
+        .arc-rings::before {{ content: ''; position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed rgba(0, 229, 255, 0.6); animation: rotateCCW 12s linear infinite; }}
+        .core-glow-dot {{ width: 14px; height: 14px; background-color: #00e5ff; border-radius: 50%; box-shadow: 0 0 25px 8px #00e5ff; }}
+        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 9px; font-weight: bold; font-family: monospace; color: #8bb2d9; }}
+        .bar-row {{ display: flex; flex-direction: column; gap: 4px; }}
+        .bar-bg {{ background: rgba(0, 162, 255, 0.1); height: 5px; border-radius: 2px; overflow: hidden; }}
+        .bar-fill {{ height: 100%; background: #00a2ff; transition: width 0.4s ease; }}
+        .voice-feed-status {{ position: absolute; right: 0; bottom: 10px; text-align: right; font-family: monospace; }}
+        .voice-title {{ font-size: 11px; font-weight: bold; color: rgba(255,255,255,0.6); }}
+        .voice-value {{ font-size: 12px; font-weight: bold; color: #00e5ff; margin-top: 2px; }}
+        @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
+        
+        .ui-LISTEN .mode-pill {{ border-color: #ffca28; box-shadow: 0 0 10px rgba(255, 202, 40, 0.3); }}
+        .ui-LISTEN .core-glow-dot {{ background-color: #ffca28; box-shadow: 0 0 25px 8px #ffca28; }}
+        .ui-LISTEN .voice-value {{ color: #ffca28; }}
+        .ui-PROCESS .mode-pill {{ border-color: #ef5350; box-shadow: 0 0 10px rgba(239, 83, 80, 0.3); }}
+        .ui-PROCESS .core-glow-dot {{ background-color: #ef5350; box-shadow: 0 0 25px 8px #ef5350; }}
+        .ui-PROCESS .voice-value {{ color: #ef5350; }}
+    </style>
+</head>
+<body class="ui-{hud_data['mode']}">
+    <div class="grid-canvas">
+        <div class="terminal-overlay">
+            {"".join([f"{log}<br>" for log in hud_data['logs']])}
+        </div>
+        <div class="core-wrapper">
+            <div class="mode-pill">MODE: {hud_data['mode']}</div>
+            <div class="arc-rings"><div class="core-glow-dot"></div></div>
+        </div>
+        <div class="mini-bars-panel">
+            <div class="bar-row"><div>CPU LOAD</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['cpu']}%"></div></div></div>
+            <div class="bar-row"><div>MEM ALLOC</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['ram']}%"></div></div></div>
+            <div class="bar-row"><div>CORE TEMP</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['temp']}%"></div></div></div>
+        </div>
+        <div class="voice-feed-status">
+            <div class="voice-title">VOICE FEED:</div>
+            <div class="voice-value">{hud_data['voice']}</div>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+# Render the graphical layout across the topmost area
+st.components.v1.html(hud_html, height=390)
+
+# 6. USER FRONTEND INTERFACE MATRIX
 st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
 st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 3.5 ONLINE")
 st.write("---")
@@ -127,7 +219,10 @@ with left_col:
     
     active_query = None
     
+    # Process updates dynamically based on the application state
     if recorded_audio:
+        st.session_state.ui_mode = "LISTEN"
+        st.session_state.voice_feed = "DECODING AUDIO..."
         with st.spinner("Decoding vocal signal patterns..."):
             active_query = transcribe_audio(recorded_audio)
             
@@ -135,8 +230,16 @@ with left_col:
         active_query = text_override
 
     if active_query:
+        st.session_state.ui_mode = "PROCESS"
+        st.session_state.voice_feed = "PROCESSING COMMAND..."
+        
         jarvis_reply = process_jarvis_logic(active_query)
         st.session_state.chat_history.append({"user": active_query, "jarvis": jarvis_reply})
+        
+        # Revert status indicators back to standard idle operations
+        st.session_state.ui_mode = "IDLE"
+        st.session_state.voice_feed = "AWAITING INPUT"
+        st.rerun()
 
     for log in reversed(st.session_state.chat_history):
         with st.chat_message("user", avatar="👤"):
@@ -151,15 +254,24 @@ with right_col:
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
         st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini 3.5 Flash Active")
         
-        cpu = psutil.cpu_percent()
-        ram = psutil.virtual_memory().percent
-        
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
         st.markdown("</div>", unsafe_allow_html=True)
         
     st.write("")
-    st.subheader("🛠️ Core Resets")
+    st.subheader("🛠 Honor Command Controls")
+    
+    # Render the system mode readout directly to align with the visual template
+    st.markdown(f"""
+    <div style='background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
+        <span style='color: rgba(255,255,255,0.4); font-size: 12px; display: block;'>SYSTEM MODE STATUS</span>
+        <strong style='color: #00e5ff; font-size: 18px; font-family: monospace;'>{st.session_state.ui_mode}</strong>
+    </div>
+    """, unsafe_allow_html=True)
+    
     if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
+        st.session_state.ui_mode = "IDLE"
+        st.session_state.voice_feed = "AWAITING INPUT"
         st.toast("Active variable stack cleared, Sir.")
+        st.rerun()
