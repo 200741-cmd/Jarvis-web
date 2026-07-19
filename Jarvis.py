@@ -5,32 +5,53 @@ import wikipedia
 import webbrowser
 import psutil
 import io
+from google import genai
 
-# 1. SCI-FI TERMINAL STYLING & HEADERS
+# 1. SCI-FI TERMINAL STYLING & HEADERS (NEON BLUE COMMAND DECK)
 st.set_page_config(
-    page_title="JARVIS // Cloud Interface",
-    page_icon="⚡",
+    page_title="JARVIS // Tactical OS",
+    page_icon="🤖",
     layout="wide"
 )
 
+# Custom injection for glowing blue neon theme
 st.markdown("""
 <style>
+    /* Main Dark Theme */
     .stApp {
-        background-color: #0d1117;
-        color: #c9d1d9;
-        font-family: 'Courier New', Courier, monospace;
+        background-color: #060b13;
+        color: #8bb2d9;
+        font-family: 'Consolas', 'Courier New', monospace;
     }
+    
+    /* Neon Blue Title Header */
     .cyber-title {
-        color: #00f0ff;
+        color: #00a2ff;
         font-family: 'Orbitron', sans-serif;
-        text-shadow: 0 0 10px #00f0ff;
-        font-weight: bold;
+        text-shadow: 0 0 8px rgba(0, 162, 255, 0.6), 0 0 15px rgba(0, 162, 255, 0.4);
+        font-weight: 800;
+        letter-spacing: 2px;
     }
+    
+    /* Tactical Data Cards */
     .terminal-card {
-        background: rgba(0, 240, 255, 0.03);
-        border: 1px solid #00f0ff;
-        padding: 20px;
-        border-radius: 8px;
+        background: rgba(0, 162, 255, 0.04);
+        border: 1px solid #0055ff;
+        padding: 22px;
+        border-radius: 6px;
+        box-shadow: 0 0 12px rgba(0, 85, 255, 0.2);
+    }
+    
+    /* Subheadings styling */
+    h3 {
+        color: #00d2ff !important;
+        border-bottom: 1px dashed #0055ff;
+        padding-bottom: 5px;
+    }
+    
+    /* Customize progress bars to neon blue spectrum */
+    .stProgress > div > div > div > div {
+        background-color: #00a2ff !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -40,20 +61,23 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 # Fetch key securely from Streamlit App Settings -> Secrets panel
-# (Will not throw errors if you are testing locally without the key loaded yet)
-api_key = st.secrets.get("API_KEY", "LOCAL_DEV_MODE")
+api_key = st.secrets.get("API_KEY", "")
+
+# Initialize the Gemini Client if key is available
+if api_key:
+    client = genai.Client(api_key=api_key)
+else:
+    client = None
 
 # 3. CORE AUDIO SPEECH-TO-TEXT TRANSCRIPTION
 def transcribe_audio(audio_buffer):
-    """Converts recorded browser audio bytes into text strings."""
     recognizer = sr.Recognizer()
     try:
-        # Convert the Streamlit upload file structure into an audio source object
         with sr.AudioFile(io.BytesIO(audio_buffer.read())) as source:
             audio_data = recognizer.record(source)
         return recognizer.recognize_google(audio_data, language='en-US')
     except sr.UnknownValueError:
-        return "ERROR: Telemetry audio waveform was unreadable."
+        return "ERROR: Acoustic waveform unreadable by central diagnostic grid."
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
@@ -79,30 +103,44 @@ def process_jarvis_logic(query_text):
         return f"Localized time stream reads: {current_time}, Sir."
         
     else:
-        # If no local keyword triggers match, it gracefully prepares the system key for LLM calls
-        return f"Command parsed. Standard system tools are empty for this text. System key authentication check: '{api_key[:6]}... OK'. Ready for neural update."
+        # --- THE NEURAL UPDATE GATE ---
+        if client:
+            try:
+                system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=query_text,
+                    config={'system_instruction': system_instruction}
+                )
+                return response.text
+            except Exception as e:
+                return f"Neural link transmission failed, Sir. Matrix logs state: {str(e)}"
+        else:
+            return "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."
 
-# 5. USER FRONTEND INTERFACE MATRIX
-st.markdown("<h1 class='cyber-title'>⚡ JARVIS // CORE SECURE TERMINAL</h1>", unsafe_allow_html=True)
-st.caption("TELEMETRY CHANNEL: SECURE // PUBLIC CODE LINKED // HOST CONTROLS INJECTED")
+# 5. USER FRONTEND INTERFACE MATRIX (COLUMNS ARCHITECTURE)
+st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
+st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION SYSTEM INTEGRATED")
 st.write("---")
 
-left_col, right_col = st.columns([2, 1])
+# Visual layout division
+left_col, right_col = st.columns([2, 1], gap="large")
 
 with left_col:
-    st.subheader("🖥️ Central Communication Deck")
+    st.subheader("🖥️ Operations Control Array")
     
-    # Feature: Native multi-device browser mic recorder widget
-    recorded_audio = st.audio_input("Activate Jarvis Vocal Command Array")
+    # Custom colored container card for voice interface
+    st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
+    recorded_audio = st.audio_input("Open Microscopic Frequency Receiver")
+    st.markdown("</div>", unsafe_allow_html=True)
     
-    # Alternate layout feature: standard chat text override field
-    text_override = st.chat_input("Input direct system text command override...")
+    st.write("") # Spacer
+    text_override = st.chat_input("Feed manual string command line interface...")
     
-    # Process actions based on active feeds
     active_query = None
     
     if recorded_audio:
-        with st.spinner("Processing vocal signal frequencies..."):
+        with st.spinner("Decoding vocal signal patterns..."):
             active_query = transcribe_audio(recorded_audio)
             
     if text_override:
@@ -120,21 +158,22 @@ with left_col:
             st.markdown(f"**JARVIS:** {log['jarvis']}")
 
 with right_col:
-    st.subheader("📊 Host Machine Diagnostics")
+    st.subheader("📊 Datastream Matrix")
     
-    with st.container(border=True):
+    with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="CENTRAL SYSTEM CORE", value="SECURED", delta="GitHub Connection Safe")
+        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Cyan Matrix Engine Valid")
         
-        # Feature: Live system diagnostic monitoring array
+        # Pull live host metrics
         cpu = psutil.cpu_percent()
         ram = psutil.virtual_memory().percent
         
-        st.progress(cpu / 100, text=f"Host Server CPU Core Load: {cpu}%")
-        st.progress(ram / 100, text=f"Active Ram Capacity Allocation: {ram}%")
+        st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
+        st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
         st.markdown("</div>", unsafe_allow_html=True)
         
-    st.subheader("🛠️ Hardware Functions")
-    if st.button("Flush Internal Variable Arrays", use_container_width=True):
+    st.write("") # Spacer
+    st.subheader("🛠️ Core Resets")
+    if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
-        st.toast("Active log buffer wiped entirely, Sir.")
+        st.toast("Active variable stack cleared, Sir.")
