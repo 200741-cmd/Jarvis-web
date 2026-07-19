@@ -5,7 +5,6 @@ import wikipedia
 import psutil
 import io
 from google import genai
-import json
 
 # 1. SCI-FI TERMINAL STYLING & HEADERS (NEON BLUE COMMAND DECK)
 st.set_page_config(
@@ -109,12 +108,12 @@ def process_jarvis_logic(query_text):
         else:
             return "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."
 
-# 5. DYNAMIC GRAPHIC CANVAS COMPONENT
+# 5. DYNAMIC GRAPHIC CANVAS COMPONENT (COLLECTS RUNTIME METRICS)
 cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
-core_temp = 31 # Standard base representation
+core_temp = 31 
 
-# Collect history logs for the overlay widget
+# Re-compile terminal line strings dynamically from session logs
 recent_logs = ["> A.R.C. CORES ACTIVE", "> LINKED TO STREAMLIT OS"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
@@ -126,10 +125,9 @@ hud_data = {
     "cpu": int(cpu),
     "ram": int(ram),
     "temp": core_temp,
-    "logs": recent_logs[-6:] # Keep the display panel bounded cleanly
+    "logs": recent_logs[-6:] 
 }
 
-# Embedded interface visual matrix inside the body structure
 hud_html = f"""
 <!DOCTYPE html>
 <html>
@@ -197,7 +195,6 @@ hud_html = f"""
 </html>
 """
 
-# Render the graphical layout across the topmost area
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
@@ -219,7 +216,6 @@ with left_col:
     
     active_query = None
     
-    # Process updates dynamically based on the application state
     if recorded_audio:
         st.session_state.ui_mode = "LISTEN"
         st.session_state.voice_feed = "DECODING AUDIO..."
@@ -236,7 +232,6 @@ with left_col:
         jarvis_reply = process_jarvis_logic(active_query)
         st.session_state.chat_history.append({"user": active_query, "jarvis": jarvis_reply})
         
-        # Revert status indicators back to standard idle operations
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
         st.rerun()
@@ -261,7 +256,6 @@ with right_col:
     st.write("")
     st.subheader("🛠 Honor Command Controls")
     
-    # Render the system mode readout directly to align with the visual template
     st.markdown(f"""
     <div style='background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
         <span style='color: rgba(255,255,255,0.4); font-size: 12px; display: block;'>SYSTEM MODE STATUS</span>
