@@ -1,4 +1,4 @@
+SpeechRecognition
 streamlit
-groq
-google-genai
-openai
+wikipedia
+psutil
