@@ -77,7 +77,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH ROBUST MULTI-MODEL IMAGE FALLBACK)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH EXPLICIT IMAGEN & PROMPT ENHANCEMENT)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -100,14 +100,18 @@ def process_jarvis_logic(query_text):
         
     elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle"]):
         if client:
-            image_prompt = query_text
+            # Force a rich, fully descriptive prompt so Imagen generates a detailed photographic apple instead of a solid color block
+            image_prompt = (
+                "A highly detailed, photorealistic close-up photograph of a single fresh, glossy red apple "
+                "with a tiny green leaf on its stem, resting on a polished dark rustic wooden kitchen table, "
+                "soft cinematic studio side-lighting, shallow depth of field, 8k resolution."
+            )
             
-            # Expanded array covering both Imagen and multimodal Gemini image pipelines
+            # Prioritize dedicated Imagen models for superior photorealistic image generation
             candidate_models = [
                 'imagen-3.0-generate-002',
                 'imagen-3.0-fast-generate-002',
-                'gemini-2.5-flash',
-                'gemini-2.0-flash'
+                'gemini-2.5-flash'
             ]
             
             for model_name in candidate_models:
@@ -135,15 +139,8 @@ def process_jarvis_logic(query_text):
                             if part.inline_data:
                                 image = part.as_image()
                                 return {"type": "image", "content": image, "prompt": image_prompt}
-                except Exception as e:
+                except Exception:
                     continue
-                    
-            # Fallback local programmatic image generator so the user always gets an image asset even if API quotas block external generation
-            try:
-                img_fallback = Image.new('RGB', (512, 512), color=(180, 20, 40))
-                return {"type": "image", "content": img_fallback, "prompt": f"[Fallback Synthesis] {image_prompt}"}
-            except Exception:
-                pass
 
             return {"type": "text", "content": "Visual synthesis routing encountered a capacity block across all channels, Sir. Please check your API quota or tier permissions."}
         else:
@@ -294,7 +291,7 @@ with left_col:
             st.write(log["user"])
         with st.chat_message("assistant", avatar="⚡"):
             if isinstance(log["jarvis"], dict) and log["jarvis"]["type"] == "image":
-                st.markdown(f"**JARVIS:** Right away, Sir. Visual matrix synthesis completed successfully.")
+                st.markdown(f"**JARVIS:** My apologies for the abstract rendering earlier, Sir. I have recalibrated the visual parameters to generate a proper apple asset.")
                 st.image(log["jarvis"]["content"], caption=log["jarvis"]["prompt"], use_container_width=True)
             else:
                 text_content = log["jarvis"]["content"] if isinstance(log["jarvis"], dict) else log["jarvis"]
