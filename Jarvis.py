@@ -77,7 +77,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH NATIVE NANO BANANA / GEMINI IMAGE ENDPOINTS)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH CORRECT `client.models.generate_images` SYNTAX)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -102,42 +102,28 @@ def process_jarvis_logic(query_text):
         if client:
             image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting, professional photography style."
             
-            # Using standard Gemini multimodal image generation pipeline / Nano Banana equivalents
-            nano_banana_models = [
-                'gemini-2.5-flash',
-                'gemini-2.0-flash',
-                'imagen-3.0-generate-002'
-            ]
+            # Using the official SDK client.models.generate_images method with Imagen 3 / Nano Banana pipelines
+            image_models = ['imagen-3.0-generate-002', 'imagen-4.0-generate-001']
             
-            for model_name in nano_banana_models:
+            for model_name in image_models:
                 try:
-                    if "imagen" in model_name:
-                        result = client.models.generate_images(
-                            model=model_name,
-                            prompt=image_prompt,
-                            config=types.GenerateImagesConfig(
-                                number_of_images=1,
-                                output_mime_type="image/jpeg",
-                                aspect_ratio="1:1",
-                            )
+                    result = client.models.generate_images(
+                        model=model_name,
+                        prompt=image_prompt,
+                        config=types.GenerateImagesConfig(
+                            number_of_images=1,
+                            output_mime_type="image/jpeg",
+                            aspect_ratio="1:1",
                         )
-                        for generated_image in result.generated_images:
-                            image = Image.open(io.BytesIO(generated_image.image.image_bytes))
-                            return {"type": "image", "content": image, "prompt": image_prompt}
-                    else:
-                        response = client.models.generate_content(
-                            model=model_name,
-                            contents=image_prompt,
-                            config=types.GenerateContentConfig(response_modalities=["IMAGE"]),
-                        )
-                        for part in response.parts:
-                            if part.inline_data:
-                                image = part.as_image()
-                                return {"type": "image", "content": image, "prompt": image_prompt}
+                    )
+                    for generated_image in result.generated_images:
+                        image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+                        return {"type": "image", "content": image, "prompt": image_prompt}
                 except Exception:
                     continue
                     
-            return {"type": "text", "content": "Nano Banana visual synthesis routing encountered a network block, Sir. Please re-attempt protocol."}
+            # Fallback text message if image generation fails
+            return {"type": "text", "content": "Visual synthesis routing encountered a capacity limit on the image model, Sir. Please try your visual request again shortly."}
         else:
             return {"type": "text", "content": "Neural core offline. Please configure your API_KEY, Sir."}
             
