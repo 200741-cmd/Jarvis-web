@@ -4,6 +4,8 @@ import datetime
 import wikipedia
 import psutil
 import io
+import time
+import random
 from google import genai
 from google.genai import types
 from PIL import Image
@@ -75,7 +77,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (ROBUST IMAGEN INTEGRATION)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH 503 EXPONENTIAL BACKOFF RETRY)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -98,42 +100,56 @@ def process_jarvis_logic(query_text):
         
     elif "generate image" in query or "draw" in query or "create a picture" in query:
         if client:
-            try:
-                image_prompt = query_text.replace("generate image", "").replace("draw", "").replace("create a picture", "").strip()
-                
-                # Dedicated Imagen model call to prevent 503 capacity timeouts on flash text endpoint
-                result = client.models.generate_images(
-                    model='imagen-3.0-generate-002',
-                    prompt=image_prompt,
-                    config=types.GenerateImagesConfig(
-                        number_of_images=1,
-                        output_mime_type="image/jpeg",
-                        aspect_ratio="1:1",
+            image_prompt = query_text.replace("generate image", "").replace("draw", "").replace("create a picture", "").strip()
+            
+            # Retry loop with exponential backoff for 503 server overloads
+            max_retries = 3
+            wait_time = 2
+            for attempt in range(max_retries):
+                try:
+                    result = client.models.generate_images(
+                        model='imagen-3.0-generate-002',
+                        prompt=image_prompt,
+                        config=types.GenerateImagesConfig(
+                            number_of_images=1,
+                            output_mime_type="image/jpeg",
+                            aspect_ratio="1:1",
+                        )
                     )
-                )
-                
-                for generated_image in result.generated_images:
-                    image = Image.open(io.BytesIO(generated_image.image.image_bytes))
-                    return {"type": "image", "content": image, "prompt": image_prompt}
-                    
-                return {"type": "text", "content": "Visual synthesis core returned empty datastreams, Sir."}
-            except Exception as e:
-                return {"type": "text", "content": f"Visual synthesis failed, Sir. Logs state: {str(e)}"}
+                    for generated_image in result.generated_images:
+                        image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+                        return {"type": "image", "content": image, "prompt": image_prompt}
+                except Exception as e:
+                    if "503" in str(e) and attempt < max_retries - 1:
+                        time.sleep(wait_time + random.uniform(0, 1))
+                        wait_time *= 2
+                        continue
+                    return {"type": "text", "content": f"Visual synthesis failed, Sir. Server matrix overloaded (503). Logs state: {str(e)}"}
+            return {"type": "text", "content": "Visual synthesis core busy, Sir. High traffic capacity lock encountered."}
         else:
             return {"type": "text", "content": "Neural core offline. Please configure your API_KEY, Sir."}
             
     else:
         if client:
-            try:
-                system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
-                response = client.models.generate_content(
-                    model='gemini-3.5-flash', 
-                    contents=query_text,
-                    config={'system_instruction': system_instruction}
-                )
-                return {"type": "text", "content": response.text}
-            except Exception as e:
-                return {"type": "text", "content": f"Neural link transmission failed, Sir. Matrix logs state: {str(e)}"}
+            system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
+            
+            # Retry loop with exponential backoff for chat text overloads
+            max_retries = 3
+            wait_time = 2
+            for attempt in range(max_retries):
+                try:
+                    response = client.models.generate_content(
+                        model='gemini-3.5-flash', 
+                        contents=query_text,
+                        config={'system_instruction': system_instruction}
+                    )
+                    return {"type": "text", "content": response.text}
+                except Exception as e:
+                    if "503" in str(e) and attempt < max_retries - 1:
+                        time.sleep(wait_time + random.uniform(0, 1))
+                        wait_time *= 2
+                        continue
+                    return {"type": "text", "content": f"Neural link transmission failed, Sir. Server capacity saturated (503). Logs state: {str(e)}"}
         else:
             return {"type": "text", "content": "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."}
 
