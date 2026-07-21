@@ -77,7 +77,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH MULTI-TIER FALLBACK ARRAY)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH NATIVE GEMINI IMAGE GENERATION)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -98,11 +98,12 @@ def process_jarvis_logic(query_text):
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         return {"type": "text", "content": f"Localized time stream reads: {current_time}, Sir."}
         
-    elif "generate image" in query or "draw" in query or "create a picture" in query or "apple" in query or "dalle" in query:
+    elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle"]):
         if client:
-            image_prompt = "A hyper-realistic, high-definition close-up of a single, vibrant red apple resting on a clean wooden surface, soft cinematic lighting, professional photography style."
+            image_prompt = query_text
             
-            image_models = ['imagen-3.0-generate-002', 'gemini-3.1-flash-image']
+            # Using Gemini 3.1 Flash Image for robust native image generation
+            image_models = ['gemini-3.1-flash-image', 'imagen-4.0-generate-001']
             
             for model_name in image_models:
                 try:
@@ -123,7 +124,10 @@ def process_jarvis_logic(query_text):
                         response = client.models.generate_content(
                             model=model_name,
                             contents=image_prompt,
-                            config=types.GenerateContentConfig(response_modalities=["IMAGE"]),
+                            config=types.GenerateContentConfig(
+                                response_modalities=["IMAGE"],
+                                image_config=types.ImageConfig(aspect_ratio="1:1"),
+                            ),
                         )
                         for part in response.parts:
                             if part.inline_data:
@@ -132,7 +136,7 @@ def process_jarvis_logic(query_text):
                 except Exception:
                     continue
                     
-            return {"type": "text", "content": "Right away, Sir. I've initiated visual synthesis subsystems, but all matrix routing channels are currently experiencing capacity congestion (503). Please reissue command shortly."}
+            return {"type": "text", "content": "Visual synthesis routing encountered a capacity block, Sir. Please re-attempt synthesis protocol."}
         else:
             return {"type": "text", "content": "Neural core offline. Please configure your API_KEY, Sir."}
             
@@ -281,7 +285,7 @@ with left_col:
             st.write(log["user"])
         with st.chat_message("assistant", avatar="⚡"):
             if isinstance(log["jarvis"], dict) and log["jarvis"]["type"] == "image":
-                st.markdown(f"**JARVIS:** Right away, Sir. Generating that image of an apple for you now. I've opted for a crisp, high-definition look—perfection is, after all, the only acceptable standard.")
+                st.markdown(f"**JARVIS:** Right away, Sir. Visual matrix synthesis completed for: *{log['jarvis']['prompt']}*")
                 st.image(log["jarvis"]["content"], caption=log["jarvis"]["prompt"], use_container_width=True)
             else:
                 text_content = log["jarvis"]["content"] if isinstance(log["jarvis"], dict) else log["jarvis"]
