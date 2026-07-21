@@ -75,7 +75,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (GEMINI 3.5 FLASH INTEGRATION)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (ROBUST IMAGEN INTEGRATION)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -100,17 +100,22 @@ def process_jarvis_logic(query_text):
         if client:
             try:
                 image_prompt = query_text.replace("generate image", "").replace("draw", "").replace("create a picture", "").strip()
-                response = client.models.generate_content(
-                    model='gemini-3.5-flash',
-                    contents=image_prompt,
-                    config=types.GenerateContentConfig(
-                        response_modalities=["IMAGE"],
-                    ),
+                
+                # Dedicated Imagen model call to prevent 503 capacity timeouts on flash text endpoint
+                result = client.models.generate_images(
+                    model='imagen-3.0-generate-002',
+                    prompt=image_prompt,
+                    config=types.GenerateImagesConfig(
+                        number_of_images=1,
+                        output_mime_type="image/jpeg",
+                        aspect_ratio="1:1",
+                    )
                 )
-                for part in response.parts:
-                    if part.inline_data:
-                        image = part.as_image()
-                        return {"type": "image", "content": image, "prompt": image_prompt}
+                
+                for generated_image in result.generated_images:
+                    image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+                    return {"type": "image", "content": image, "prompt": image_prompt}
+                    
                 return {"type": "text", "content": "Visual synthesis core returned empty datastreams, Sir."}
             except Exception as e:
                 return {"type": "text", "content": f"Visual synthesis failed, Sir. Logs state: {str(e)}"}
@@ -228,7 +233,7 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.write("")
-    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate image of an Iron Man suit')")
+    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate image of a futuristic laboratory')")
     
     active_query = None
     
