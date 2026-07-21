@@ -5,6 +5,8 @@ import wikipedia
 import psutil
 import io
 from google import genai
+from google.genai import types
+from PIL import Image
 import json
 
 # 1. SCI-FI TERMINAL STYLING & HEADERS (NEON BLUE COMMAND DECK)
@@ -73,48 +75,68 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (INCLUDING IMAGE GENERATION)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
     if "wikipedia" in query:
         search_target = query.replace("wikipedia", "").strip()
         try:
-            return f"Querying international information grid... {wikipedia.summary(search_target, sentences=2)}"
+            return {"type": "text", "content": f"Querying international information grid... {wikipedia.summary(search_target, sentences=2)}"}
         except Exception:
-            return "Unable to pull valid log matches from the Wikipedia index, Sir."
+            return {"type": "text", "content": "Unable to pull valid log matches from the Wikipedia index, Sir."}
             
     elif "open youtube" in query:
-        return "Matrix link generated: [Click to launch YouTube Mainframe](https://youtube.com)"
+        return {"type": "text", "content": "Matrix link generated: [Click to launch YouTube Mainframe](https://youtube.com)"}
         
     elif "open google" in query:
-        return "Matrix link generated: [Click to launch Google Gateway](https://google.com)"
+        return {"type": "text", "content": "Matrix link generated: [Click to launch Google Gateway](https://google.com)"}
         
     elif "the time" in query or "time sync" in query:
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
-        return f"Localized time stream reads: {current_time}, Sir."
+        return {"type": "text", "content": f"Localized time stream reads: {current_time}, Sir."}
         
+    elif "generate image" in query or "draw" in query or "create a picture" in query:
+        if client:
+            try:
+                image_prompt = query_text.replace("generate image", "").replace("draw", "").replace("create a picture", "").strip()
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash-image',
+                    contents=image_prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE"],
+                    ),
+                )
+                for part in response.parts:
+                    if part.inline_data:
+                        image = part.as_image()
+                        return {"type": "image", "content": image, "prompt": image_prompt}
+                return {"type": "text", "content": "Visual synthesis core returned empty datastreams, Sir."}
+            except Exception as e:
+                return {"type": "text", "content": f"Visual synthesis failed, Sir. Logs state: {str(e)}"}
+        else:
+            return {"type": "text", "content": "Neural core offline. Please configure your API_KEY, Sir."}
+            
     else:
         if client:
             try:
                 system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
                 response = client.models.generate_content(
-                    model='gemini-3.5-flash', 
+                    model='gemini-2.5-flash', 
                     contents=query_text,
                     config={'system_instruction': system_instruction}
                 )
-                return response.text
+                return {"type": "text", "content": response.text}
             except Exception as e:
-                return f"Neural link transmission failed, Sir. Matrix logs state: {str(e)}"
+                return {"type": "text", "content": f"Neural link transmission failed, Sir. Matrix logs state: {str(e)}"}
         else:
-            return "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."
+            return {"type": "text", "content": "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."}
 
 # 5. DYNAMIC GRAPHIC CANVAS COMPONENT
 cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
-core_temp = 31 # Standard base representation
+core_temp = 31
 
-# Collect history logs for the overlay widget
 recent_logs = ["> A.R.C. CORES ACTIVE", "> LINKED TO STREAMLIT OS"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
@@ -126,10 +148,9 @@ hud_data = {
     "cpu": int(cpu),
     "ram": int(ram),
     "temp": core_temp,
-    "logs": recent_logs[-6:] # Keep the display panel bounded cleanly
+    "logs": recent_logs[-6:]
 }
 
-# Embedded interface visual matrix inside the body structure
 hud_html = f"""
 <!DOCTYPE html>
 <html>
@@ -165,13 +186,6 @@ hud_html = f"""
         .voice-title {{ font-size: 11px; font-weight: bold; color: rgba(255,255,255,0.6); }}
         .voice-value {{ font-size: 12px; font-weight: bold; color: #00e5ff; margin-top: 2px; }}
         @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
-        
-        .ui-LISTEN .mode-pill {{ border-color: #ffca28; box-shadow: 0 0 10px rgba(255, 202, 40, 0.3); }}
-        .ui-LISTEN .core-glow-dot {{ background-color: #ffca28; box-shadow: 0 0 25px 8px #ffca28; }}
-        .ui-LISTEN .voice-value {{ color: #ffca28; }}
-        .ui-PROCESS .mode-pill {{ border-color: #ef5350; box-shadow: 0 0 10px rgba(239, 83, 80, 0.3); }}
-        .ui-PROCESS .core-glow-dot {{ background-color: #ef5350; box-shadow: 0 0 25px 8px #ef5350; }}
-        .ui-PROCESS .voice-value {{ color: #ef5350; }}
     </style>
 </head>
 <body class="ui-{hud_data['mode']}">
@@ -197,12 +211,11 @@ hud_html = f"""
 </html>
 """
 
-# Render the graphical layout across the topmost area
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
 st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 3.5 ONLINE")
+st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 2.5 ONLINE")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -215,11 +228,10 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.write("")
-    text_override = st.chat_input("Feed manual string command line interface...")
+    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate image of a cybernetic futuristic city')")
     
     active_query = None
     
-    # Process updates dynamically based on the application state
     if recorded_audio:
         st.session_state.ui_mode = "LISTEN"
         st.session_state.voice_feed = "DECODING AUDIO..."
@@ -236,7 +248,6 @@ with left_col:
         jarvis_reply = process_jarvis_logic(active_query)
         st.session_state.chat_history.append({"user": active_query, "jarvis": jarvis_reply})
         
-        # Revert status indicators back to standard idle operations
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
         st.rerun()
@@ -245,14 +256,19 @@ with left_col:
         with st.chat_message("user", avatar="👤"):
             st.write(log["user"])
         with st.chat_message("assistant", avatar="⚡"):
-            st.markdown(f"**JARVIS:** {log['jarvis']}")
+            if isinstance(log["jarvis"], dict) and log["jarvis"]["type"] == "image":
+                st.markdown(f"**JARVIS:** Visual schematic rendered successfully for: *{log['jarvis']['prompt']}*")
+                st.image(log["jarvis"]["content"], caption=log["jarvis"]["prompt"], use_container_width=True)
+            else:
+                text_content = log["jarvis"]["content"] if isinstance(log["jarvis"], dict) else log["jarvis"]
+                st.markdown(f"**JARVIS:** {text_content}")
 
 with right_col:
     st.subheader("📊 Datastream Matrix")
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini 3.5 Flash Active")
+        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini Multimodal Active")
         
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
@@ -261,7 +277,6 @@ with right_col:
     st.write("")
     st.subheader("🛠 Honor Command Controls")
     
-    # Render the system mode readout directly to align with the visual template
     st.markdown(f"""
     <div style='background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
         <span style='color: rgba(255,255,255,0.4); font-size: 12px; display: block;'>SYSTEM MODE STATUS</span>
