@@ -102,27 +102,38 @@ def process_jarvis_logic(query_text):
         if client:
             image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting, professional photography style."
             
-            # Using Nano Banana model identifiers (`gemini-3.1-flash-image` / `gemini-3-pro-image`) for accurate native visual synthesis
+            # Using standard Gemini multimodal image generation pipeline / Nano Banana equivalents
             nano_banana_models = [
-                'gemini-3.1-flash-image',
-                'gemini-3-pro-image',
-                'gemini-2.5-flash-image'
+                'gemini-2.5-flash',
+                'gemini-2.0-flash',
+                'imagen-3.0-generate-002'
             ]
             
             for model_name in nano_banana_models:
                 try:
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=[image_prompt],
-                        config=types.GenerateContentConfig(
-                            response_modalities=["IMAGE"],
-                            image_config=types.ImageConfig(aspect_ratio="1:1"),
-                        ),
-                    )
-                    for part in response.parts:
-                        if part.inline_data:
-                            image = part.as_image()
+                    if "imagen" in model_name:
+                        result = client.models.generate_images(
+                            model=model_name,
+                            prompt=image_prompt,
+                            config=types.GenerateImagesConfig(
+                                number_of_images=1,
+                                output_mime_type="image/jpeg",
+                                aspect_ratio="1:1",
+                            )
+                        )
+                        for generated_image in result.generated_images:
+                            image = Image.open(io.BytesIO(generated_image.image.image_bytes))
                             return {"type": "image", "content": image, "prompt": image_prompt}
+                    else:
+                        response = client.models.generate_content(
+                            model=model_name,
+                            contents=image_prompt,
+                            config=types.GenerateContentConfig(response_modalities=["IMAGE"]),
+                        )
+                        for part in response.parts:
+                            if part.inline_data:
+                                image = part.as_image()
+                                return {"type": "image", "content": image, "prompt": image_prompt}
                 except Exception:
                     continue
                     
@@ -133,7 +144,7 @@ def process_jarvis_logic(query_text):
     else:
         if client:
             system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
-            text_models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash']
+            text_models = ['gemini-2.5-flash', 'gemini-2.0-flash']
             
             for model_name in text_models:
                 try:
@@ -232,7 +243,7 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_app=True)
+st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
 st.caption("COMMUNICATION SPECTRUM: BLUE // NANO BANANA VISUAL ENGINE ONLINE")
 st.write("---")
 
