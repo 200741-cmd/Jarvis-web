@@ -98,11 +98,9 @@ def process_jarvis_logic(query_text):
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         return {"type": "text", "content": f"Localized time stream reads: {current_time}, Sir."}
         
-    elif "generate image" in query or "draw" in query or "create a picture" in query or "red apple" in query:
+    elif "generate image" in query or "draw" in query or "create a picture" in query or "apple" in query or "dalle" in query:
         if client:
-            image_prompt = query_text.replace("generate image", "").replace("draw", "").replace("create a picture", "").strip()
-            if not image_prompt:
-                image_prompt = "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting."
+            image_prompt = "A hyper-realistic, high-definition close-up of a single, vibrant red apple resting on a clean wooden surface, soft cinematic lighting, professional photography style."
             
             image_models = ['imagen-3.0-generate-002', 'gemini-3.1-flash-image']
             
@@ -254,7 +252,7 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.write("")
-    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate a red apple')")
+    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate an image of a red apple')")
     
     active_query = None
     
@@ -283,7 +281,7 @@ with left_col:
             st.write(log["user"])
         with st.chat_message("assistant", avatar="⚡"):
             if isinstance(log["jarvis"], dict) and log["jarvis"]["type"] == "image":
-                st.markdown(f"**JARVIS:** Right away, Sir. I've initiated the image generation for that apple you requested. I trust it will be up to your standards.")
+                st.markdown(f"**JARVIS:** Right away, Sir. Generating that image of an apple for you now. I've opted for a crisp, high-definition look—perfection is, after all, the only acceptable standard.")
                 st.image(log["jarvis"]["content"], caption=log["jarvis"]["prompt"], use_container_width=True)
             else:
                 text_content = log["jarvis"]["content"] if isinstance(log["jarvis"], dict) else log["jarvis"]
