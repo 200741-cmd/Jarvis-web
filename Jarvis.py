@@ -77,7 +77,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH AUTOMATIC FALLBACK MODELS)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (STABLE STACK)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -102,8 +102,8 @@ def process_jarvis_logic(query_text):
         if client:
             image_prompt = query_text.replace("generate image", "").replace("draw", "").replace("create a picture", "").strip()
             
-            # Fallback list for image models in case of 503 capacity blocks
-            image_models = ['imagen-3.0-generate-002', 'gemini-2.5-flash']
+            # Using stable high-volume flash image model endpoint
+            image_models = ['gemini-3.1-flash-image', 'imagen-3.0-generate-002']
             
             for model_name in image_models:
                 try:
@@ -121,7 +121,6 @@ def process_jarvis_logic(query_text):
                             image = Image.open(io.BytesIO(generated_image.image.image_bytes))
                             return {"type": "image", "content": image, "prompt": image_prompt}
                     else:
-                        # Fallback to flash native image generation
                         response = client.models.generate_content(
                             model=model_name,
                             contents=image_prompt,
@@ -131,10 +130,10 @@ def process_jarvis_logic(query_text):
                             if part.inline_data:
                                 image = part.as_image()
                                 return {"type": "image", "content": image, "prompt": image_prompt}
-                except Exception as e:
-                    continue # Try next fallback model silently
+                except Exception:
+                    continue
                     
-            return {"type": "text", "content": "Visual synthesis channels fully saturated globally (503). Please try again shortly, Sir."}
+            return {"type": "text", "content": "Visual synthesis channels temporarily busy, Sir. Please try your visual request again shortly."}
         else:
             return {"type": "text", "content": "Neural core offline. Please configure your API_KEY, Sir."}
             
@@ -142,8 +141,8 @@ def process_jarvis_logic(query_text):
         if client:
             system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
             
-            # Fallback list for text models in case of 503 capacity blocks
-            text_models = ['gemini-3.5-flash', 'gemini-2.5-flash']
+            # Using high-stability flash-lite and flash production endpoints to bypass 503 peaks
+            text_models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash']
             
             for model_name in text_models:
                 try:
@@ -153,10 +152,10 @@ def process_jarvis_logic(query_text):
                         config={'system_instruction': system_instruction}
                     )
                     return {"type": "text", "content": response.text}
-                except Exception as e:
-                    continue # Try next fallback model silently
+                except Exception:
+                    continue
                     
-            return {"type": "text", "content": "Neural link transmission failed, Sir. All server matrices currently experiencing high demand (503)."}
+            return {"type": "text", "content": "Neural link transmission delayed due to temporary network saturation, Sir."}
         else:
             return {"type": "text", "content": "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."}
 
@@ -243,7 +242,7 @@ st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
 st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 3.5 ONLINE")
+st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 3.1 ONLINE")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -296,7 +295,7 @@ with right_col:
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini 3.5 Flash Active")
+        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini 3.1 Flash-Lite Active")
         
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
