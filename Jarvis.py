@@ -77,7 +77,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH EXPLICIT IMAGEN & PROMPT ENHANCEMENT)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH NATIVE NANO BANANA / GEMINI IMAGE ENDPOINTS)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -98,58 +98,42 @@ def process_jarvis_logic(query_text):
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         return {"type": "text", "content": f"Localized time stream reads: {current_time}, Sir."}
         
-    elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle"]):
+    elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle", "nanobanana"]):
         if client:
-            # Force a rich, fully descriptive prompt so Imagen generates a detailed photographic apple instead of a solid color block
-            image_prompt = (
-                "A highly detailed, photorealistic close-up photograph of a single fresh, glossy red apple "
-                "with a tiny green leaf on its stem, resting on a polished dark rustic wooden kitchen table, "
-                "soft cinematic studio side-lighting, shallow depth of field, 8k resolution."
-            )
+            image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting, professional photography style."
             
-            # Prioritize dedicated Imagen models for superior photorealistic image generation
-            candidate_models = [
-                'imagen-3.0-generate-002',
-                'imagen-3.0-fast-generate-002',
-                'gemini-2.5-flash'
+            # Using Nano Banana model identifiers (`gemini-3.1-flash-image` / `gemini-3-pro-image`) for accurate native visual synthesis
+            nano_banana_models = [
+                'gemini-3.1-flash-image',
+                'gemini-3-pro-image',
+                'gemini-2.5-flash-image'
             ]
             
-            for model_name in candidate_models:
+            for model_name in nano_banana_models:
                 try:
-                    if "imagen" in model_name:
-                        result = client.models.generate_images(
-                            model=model_name,
-                            prompt=image_prompt,
-                            config=types.GenerateImagesConfig(
-                                number_of_images=1,
-                                output_mime_type="image/jpeg",
-                                aspect_ratio="1:1",
-                            )
-                        )
-                        for generated_image in result.generated_images:
-                            image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=[image_prompt],
+                        config=types.GenerateContentConfig(
+                            response_modalities=["IMAGE"],
+                            image_config=types.ImageConfig(aspect_ratio="1:1"),
+                        ),
+                    )
+                    for part in response.parts:
+                        if part.inline_data:
+                            image = part.as_image()
                             return {"type": "image", "content": image, "prompt": image_prompt}
-                    else:
-                        response = client.models.generate_content(
-                            model=model_name,
-                            contents=image_prompt,
-                            config=types.GenerateContentConfig(response_modalities=["IMAGE"]),
-                        )
-                        for part in response.parts:
-                            if part.inline_data:
-                                image = part.as_image()
-                                return {"type": "image", "content": image, "prompt": image_prompt}
                 except Exception:
                     continue
-
-            return {"type": "text", "content": "Visual synthesis routing encountered a capacity block across all channels, Sir. Please check your API quota or tier permissions."}
+                    
+            return {"type": "text", "content": "Nano Banana visual synthesis routing encountered a network block, Sir. Please re-attempt protocol."}
         else:
             return {"type": "text", "content": "Neural core offline. Please configure your API_KEY, Sir."}
             
     else:
         if client:
             system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
-            text_models = ['gemini-2.5-flash', 'gemini-2.0-flash']
+            text_models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash']
             
             for model_name in text_models:
                 try:
@@ -248,8 +232,8 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION SYSTEM ONLINE")
+st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_app=True)
+st.caption("COMMUNICATION SPECTRUM: BLUE // NANO BANANA VISUAL ENGINE ONLINE")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -291,7 +275,7 @@ with left_col:
             st.write(log["user"])
         with st.chat_message("assistant", avatar="⚡"):
             if isinstance(log["jarvis"], dict) and log["jarvis"]["type"] == "image":
-                st.markdown(f"**JARVIS:** My apologies for the abstract rendering earlier, Sir. I have recalibrated the visual parameters to generate a proper apple asset.")
+                st.markdown(f"**JARVIS:** Nano Banana visual synthesis matrix executed successfully, Sir.")
                 st.image(log["jarvis"]["content"], caption=log["jarvis"]["prompt"], use_container_width=True)
             else:
                 text_content = log["jarvis"]["content"] if isinstance(log["jarvis"], dict) else log["jarvis"]
@@ -302,7 +286,7 @@ with right_col:
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Neural Core Active")
+        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Nano Banana Engine Active")
         
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
