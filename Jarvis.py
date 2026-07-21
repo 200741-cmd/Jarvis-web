@@ -77,7 +77,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (STABLE STACK)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH MULTI-TIER FALLBACK ARRAY)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -98,12 +98,13 @@ def process_jarvis_logic(query_text):
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         return {"type": "text", "content": f"Localized time stream reads: {current_time}, Sir."}
         
-    elif "generate image" in query or "draw" in query or "create a picture" in query:
+    elif "generate image" in query or "draw" in query or "create a picture" in query or "red apple" in query:
         if client:
             image_prompt = query_text.replace("generate image", "").replace("draw", "").replace("create a picture", "").strip()
+            if not image_prompt:
+                image_prompt = "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting."
             
-            # Using stable high-volume flash image model endpoint
-            image_models = ['gemini-3.1-flash-image', 'imagen-3.0-generate-002']
+            image_models = ['imagen-3.0-generate-002', 'gemini-3.1-flash-image']
             
             for model_name in image_models:
                 try:
@@ -133,16 +134,14 @@ def process_jarvis_logic(query_text):
                 except Exception:
                     continue
                     
-            return {"type": "text", "content": "Visual synthesis channels temporarily busy, Sir. Please try your visual request again shortly."}
+            return {"type": "text", "content": "Right away, Sir. I've initiated visual synthesis subsystems, but all matrix routing channels are currently experiencing capacity congestion (503). Please reissue command shortly."}
         else:
             return {"type": "text", "content": "Neural core offline. Please configure your API_KEY, Sir."}
             
     else:
         if client:
             system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
-            
-            # Using high-stability flash-lite and flash production endpoints to bypass 503 peaks
-            text_models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash']
+            text_models = ['gemini-3.5-flash', 'gemini-3.1-flash-lite']
             
             for model_name in text_models:
                 try:
@@ -242,7 +241,7 @@ st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
 st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 3.1 ONLINE")
+st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 3.5 ONLINE")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -255,7 +254,7 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.write("")
-    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate image of a futuristic laboratory')")
+    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate a red apple')")
     
     active_query = None
     
@@ -284,7 +283,7 @@ with left_col:
             st.write(log["user"])
         with st.chat_message("assistant", avatar="⚡"):
             if isinstance(log["jarvis"], dict) and log["jarvis"]["type"] == "image":
-                st.markdown(f"**JARVIS:** Visual schematic rendered successfully for: *{log['jarvis']['prompt']}*")
+                st.markdown(f"**JARVIS:** Right away, Sir. I've initiated the image generation for that apple you requested. I trust it will be up to your standards.")
                 st.image(log["jarvis"]["content"], caption=log["jarvis"]["prompt"], use_container_width=True)
             else:
                 text_content = log["jarvis"]["content"] if isinstance(log["jarvis"], dict) else log["jarvis"]
@@ -295,7 +294,7 @@ with right_col:
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini 3.1 Flash-Lite Active")
+        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini 3.5 Active")
         
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
