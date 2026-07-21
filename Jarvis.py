@@ -75,7 +75,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: System transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (INCLUDING IMAGE GENERATION)
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (GEMINI 3.5 FLASH INTEGRATION)
 def process_jarvis_logic(query_text):
     query = query_text.lower().strip()
     
@@ -101,7 +101,7 @@ def process_jarvis_logic(query_text):
             try:
                 image_prompt = query_text.replace("generate image", "").replace("draw", "").replace("create a picture", "").strip()
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash-image',
+                    model='gemini-3.5-flash',
                     contents=image_prompt,
                     config=types.GenerateContentConfig(
                         response_modalities=["IMAGE"],
@@ -122,7 +122,7 @@ def process_jarvis_logic(query_text):
             try:
                 system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash', 
+                    model='gemini-3.5-flash', 
                     contents=query_text,
                     config={'system_instruction': system_instruction}
                 )
@@ -215,7 +215,7 @@ st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
 st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 2.5 ONLINE")
+st.caption("COMMUNICATION SPECTRUM: BLUE // NEURAL COGNITION GENERATION 3.5 ONLINE")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -228,7 +228,7 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.write("")
-    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate image of a cybernetic futuristic city')")
+    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate image of an Iron Man suit')")
     
     active_query = None
     
@@ -268,7 +268,7 @@ with right_col:
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini Multimodal Active")
+        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Gemini 3.5 Flash Active")
         
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
