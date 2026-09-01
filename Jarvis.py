@@ -126,7 +126,7 @@ def process_friday_logic(query_text):
         if client:
             system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
             try:
-                # Upgraded to gemini-3.6-flash for maximum production performance
+                # Locked to gemini-3.6-flash standard production model
                 response = client.models.generate_content(
                     model='gemini-3.6-flash', 
                     contents=query_text,
