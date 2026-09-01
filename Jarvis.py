@@ -80,7 +80,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH GEMINI 3.0 INTEGRATION)
+# 4. STREAMLINED ACTION MATRIX (DIRECT GEMINI 3.0 ROUTING FOR SPEED)
 def process_friday_logic(query_text):
     query = query_text.lower().strip()
     
@@ -101,53 +101,42 @@ def process_friday_logic(query_text):
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         return {"type": "text", "content": f"Current local time stream reads: {current_time}, Boss."}
         
-    elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle", "nanobanana"]):
+    elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle"]):
         if client:
-            image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting, professional photography style."
-            
-            image_models = ['imagen-3.0-generate-002', 'imagen-4.0-generate-001']
-            
-            for model_name in image_models:
-                try:
-                    result = client.models.generate_images(
-                        model=model_name,
-                        prompt=image_prompt,
-                        config=types.GenerateImagesConfig(
-                            number_of_images=1,
-                            output_mime_type="image/jpeg",
-                            aspect_ratio="1:1",
-                        )
+            image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting."
+            try:
+                result = client.models.generate_images(
+                    model='imagen-3.0-generate-002',
+                    prompt=image_prompt,
+                    config=types.GenerateImagesConfig(
+                        number_of_images=1,
+                        output_mime_type="image/jpeg",
+                        aspect_ratio="1:1",
                     )
-                    for generated_image in result.generated_images:
-                        image = Image.open(io.BytesIO(generated_image.image.image_bytes))
-                        return {"type": "image", "content": image, "prompt": image_prompt}
-                except Exception:
-                    continue
-                    
-            return {"type": "text", "content": "Visual synthesis hit a capacity snag on the model pipeline, Boss. Try your visual request again in a second."}
+                )
+                for generated_image in result.generated_images:
+                    image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+                    return {"type": "image", "content": image, "prompt": image_prompt}
+            except Exception as e:
+                return {"type": "text", "content": f"Visual synthesis failed, Boss. ({str(e)})"}
         else:
-            return {"type": "text", "content": "Neural core offline. Please configure your API_KEY in Streamlit secrets, Boss."}
+            return {"type": "text", "content": "Neural core offline. Configure your API_KEY in secrets, Boss."}
             
     else:
         if client:
-            system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss."
-            # Upgraded to Gemini 3.0 Flash models for high speed and reasoning precision
-            text_models = ['gemini-3.0-flash', 'gemini-3-flash-preview', 'gemini-3.0-pro']
-            
-            for model_name in text_models:
-                try:
-                    response = client.models.generate_content(
-                        model=model_name, 
-                        contents=query_text,
-                        config={'system_instruction': system_instruction}
-                    )
-                    return {"type": "text", "content": response.text}
-                except Exception:
-                    continue
-                    
-            return {"type": "text", "content": "Neural link transmission delayed due to temporary network saturation, Boss."}
+            system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
+            try:
+                # Direct call to Gemini 3.0 Flash for maximum speed
+                response = client.models.generate_content(
+                    model='gemini-3.0-flash', 
+                    contents=query_text,
+                    config={'system_instruction': system_instruction}
+                )
+                return {"type": "text", "content": response.text}
+            except Exception as e:
+                return {"type": "text", "content": f"Neural link transmission error: {str(e)}, Boss."}
         else:
-            return {"type": "text", "content": "Neural core offline. Please configure your API_KEY in the Streamlit secrets dashboard, Boss."}
+            return {"type": "text", "content": "Neural core offline. Configure your API_KEY in Streamlit secrets, Boss."}
 
 # 5. DYNAMIC GRAPHIC CANVAS COMPONENT (STARK ORANGE HUD)
 cpu = psutil.cpu_percent()
