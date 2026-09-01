@@ -63,19 +63,19 @@ st.markdown(f"""
         text-shadow: 0 0 10px {shadow_color}, 0 0 20px {shadow_color};
         font-weight: 800;
         letter-spacing: 2px;
-    }
+    }}
     .terminal-card {{
         background: {card_bg};
         border: 1px solid {border_color};
         padding: 22px;
         border-radius: 6px;
         box-shadow: 0 0 12px {border_color};
-    }
+    }}
     h3 {{
         color: {accent_color} !important;
         border-bottom: 1px dashed {border_color};
         padding-bottom: 5px;
-    }
+    }}
     .stProgress > div > div > div > div {{
         background-color: {accent_color} !important;
     }}
