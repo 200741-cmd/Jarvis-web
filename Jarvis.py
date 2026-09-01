@@ -57,6 +57,8 @@ if "ui_mode" not in st.session_state:
     st.session_state.ui_mode = "IDLE"
 if "voice_feed" not in st.session_state:
     st.session_state.voice_feed = "AWAITING INPUT"
+if "ai_persona" not in st.session_state:
+    st.session_state.ai_persona = "F.R.I.D.A.Y."
 
 api_key = st.secrets.get("API_KEY", "")
 
@@ -81,7 +83,7 @@ def transcribe_audio(audio_buffer):
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
 # 4. STREAMLINED ACTION MATRIX (STABLE GEMINI 3.6 ROUTING)
-def process_friday_logic(query_text):
+def process_friday_logic(query_text, persona):
     query = query_text.lower().strip()
     
     if "wikipedia" in query:
@@ -124,7 +126,11 @@ def process_friday_logic(query_text):
             
     else:
         if client:
-            system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
+            if persona == "F.R.I.D.A.Y.":
+                system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
+            else:
+                system_instruction = "You are J.A.R.V.I.S., the highly sophisticated, impeccably polite, British-accented tactical AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise, formal, and articulate."
+                
             try:
                 # Upgraded to gemini-3.6-flash for maximum production performance
                 response = client.models.generate_content(
@@ -143,7 +149,7 @@ cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
 core_temp = 34
 
-recent_logs = ["> F.R.I.D.A.Y. OS ONLINE (GEMINI 3.6)", "> LINKED TO STARK ARCHIVES"]
+recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (GEMINI 3.6)", "> LINKED TO STARK ARCHIVES"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -220,8 +226,8 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown("<h1 class='cyber-title'>🟠 F.R.I.D.A.Y. // GEMINI 3.6 OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: STARK ORANGE // GEMINI 3.6 ENGINE ONLINE")
+st.markdown(f"<h1 class='cyber-title'>🟠 {st.session_state.ai_persona} // GEMINI 3.6 OS</h1>", unsafe_allow_html=True)
+st.caption(f"COMMUNICATION SPECTRUM: STARK ORANGE // ACTIVE PROTOCOL: {st.session_state.ai_persona}")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -251,23 +257,24 @@ with left_col:
         st.session_state.ui_mode = "PROCESS"
         st.session_state.voice_feed = "PROCESSING COMMAND..."
         
-        friday_reply = process_friday_logic(active_query)
-        st.session_state.chat_history.append({"user": active_query, "friday": friday_reply})
+        ai_reply = process_friday_logic(active_query, st.session_state.ai_persona)
+        st.session_state.chat_history.append({"user": active_query, "friday": ai_reply, "persona": st.session_state.ai_persona})
         
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
         st.rerun()
 
     for log in reversed(st.session_state.chat_history):
+        persona_name = log.get("persona", "F.R.I.D.A.Y.")
         with st.chat_message("user", avatar="👤"):
             st.write(log["user"])
         with st.chat_message("assistant", avatar="🟠"):
             if isinstance(log["friday"], dict) and log["friday"]["type"] == "image":
-                st.markdown(f"**F.R.I.D.A.Y.:** Visual synthesis matrix executed successfully, Boss.")
+                st.markdown(f"**{persona_name}:** Visual synthesis matrix executed successfully, Boss.")
                 st.image(log["friday"]["content"], caption=log["friday"]["prompt"], use_container_width=True)
             else:
                 text_content = log["friday"]["content"] if isinstance(log["friday"], dict) else log["friday"]
-                st.markdown(f"**F.R.I.D.A.Y.:** {text_content}")
+                st.markdown(f"**{persona_name}:** {text_content}")
 
 with right_col:
     st.subheader("📊 Datastream Matrix")
@@ -276,6 +283,14 @@ with right_col:
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
         st.metric(label="STARK LINK HUB", value="SECURE", delta="Gemini 3.6 Active")
         
+        # AI PROTOCOL SWITCHER FEATURE
+        selected_persona = st.radio("AI Protocol Selector", ["F.R.I.D.A.Y.", "J.A.R.V.I.S."], index=0 if st.session_state.ai_persona == "F.R.I.D.A.Y." else 1)
+        if selected_persona != st.session_state.ai_persona:
+            st.session_state.ai_persona = selected_persona
+            st.toast(f"Protocol shifted to {selected_persona}, Boss.")
+            st.rerun()
+            
+        st.write("")
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
         st.markdown("</div>", unsafe_allow_html=True)
