@@ -80,7 +80,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. STREAMLINED ACTION MATRIX (STABLE GEMINI 2.5 ROUTING)
+# 4. STREAMLINED ACTION MATRIX (STABLE GEMINI 3.6 ROUTING)
 def process_friday_logic(query_text):
     query = query_text.lower().strip()
     
@@ -126,9 +126,9 @@ def process_friday_logic(query_text):
         if client:
             system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
             try:
-                # Utilizing gemini-2.5-flash for maximum speed and rock-solid endpoint compatibility
+                # Upgraded to gemini-3.6-flash for maximum production performance
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash', 
+                    model='gemini-3.6-flash', 
                     contents=query_text,
                     config={'system_instruction': system_instruction}
                 )
@@ -143,7 +143,7 @@ cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
 core_temp = 34
 
-recent_logs = ["> F.R.I.D.A.Y. OS ONLINE (GEMINI 2.5)", "> LINKED TO STARK ARCHIVES"]
+recent_logs = ["> F.R.I.D.A.Y. OS ONLINE (GEMINI 3.6)", "> LINKED TO STARK ARCHIVES"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -220,8 +220,8 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown("<h1 class='cyber-title'>🟠 F.R.I.D.A.Y. // GEMINI 2.5 OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: STARK ORANGE // GEMINI 2.5 ENGINE ONLINE")
+st.markdown("<h1 class='cyber-title'>🟠 F.R.I.D.A.Y. // GEMINI 3.6 OS</h1>", unsafe_allow_html=True)
+st.caption("COMMUNICATION SPECTRUM: STARK ORANGE // GEMINI 3.6 ENGINE ONLINE")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -274,7 +274,7 @@ with right_col:
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="STARK LINK HUB", value="SECURE", delta="Gemini 2.5 Active")
+        st.metric(label="STARK LINK HUB", value="SECURE", delta="Gemini 3.6 Active")
         
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
