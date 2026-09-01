@@ -11,46 +11,7 @@ from google.genai import types
 from PIL import Image
 import json
 
-# 1. IRON MAN STARK TECH STYLING & HEADERS (GOLD & REACTOR ORANGE DECK)
-st.set_page_config(
-    page_title="F.R.I.D.A.Y. // Tactical OS",
-    page_icon="🟠",
-    layout="wide"
-)
-
-st.markdown("""
-<style>
-    .stApp {
-        background-color: #0c0805;
-        color: #ffb74d;
-        font-family: 'Consolas', 'Courier New', monospace;
-    }
-    .cyber-title {
-        color: #ff9900;
-        font-family: 'Orbitron', sans-serif;
-        text-shadow: 0 0 10px rgba(255, 153, 0, 0.7), 0 0 20px rgba(255, 69, 0, 0.5);
-        font-weight: 800;
-        letter-spacing: 2px;
-    }
-    .terminal-card {
-        background: rgba(255, 153, 0, 0.04);
-        border: 1px solid #ff6600;
-        padding: 22px;
-        border-radius: 6px;
-        box-shadow: 0 0 12px rgba(255, 102, 0, 0.2);
-    }
-    h3 {
-        color: #ffbb33 !important;
-        border-bottom: 1px dashed #ff6600;
-        padding-bottom: 5px;
-    }
-    .stProgress > div > div > div > div {
-        background-color: #ff9900 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# 2. STATE PERSISTENCE & MEMORY ENGINE
+# 2. STATE PERSISTENCE & MEMORY ENGINE (Initialized early for theme configuration)
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "ui_mode" not in st.session_state:
@@ -59,6 +20,67 @@ if "voice_feed" not in st.session_state:
     st.session_state.voice_feed = "AWAITING INPUT"
 if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "F.R.I.D.A.Y."
+
+# DYNAMIC THEME PALETTE CONFIGURATION
+if st.session_state.ai_persona == "F.R.I.D.A.Y.":
+    bg_color = "#0c0805"
+    text_color = "#ffb74d"
+    accent_color = "#ff9900"
+    border_color = "#ff6600"
+    shadow_color = "rgba(255, 153, 0, 0.7)"
+    card_bg = "rgba(255, 153, 0, 0.04)"
+    page_icon = "🟠"
+    glow_dot = "#ff9900"
+    glow_shadow = "#ff6600"
+else:
+    bg_color = "#05080c"
+    text_color = "#80d8ff"
+    accent_color = "#00e5ff"
+    border_color = "#00b8d4"
+    shadow_color = "rgba(0, 229, 255, 0.7)"
+    card_bg = "rgba(0, 229, 255, 0.04)"
+    page_icon = "🔵"
+    glow_dot = "#00e5ff"
+    glow_shadow = "#00b8d4"
+
+# 1. IRON MAN STARK TECH STYLING & HEADERS (DYNAMIC THEME DECK)
+st.set_page_config(
+    page_title=f"{st.session_state.ai_persona} // Tactical OS",
+    page_icon=page_icon,
+    layout="wide"
+)
+
+st.markdown(f"""
+<style>
+    .stApp {{
+        background-color: {bg_color};
+        color: {text_color};
+        font-family: 'Consolas', 'Courier New', monospace;
+    }
+    .cyber-title {{
+        color: {accent_color};
+        font-family: 'Orbitron', sans-serif;
+        text-shadow: 0 0 10px {shadow_color}, 0 0 20px {shadow_color};
+        font-weight: 800;
+        letter-spacing: 2px;
+    }
+    .terminal-card {{
+        background: {card_bg};
+        border: 1px solid {border_color};
+        padding: 22px;
+        border-radius: 6px;
+        box-shadow: 0 0 12px {border_color};
+    }
+    h3 {{
+        color: {accent_color} !important;
+        border-bottom: 1px dashed {border_color};
+        padding-bottom: 5px;
+    }
+    .stProgress > div > div > div > div {{
+        background-color: {accent_color} !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 api_key = st.secrets.get("API_KEY", "")
 
@@ -83,7 +105,7 @@ def transcribe_audio(audio_buffer):
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
 # 4. STREAMLINED ACTION MATRIX (STABLE GEMINI 3.6 ROUTING)
-def process_friday_logic(query_text, persona):
+def process_ai_logic(query_text, persona):
     query = query_text.lower().strip()
     
     if "wikipedia" in query:
@@ -144,7 +166,7 @@ def process_friday_logic(query_text, persona):
         else:
             return {"type": "text", "content": "Neural core offline. Configure your API_KEY in Streamlit secrets, Boss."}
 
-# 5. DYNAMIC GRAPHIC CANVAS COMPONENT (STARK ORANGE HUD)
+# 5. DYNAMIC GRAPHIC CANVAS COMPONENT (THEME-AWARE HUD)
 cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
 core_temp = 34
@@ -170,10 +192,10 @@ hud_html = f"""
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }}
         body {{
-            background-color: #0c0805;
+            background-color: {bg_color};
             background-image: 
-                linear-gradient(rgba(255,153,0,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,153,0,0.02) 1px, transparent 1px);
+                linear-gradient({border_color}0a 1px, transparent 1px),
+                linear-gradient(90deg, {border_color}0a 1px, transparent 1px);
             background-size: 30px 30px;
             color: #ffffff;
             height: 380px;
@@ -184,19 +206,19 @@ hud_html = f"""
             overflow: hidden;
         }}
         .grid-canvas {{ display: flex; justify-content: space-between; align-items: center; height: 100%; position: relative; }}
-        .terminal-overlay {{ background: rgba(20, 12, 5, 0.7); border: 1px solid rgba(255, 153, 0, 0.3); padding: 12px; width: 230px; font-family: monospace; font-size: 11px; color: #ffcc80; opacity: 0.9; line-height: 1.6; border-radius: 4px; }}
+        .terminal-overlay {{ background: rgba(10, 15, 20, 0.7); border: 1px solid {border_color}; padding: 12px; width: 230px; font-family: monospace; font-size: 11px; color: {text_color}; opacity: 0.9; line-height: 1.6; border-radius: 4px; }}
         .core-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }}
-        .mode-pill {{ background: #0c0805; border: 2px solid #ff9900; border-radius: 20px; padding: 3px 15px; font-size: 11px; font-weight: bold; margin-bottom: -15px; box-shadow: 0 0 12px rgba(255, 153, 0, 0.4); z-index: 10; font-family: monospace; color: #ffcc00; }}
-        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed rgba(255, 153, 0, 0.5); display: flex; align-items: center; justify-content: center; position: relative; }}
-        .arc-rings::before {{ content: ''; position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed rgba(255, 69, 0, 0.7); animation: rotateCCW 12s linear infinite; }}
-        .core-glow-dot {{ width: 14px; height: 14px; background-color: #ff9900; border-radius: 50%; box-shadow: 0 0 25px 8px #ff6600; }}
-        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 9px; font-weight: bold; font-family: monospace; color: #ffb74d; }}
+        .mode-pill {{ background: {bg_color}; border: 2px solid {accent_color}; border-radius: 20px; padding: 3px 15px; font-size: 11px; font-weight: bold; margin-bottom: -15px; box-shadow: 0 0 12px {shadow_color}; z-index: 10; font-family: monospace; color: {accent_color}; }}
+        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed {border_color}; display: flex; align-items: center; justify-content: center; position: relative; }}
+        .arc-rings::before {{ content: ''; position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed {accent_color}; animation: rotateCCW 12s linear infinite; }}
+        .core-glow-dot {{ width: 14px; height: 14px; background-color: {glow_dot}; border-radius: 50%; box-shadow: 0 0 25px 8px {glow_shadow}; }}
+        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 9px; font-weight: bold; font-family: monospace; color: {text_color}; }}
         .bar-row {{ display: flex; flex-direction: column; gap: 4px; }}
-        .bar-bg {{ background: rgba(255, 153, 0, 0.1); height: 5px; border-radius: 2px; overflow: hidden; }}
-        .bar-fill {{ height: 100%; background: #ff9900; transition: width 0.4s ease; }}
+        .bar-bg {{ background: {border_color}1a; height: 5px; border-radius: 2px; overflow: hidden; }}
+        .bar-fill {{ height: 100%; background: {accent_color}; transition: width 0.4s ease; }}
         .voice-feed-status {{ position: absolute; right: 0; bottom: 10px; text-align: right; font-family: monospace; }}
         .voice-title {{ font-size: 11px; font-weight: bold; color: rgba(255,255,255,0.6); }}
-        .voice-value {{ font-size: 12px; font-weight: bold; color: #ff9900; margin-top: 2px; }}
+        .voice-value {{ font-size: 12px; font-weight: bold; color: {accent_color}; margin-top: 2px; }}
         @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
     </style>
 </head>
@@ -226,8 +248,8 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown(f"<h1 class='cyber-title'>🟠 {st.session_state.ai_persona} // GEMINI 3.6 OS</h1>", unsafe_allow_html=True)
-st.caption(f"COMMUNICATION SPECTRUM: STARK ORANGE // ACTIVE PROTOCOL: {st.session_state.ai_persona}")
+st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // GEMINI 3.6 OS</h1>", unsafe_allow_html=True)
+st.caption(f"COMMUNICATION SPECTRUM: {st.session_state.ai_persona.upper()} THEME // ACTIVE PROTOCOL: {st.session_state.ai_persona}")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -257,7 +279,7 @@ with left_col:
         st.session_state.ui_mode = "PROCESS"
         st.session_state.voice_feed = "PROCESSING COMMAND..."
         
-        ai_reply = process_friday_logic(active_query, st.session_state.ai_persona)
+        ai_reply = process_ai_logic(active_query, st.session_state.ai_persona)
         st.session_state.chat_history.append({"user": active_query, "friday": ai_reply, "persona": st.session_state.ai_persona})
         
         st.session_state.ui_mode = "IDLE"
@@ -268,7 +290,7 @@ with left_col:
         persona_name = log.get("persona", "F.R.I.D.A.Y.")
         with st.chat_message("user", avatar="👤"):
             st.write(log["user"])
-        with st.chat_message("assistant", avatar="🟠"):
+        with st.chat_message("assistant", avatar=page_icon):
             if isinstance(log["friday"], dict) and log["friday"]["type"] == "image":
                 st.markdown(f"**{persona_name}:** Visual synthesis matrix executed successfully, Boss.")
                 st.image(log["friday"]["content"], caption=log["friday"]["prompt"], use_container_width=True)
@@ -283,11 +305,11 @@ with right_col:
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
         st.metric(label="STARK LINK HUB", value="SECURE", delta="Gemini 3.6 Active")
         
-        # AI PROTOCOL SWITCHER FEATURE
+        # AI PROTOCOL SWITCHER WITH DYNAMIC THEME TRIGGER
         selected_persona = st.radio("AI Protocol Selector", ["F.R.I.D.A.Y.", "J.A.R.V.I.S."], index=0 if st.session_state.ai_persona == "F.R.I.D.A.Y." else 1)
         if selected_persona != st.session_state.ai_persona:
             st.session_state.ai_persona = selected_persona
-            st.toast(f"Protocol shifted to {selected_persona}, Boss.")
+            st.toast(f"Protocol shifted to {selected_persona}. Adapting color matrix, Boss.")
             st.rerun()
             
         st.write("")
@@ -299,9 +321,9 @@ with right_col:
     st.subheader("🛠 Honor Command Controls")
     
     st.markdown(f"""
-    <div style='background: rgba(255,153,0,0.02); border: 1px solid rgba(255,153,0,0.1); padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
+    <div style='background: {card_bg}; border: 1px solid {border_color}; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
         <span style='color: rgba(255,255,255,0.4); font-size: 12px; display: block;'>SYSTEM MODE STATUS</span>
-        <strong style='color: #ff9900; font-size: 18px; font-family: monospace;'>{st.session_state.ui_mode}</strong>
+        <strong style='color: {accent_color}; font-size: 18px; font-family: monospace;'>{st.session_state.ui_mode}</strong>
     </div>
     """, unsafe_allow_html=True)
     
