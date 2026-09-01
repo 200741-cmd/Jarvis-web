@@ -11,41 +11,41 @@ from google.genai import types
 from PIL import Image
 import json
 
-# 1. SCI-FI TERMINAL STYLING & HEADERS (NEON BLUE COMMAND DECK)
+# 1. IRON MAN STARK TECH STYLING & HEADERS (GOLD & REACTOR ORANGE DECK)
 st.set_page_config(
-    page_title="JARVIS // Tactical OS",
-    page_icon="🤖",
+    page_title="F.R.I.D.A.Y. // Tactical OS",
+    page_icon="🟠",
     layout="wide"
 )
 
 st.markdown("""
 <style>
     .stApp {
-        background-color: #060b13;
-        color: #8bb2d9;
+        background-color: #0c0805;
+        color: #ffb74d;
         font-family: 'Consolas', 'Courier New', monospace;
     }
     .cyber-title {
-        color: #00a2ff;
+        color: #ff9900;
         font-family: 'Orbitron', sans-serif;
-        text-shadow: 0 0 8px rgba(0, 162, 255, 0.6), 0 0 15px rgba(0, 162, 255, 0.4);
+        text-shadow: 0 0 10px rgba(255, 153, 0, 0.7), 0 0 20px rgba(255, 69, 0, 0.5);
         font-weight: 800;
         letter-spacing: 2px;
     }
     .terminal-card {
-        background: rgba(0, 162, 255, 0.04);
-        border: 1px solid #0055ff;
+        background: rgba(255, 153, 0, 0.04);
+        border: 1px solid #ff6600;
         padding: 22px;
         border-radius: 6px;
-        box-shadow: 0 0 12px rgba(0, 85, 255, 0.2);
+        box-shadow: 0 0 12px rgba(255, 102, 0, 0.2);
     }
     h3 {
-        color: #00d2ff !important;
-        border-bottom: 1px dashed #0055ff;
+        color: #ffbb33 !important;
+        border-bottom: 1px dashed #ff6600;
         padding-bottom: 5px;
     }
     .stProgress > div > div > div > div {
-        background-color: #00a2ff !important;
+        background-color: #ff9900 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -61,7 +61,10 @@ if "voice_feed" not in st.session_state:
 api_key = st.secrets.get("API_KEY", "")
 
 if api_key:
-    client = genai.Client(api_key=api_key)
+    try:
+        client = genai.Client(api_key=api_key)
+    except Exception:
+        client = None
 else:
     client = None
 
@@ -73,36 +76,35 @@ def transcribe_audio(audio_buffer):
             audio_data = recognizer.record(source)
         return recognizer.recognize_google(audio_data, language='en-US')
     except sr.UnknownValueError:
-        return "ERROR: Acoustic waveform unreadable by central diagnostic grid."
+        return "ERROR: Acoustic waveform unreadable by tactical grid."
     except Exception as e:
-        return f"ERROR: System transcription layer failed. ({str(e)})"
+        return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH CORRECT `client.models.generate_images` SYNTAX)
-def process_jarvis_logic(query_text):
+# 4. ACTION MATRIX CAPABILITY PROTOCOLS (WITH GEMINI 3.0 INTEGRATION)
+def process_friday_logic(query_text):
     query = query_text.lower().strip()
     
     if "wikipedia" in query:
         search_target = query.replace("wikipedia", "").strip()
         try:
-            return {"type": "text", "content": f"Querying international information grid... {wikipedia.summary(search_target, sentences=2)}"}
+            return {"type": "text", "content": f"Accessing global archives, Boss... {wikipedia.summary(search_target, sentences=2)}"}
         except Exception:
-            return {"type": "text", "content": "Unable to pull valid log matches from the Wikipedia index, Sir."}
+            return {"type": "text", "content": "Couldn't match any solid logs in the database, Boss."}
             
     elif "open youtube" in query:
-        return {"type": "text", "content": "Matrix link generated: [Click to launch YouTube Mainframe](https://youtube.com)"}
+        return {"type": "text", "content": "Link established: [Click to launch YouTube Mainframe](https://youtube.com)"}
         
     elif "open google" in query:
-        return {"type": "text", "content": "Matrix link generated: [Click to launch Google Gateway](https://google.com)"}
+        return {"type": "text", "content": "Link established: [Click to launch Google Gateway](https://google.com)"}
         
     elif "the time" in query or "time sync" in query:
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
-        return {"type": "text", "content": f"Localized time stream reads: {current_time}, Sir."}
+        return {"type": "text", "content": f"Current local time stream reads: {current_time}, Boss."}
         
     elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle", "nanobanana"]):
         if client:
             image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting, professional photography style."
             
-            # Using the official SDK client.models.generate_images method with Imagen 3 / Nano Banana pipelines
             image_models = ['imagen-3.0-generate-002', 'imagen-4.0-generate-001']
             
             for model_name in image_models:
@@ -122,15 +124,15 @@ def process_jarvis_logic(query_text):
                 except Exception:
                     continue
                     
-            # Fallback text message if image generation fails
-            return {"type": "text", "content": "Visual synthesis routing encountered a capacity limit on the image model, Sir. Please try your visual request again shortly."}
+            return {"type": "text", "content": "Visual synthesis hit a capacity snag on the model pipeline, Boss. Try your visual request again in a second."}
         else:
-            return {"type": "text", "content": "Neural core offline. Please configure your API_KEY, Sir."}
+            return {"type": "text", "content": "Neural core offline. Please configure your API_KEY in Streamlit secrets, Boss."}
             
     else:
         if client:
-            system_instruction = "You are JARVIS, a highly advanced, intelligent, loyal, and slightly witty AI assistant. Address the user as Sir."
-            text_models = ['gemini-2.5-flash', 'gemini-2.0-flash']
+            system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss."
+            # Upgraded to Gemini 3.0 Flash models for high speed and reasoning precision
+            text_models = ['gemini-3.0-flash', 'gemini-3-flash-preview', 'gemini-3.0-pro']
             
             for model_name in text_models:
                 try:
@@ -143,16 +145,16 @@ def process_jarvis_logic(query_text):
                 except Exception:
                     continue
                     
-            return {"type": "text", "content": "Neural link transmission delayed due to temporary network saturation, Sir."}
+            return {"type": "text", "content": "Neural link transmission delayed due to temporary network saturation, Boss."}
         else:
-            return {"type": "text", "content": "Neural core offline. Please configure your API_KEY in the Streamlit Settings dashboard, Sir."}
+            return {"type": "text", "content": "Neural core offline. Please configure your API_KEY in the Streamlit secrets dashboard, Boss."}
 
-# 5. DYNAMIC GRAPHIC CANVAS COMPONENT
+# 5. DYNAMIC GRAPHIC CANVAS COMPONENT (STARK ORANGE HUD)
 cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
-core_temp = 31
+core_temp = 34
 
-recent_logs = ["> A.R.C. CORES ACTIVE", "> LINKED TO STREAMLIT OS"]
+recent_logs = ["> F.R.I.D.A.Y. OS ONLINE (GEMINI 3.0)", "> LINKED TO STARK ARCHIVES"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -173,10 +175,10 @@ hud_html = f"""
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }}
         body {{
-            background-color: #060b13;
+            background-color: #0c0805;
             background-image: 
-                linear-gradient(rgba(0,162,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,162,255,0.02) 1px, transparent 1px);
+                linear-gradient(rgba(255,153,0,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,153,0,0.02) 1px, transparent 1px);
             background-size: 30px 30px;
             color: #ffffff;
             height: 380px;
@@ -187,19 +189,19 @@ hud_html = f"""
             overflow: hidden;
         }}
         .grid-canvas {{ display: flex; justify-content: space-between; align-items: center; height: 100%; position: relative; }}
-        .terminal-overlay {{ background: rgba(15, 17, 22, 0.6); border: 1px solid rgba(0, 162, 255, 0.2); padding: 12px; width: 230px; font-family: monospace; font-size: 11px; color: #a5b4fc; opacity: 0.8; line-height: 1.6; border-radius: 4px; }}
+        .terminal-overlay {{ background: rgba(20, 12, 5, 0.7); border: 1px solid rgba(255, 153, 0, 0.3); padding: 12px; width: 230px; font-family: monospace; font-size: 11px; color: #ffcc80; opacity: 0.9; line-height: 1.6; border-radius: 4px; }}
         .core-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }}
-        .mode-pill {{ background: #060b13; border: 2px solid #00e5ff; border-radius: 20px; padding: 3px 15px; font-size: 11px; font-weight: bold; margin-bottom: -15px; box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); z-index: 10; font-family: monospace; }}
-        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed rgba(0, 229, 255, 0.4); display: flex; align-items: center; justify-content: center; position: relative; }}
-        .arc-rings::before {{ content: ''; position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed rgba(0, 229, 255, 0.6); animation: rotateCCW 12s linear infinite; }}
-        .core-glow-dot {{ width: 14px; height: 14px; background-color: #00e5ff; border-radius: 50%; box-shadow: 0 0 25px 8px #00e5ff; }}
-        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 9px; font-weight: bold; font-family: monospace; color: #8bb2d9; }}
+        .mode-pill {{ background: #0c0805; border: 2px solid #ff9900; border-radius: 20px; padding: 3px 15px; font-size: 11px; font-weight: bold; margin-bottom: -15px; box-shadow: 0 0 12px rgba(255, 153, 0, 0.4); z-index: 10; font-family: monospace; color: #ffcc00; }}
+        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed rgba(255, 153, 0, 0.5); display: flex; align-items: center; justify-content: center; position: relative; }}
+        .arc-rings::before {{ content: ''; position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed rgba(255, 69, 0, 0.7); animation: rotateCCW 12s linear infinite; }}
+        .core-glow-dot {{ width: 14px; height: 14px; background-color: #ff9900; border-radius: 50%; box-shadow: 0 0 25px 8px #ff6600; }}
+        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 9px; font-weight: bold; font-family: monospace; color: #ffb74d; }}
         .bar-row {{ display: flex; flex-direction: column; gap: 4px; }}
-        .bar-bg {{ background: rgba(0, 162, 255, 0.1); height: 5px; border-radius: 2px; overflow: hidden; }}
-        .bar-fill {{ height: 100%; background: #00a2ff; transition: width 0.4s ease; }}
+        .bar-bg {{ background: rgba(255, 153, 0, 0.1); height: 5px; border-radius: 2px; overflow: hidden; }}
+        .bar-fill {{ height: 100%; background: #ff9900; transition: width 0.4s ease; }}
         .voice-feed-status {{ position: absolute; right: 0; bottom: 10px; text-align: right; font-family: monospace; }}
         .voice-title {{ font-size: 11px; font-weight: bold; color: rgba(255,255,255,0.6); }}
-        .voice-value {{ font-size: 12px; font-weight: bold; color: #00e5ff; margin-top: 2px; }}
+        .voice-value {{ font-size: 12px; font-weight: bold; color: #ff9900; margin-top: 2px; }}
         @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
     </style>
 </head>
@@ -229,8 +231,8 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown("<h1 class='cyber-title'>⚡ JARVIS // TACTICAL BLUE OS</h1>", unsafe_allow_html=True)
-st.caption("COMMUNICATION SPECTRUM: BLUE // NANO BANANA VISUAL ENGINE ONLINE")
+st.markdown("<h1 class='cyber-title'>🟠 F.R.I.D.A.Y. // GEMINI 3.0 OS</h1>", unsafe_allow_html=True)
+st.caption("COMMUNICATION SPECTRUM: STARK ORANGE // GEMINI 3.0 ENGINE ONLINE")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -260,8 +262,8 @@ with left_col:
         st.session_state.ui_mode = "PROCESS"
         st.session_state.voice_feed = "PROCESSING COMMAND..."
         
-        jarvis_reply = process_jarvis_logic(active_query)
-        st.session_state.chat_history.append({"user": active_query, "jarvis": jarvis_reply})
+        friday_reply = process_friday_logic(active_query)
+        st.session_state.chat_history.append({"user": active_query, "friday": friday_reply})
         
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
@@ -270,20 +272,20 @@ with left_col:
     for log in reversed(st.session_state.chat_history):
         with st.chat_message("user", avatar="👤"):
             st.write(log["user"])
-        with st.chat_message("assistant", avatar="⚡"):
-            if isinstance(log["jarvis"], dict) and log["jarvis"]["type"] == "image":
-                st.markdown(f"**JARVIS:** Nano Banana visual synthesis matrix executed successfully, Sir.")
-                st.image(log["jarvis"]["content"], caption=log["jarvis"]["prompt"], use_container_width=True)
+        with st.chat_message("assistant", avatar="🟠"):
+            if isinstance(log["friday"], dict) and log["friday"]["type"] == "image":
+                st.markdown(f"**F.R.I.D.A.Y.:** Visual synthesis matrix executed successfully, Boss.")
+                st.image(log["friday"]["content"], caption=log["friday"]["prompt"], use_container_width=True)
             else:
-                text_content = log["jarvis"]["content"] if isinstance(log["jarvis"], dict) else log["jarvis"]
-                st.markdown(f"**JARVIS:** {text_content}")
+                text_content = log["friday"]["content"] if isinstance(log["friday"], dict) else log["friday"]
+                st.markdown(f"**F.R.I.D.A.Y.:** {text_content}")
 
 with right_col:
     st.subheader("📊 Datastream Matrix")
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="CYBER LINK HUB", value="SECURE", delta="Nano Banana Engine Active")
+        st.metric(label="STARK LINK HUB", value="SECURE", delta="Gemini 3.0 Active")
         
         st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
         st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
@@ -293,9 +295,9 @@ with right_col:
     st.subheader("🛠 Honor Command Controls")
     
     st.markdown(f"""
-    <div style='background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
+    <div style='background: rgba(255,153,0,0.02); border: 1px solid rgba(255,153,0,0.1); padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
         <span style='color: rgba(255,255,255,0.4); font-size: 12px; display: block;'>SYSTEM MODE STATUS</span>
-        <strong style='color: #00e5ff; font-size: 18px; font-family: monospace;'>{st.session_state.ui_mode}</strong>
+        <strong style='color: #ff9900; font-size: 18px; font-family: monospace;'>{st.session_state.ui_mode}</strong>
     </div>
     """, unsafe_allow_html=True)
     
@@ -303,5 +305,5 @@ with right_col:
         st.session_state.chat_history = []
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
-        st.toast("Active variable stack cleared, Sir.")
+        st.toast("Active variable stack cleared, Boss.")
         st.rerun()
