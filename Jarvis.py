@@ -57,8 +57,6 @@ if "ui_mode" not in st.session_state:
     st.session_state.ui_mode = "IDLE"
 if "voice_feed" not in st.session_state:
     st.session_state.voice_feed = "AWAITING INPUT"
-if "last_processed" not in st.session_state:
-    st.session_state.last_processed = None
 
 api_key = st.secrets.get("API_KEY", "")
 
@@ -82,7 +80,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. STREAMLINED ACTION MATRIX
+# 4. STREAMLINED ACTION MATRIX (STABLE GEMINI 3.6 ROUTING)
 def process_friday_logic(query_text):
     query = query_text.lower().strip()
     
@@ -128,6 +126,7 @@ def process_friday_logic(query_text):
         if client:
             system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
             try:
+                # Upgraded to gemini-3.6-flash for maximum production performance
                 response = client.models.generate_content(
                     model='gemini-3.6-flash', 
                     contents=query_text,
@@ -144,7 +143,7 @@ cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
 core_temp = 34
 
-recent_logs = ["> F.R.I.D.A.Y. OS ONLINE", "> LINKED TO STARK ARCHIVES"]
+recent_logs = ["> F.R.I.D.A.Y. OS ONLINE (GEMINI 3.6)", "> LINKED TO STARK ARCHIVES"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -240,19 +239,13 @@ with left_col:
     active_query = None
     
     if recorded_audio:
-        # Check unique object ID to avoid looping the same audio file
-        audio_id = id(recorded_audio)
-        if st.session_state.last_processed != audio_id:
-            st.session_state.last_processed = audio_id
-            st.session_state.ui_mode = "LISTEN"
-            st.session_state.voice_feed = "DECODING AUDIO..."
-            with st.spinner("Decoding vocal signal patterns..."):
-                active_query = transcribe_audio(recorded_audio)
+        st.session_state.ui_mode = "LISTEN"
+        st.session_state.voice_feed = "DECODING AUDIO..."
+        with st.spinner("Decoding vocal signal patterns..."):
+            active_query = transcribe_audio(recorded_audio)
             
     if text_override:
-        if st.session_state.last_processed != text_override:
-            st.session_state.last_processed = text_override
-            active_query = text_override
+        active_query = text_override
 
     if active_query:
         st.session_state.ui_mode = "PROCESS"
@@ -301,6 +294,5 @@ with right_col:
         st.session_state.chat_history = []
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
-        st.session_state.last_processed = None
         st.toast("Active variable stack cleared, Boss.")
         st.rerun()
