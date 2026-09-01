@@ -56,26 +56,26 @@ st.markdown(f"""
         background-color: {bg_color};
         color: {text_color};
         font-family: 'Consolas', 'Courier New', monospace;
-    }}
+    }
     .cyber-title {{
         color: {accent_color};
         font-family: 'Orbitron', sans-serif;
         text-shadow: 0 0 10px {shadow_color}, 0 0 20px {shadow_color};
         font-weight: 800;
         letter-spacing: 2px;
-    }}
+    }
     .terminal-card {{
         background: {card_bg};
         border: 1px solid {border_color};
         padding: 22px;
         border-radius: 6px;
         box-shadow: 0 0 12px {border_color};
-    }}
+    }
     h3 {{
         color: {accent_color} !important;
         border-bottom: 1px dashed {border_color};
         padding-bottom: 5px;
-    }}
+    }
     .stProgress > div > div > div > div {{
         background-color: {accent_color} !important;
     }}
@@ -104,7 +104,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. STREAMLINED ACTION MATRIX (STABLE GEMINI 3.6 ROUTING)
+# 4. STREAMLINED ACTION MATRIX (STABLE VERSION 3.6 ROUTING)
 def process_ai_logic(query_text, persona):
     query = query_text.lower().strip()
     
@@ -170,7 +170,7 @@ cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
 core_temp = 34
 
-recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (GEMINI 3.6)", "> LINKED TO STARK ARCHIVES"]
+recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (VERSION 3.6)", "> LINKED TO STARK ARCHIVES"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -247,8 +247,8 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // GEMINI 3.6 OS</h1>", unsafe_allow_html=True)
-st.caption(f"COMMUNICATION SPECTRUM: {st.session_state.ai_persona.upper()} THEME // ACTIVE PROTOCOL: {st.session_state.ai_persona}")
+st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // VERSION 3.6 OS</h1>", unsafe_allow_html=True)
+st.caption(f"COMMUNICATION SPECTRUM: {st.session_state.ai_persona.upper()} THEME // ACTIVE PROTOCOL: {st.session_state.ai_persona} (VERSION 3.6)")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -302,7 +302,7 @@ with right_col:
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="STARK LINK HUB", value="SECURE", delta="Gemini 3.6 Active")
+        st.metric(label="STARK LINK HUB", value="SECURE", delta="Version 3.6 Active")
         
         selected_persona = st.radio("AI Protocol Selector", ["F.R.I.D.A.Y.", "J.A.R.V.I.S."], index=0 if st.session_state.ai_persona == "F.R.I.D.A.Y." else 1)
         if selected_persona != st.session_state.ai_persona:
