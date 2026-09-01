@@ -56,7 +56,7 @@ st.markdown(f"""
         background-color: {bg_color};
         color: {text_color};
         font-family: 'Consolas', 'Courier New', monospace;
-    }
+    }}
     .cyber-title {{
         color: {accent_color};
         font-family: 'Orbitron', sans-serif;
