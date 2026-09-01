@@ -56,29 +56,29 @@ st.markdown(f"""
         background-color: {bg_color};
         color: {text_color};
         font-family: 'Consolas', 'Courier New', monospace;
-    }
+    }}
     .cyber-title {{
         color: {accent_color};
         font-family: 'Orbitron', sans-serif;
         text-shadow: 0 0 10px {shadow_color}, 0 0 20px {shadow_color};
         font-weight: 800;
         letter-spacing: 2px;
-    }
+    }}
     .terminal-card {{
         background: {card_bg};
         border: 1px solid {border_color};
         padding: 22px;
         border-radius: 6px;
         box-shadow: 0 0 12px {border_color};
-    }
+    }}
     h3 {{
         color: {accent_color} !important;
         border-bottom: 1px dashed {border_color};
         padding-bottom: 5px;
-    }
+    }}
     .stProgress > div > div > div > div {{
         background-color: {accent_color} !important;
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -154,7 +154,6 @@ def process_ai_logic(query_text, persona):
                 system_instruction = "You are J.A.R.V.I.S., the highly sophisticated, impeccably polite, British-accented tactical AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise, formal, and articulate."
                 
             try:
-                # Upgraded to gemini-3.6-flash for maximum production performance
                 response = client.models.generate_content(
                     model='gemini-3.6-flash', 
                     contents=query_text,
@@ -305,7 +304,6 @@ with right_col:
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
         st.metric(label="STARK LINK HUB", value="SECURE", delta="Gemini 3.6 Active")
         
-        # AI PROTOCOL SWITCHER WITH DYNAMIC THEME TRIGGER
         selected_persona = st.radio("AI Protocol Selector", ["F.R.I.D.A.Y.", "J.A.R.V.I.S."], index=0 if st.session_state.ai_persona == "F.R.I.D.A.Y." else 1)
         if selected_persona != st.session_state.ai_persona:
             st.session_state.ai_persona = selected_persona
