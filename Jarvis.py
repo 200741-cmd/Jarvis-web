@@ -15,7 +15,9 @@ import json
 # GLOBAL THREAD-SAFE COUNTER FOR KEY ROTATION
 _key_counter = 0
 
-# 2. STATE PERSISTENCE & MEMORY ENGINE
+# 2. STATE PERSISTENCE & MEMORY ENGINE (FIXED INITIALIZATION ORDER)
+if "build_version" not in st.session_state:
+    st.session_state.build_version = "v3.6"
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "ui_mode" not in st.session_state:
@@ -24,8 +26,6 @@ if "voice_feed" not in st.session_state:
     st.session_state.voice_feed = "AWAITING INPUT"
 if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "F.R.I.D.A.Y."
-if "build_version" not in st.session_state:
-    st.session_state.build_version = "v3.6"
 
 # DYNAMIC THEME PALETTE CONFIGURATION
 if st.session_state.ai_persona == "F.R.I.D.A.Y.":
@@ -141,7 +141,7 @@ def transcribe_audio(audio_buffer):
 # 4. VERSION-AWARE GENERATION ENGINE
 def _single_generation_call(chosen_client, query_text, system_instruction):
     response = chosen_client.models.generate_content(
-        model='gemini-2.5-flash', 
+        model='gemini-3.5-flash', 
         contents=query_text,
         config={'system_instruction': system_instruction}
     )
@@ -154,17 +154,12 @@ def execute_generation(query_text, system_instruction):
     
     # Behavior adapts based on chosen build version
     if st.session_state.build_version == "v3.4":
-        # v3.4: Simple single call without failover loop or thread timeout
         return _single_generation_call(active_clients[0], query_text, system_instruction)
-        
     elif st.session_state.build_version == "v3.5":
-        # v3.5: Multi-key rotation without strict thread safety/timeouts
         chosen_client = active_clients[_key_counter % len(active_clients)]
         _key_counter += 1
         return _single_generation_call(chosen_client, query_text, system_instruction)
-        
     else:
-        # v3.6 (Current): Thread-safe failover with 12s timeout guards
         start_index = _key_counter % len(active_clients)
         for i in range(len(active_clients)):
             client_idx = (start_index + i) % len(active_clients)
@@ -356,7 +351,7 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.write("")
-    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate an image of a red apple')")
+    text_override = st.chat_input("Feed manual string command line interface...")
     
     active_query = None
     
