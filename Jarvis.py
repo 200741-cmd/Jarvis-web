@@ -23,7 +23,7 @@ if "ai_persona" not in st.session_state:
 if "key_rotation_toggle" not in st.session_state:
     st.session_state.key_rotation_toggle = 0
 
-# DYNAMIC THEME PALETTE CONFIGURATION
+# DYNAMIC THEME PALETTE CONFIGURATION (F.R.I.D.A.Y., J.A.R.V.I.S., OR BOTH)
 if st.session_state.ai_persona == "F.R.I.D.A.Y.":
     bg_color = "#0c0805"
     text_color = "#ffb74d"
@@ -34,7 +34,7 @@ if st.session_state.ai_persona == "F.R.I.D.A.Y.":
     page_icon = "🟠"
     glow_dot = "#ff9900"
     glow_shadow = "#ff6600"
-else:
+elif st.session_state.ai_persona == "J.A.R.V.I.S.":
     bg_color = "#05080c"
     text_color = "#80d8ff"
     accent_color = "#00e5ff"
@@ -44,11 +44,21 @@ else:
     page_icon = "🔵"
     glow_dot = "#00e5ff"
     glow_shadow = "#00b8d4"
+else: # BOTH (DUAL PROTOCOL HYBRID MATRIX)
+    bg_color = "#07050c"
+    text_color = "#e1bee7"
+    accent_color = "#ab47bc"
+    border_color = "#8e24aa"
+    shadow_color = "rgba(171, 71, 188, 0.7)"
+    card_bg = "rgba(171, 71, 188, 0.04)"
+    page_icon = "🟣🔵"
+    glow_dot = "#ab47bc"
+    glow_shadow = "#8e24aa"
 
 # 1. IRON MAN STARK TECH STYLING & HEADERS (DYNAMIC THEME DECK)
 st.set_page_config(
     page_title=f"{st.session_state.ai_persona} // Tactical OS",
-    page_icon=page_icon,
+    page_icon="⚡",
     layout="wide"
 )
 
@@ -84,38 +94,24 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# DUAL-KEY SIMULTANEOUS ACTIVATION MATRIX
-# F.R.I.D.A.Y. Keys: API_KEY_1 & API_KEY_2
-# J.A.R.V.I.S. Keys: API_KEY_3 & API_KEY_4
-if st.session_state.ai_persona == "F.R.I.D.A.Y.":
-    key_a = st.secrets.get("API_KEY_1", st.secrets.get("API_KEY", ""))
-    key_b = st.secrets.get("API_KEY_2", "")
-else:
-    key_a = st.secrets.get("API_KEY_3", st.secrets.get("API_KEY", ""))
-    key_b = st.secrets.get("API_KEY_4", "")
+# UNIFIED GLOBAL MASTER KEY POOL (ALL KEYS ACTIVATE SIMULTANEOUSLY)
+raw_keys = [
+    st.secrets.get("API_KEY_1", ""),
+    st.secrets.get("API_KEY_2", ""),
+    st.secrets.get("API_KEY_3", st.secrets.get("API_KEY", "")),
+    st.secrets.get("API_KEY_4", "")
+]
 
-client_primary = None
-client_backup = None
-active_keys_status = "Offline"
+active_clients = []
+for idx, k in enumerate(raw_keys):
+    if k.strip():
+        try:
+            active_clients.append(genai.Client(api_key=k.strip()))
+        except Exception:
+            pass
 
-try:
-    if key_a:
-        client_primary = genai.Client(api_key=key_a)
-except Exception:
-    pass
-
-try:
-    if key_b:
-        client_backup = genai.Client(api_key=key_b)
-except Exception:
-    pass
-
-if client_primary and client_backup:
-    active_keys_status = "Dual-Key Active (Simultaneous Load-Balancing)"
-elif client_primary:
-    active_keys_status = "Key A Active Only"
-elif client_backup:
-    active_keys_status = "Key B Active Only"
+total_active_keys = len(active_clients)
+active_keys_status = f"{total_active_keys} Key Bank(s) Active in Global Pool" if total_active_keys > 0 else "Offline"
 
 # 3. CORE AUDIO SPEECH-TO-TEXT TRANSCRIPTION
 def transcribe_audio(audio_buffer):
@@ -129,40 +125,33 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. STREAMLINED ACTION MATRIX (DUAL-KEY SIMULTANEOUS ROTATION)
+# 4. STREAMLINED ACTION MATRIX (GLOBAL POOL LOAD-BALANCING & FAILOVER)
 def execute_generation(query_text, system_instruction):
-    global client_primary, client_backup
+    global active_clients
     
-    # Select available active clients
-    available_clients = [c for c in [client_primary, client_backup] if c is not None]
-    if not available_clients:
+    if not active_clients:
         raise Exception("All neural key banks offline. Configure your API keys in secrets, Boss.")
     
-    # Rotate between available keys to share the load simultaneously
-    chosen_client = available_clients[st.session_state.key_rotation_toggle % len(available_clients)]
-    st.session_state.key_rotation_toggle += 1
+    start_index = st.session_state.key_rotation_toggle % len(active_clients)
     
-    try:
-        response = chosen_client.models.generate_content(
-            model='gemini-3.6-flash', 
-            contents=query_text,
-            config={'system_instruction': system_instruction}
-        )
-        return response.text
-    except Exception as e:
-        # Fallback to alternative client if chosen one exhausts/fails
-        for backup_c in available_clients:
-            if backup_c != chosen_client:
-                try:
-                    response = backup_c.models.generate_content(
-                        model='gemini-3.6-flash', 
-                        contents=query_text,
-                        config={'system_instruction': system_instruction}
-                    )
-                    return f"[Load-Shifted to Secondary Bank] {response.text}"
-                except Exception:
-                    continue
-        raise e
+    for i in range(len(active_clients)):
+        client_idx = (start_index + i) % len(active_clients)
+        chosen_client = active_clients[client_idx]
+        st.session_state.key_rotation_toggle += 1
+        
+        try:
+            response = chosen_client.models.generate_content(
+                model='gemini-3.6-flash', 
+                contents=query_text,
+                config={'system_instruction': system_instruction}
+            )
+            if i > 0:
+                return f"[Failover Shifted to Key Index {client_idx + 1}] {response.text}"
+            return response.text
+        except Exception:
+            continue
+            
+    raise Exception("All active API keys in the global pool have encountered an error or exhaustion.")
 
 def process_ai_logic(query_text, persona):
     query = query_text.lower().strip()
@@ -185,11 +174,10 @@ def process_ai_logic(query_text, persona):
         return {"type": "text", "content": f"Current local time stream reads: {current_time}, Boss."}
         
     elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle"]):
-        img_client = client_primary if client_primary else client_backup
-        if img_client:
+        if active_clients:
             image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting."
             try:
-                result = img_client.models.generate_images(
+                result = active_clients[0].models.generate_images(
                     model='imagen-3.0-generate-002',
                     prompt=image_prompt,
                     config=types.GenerateImagesConfig(
@@ -207,17 +195,27 @@ def process_ai_logic(query_text, persona):
             return {"type": "text", "content": "Neural core offline. Configure your API keys in secrets, Boss."}
             
     else:
-        if client_primary or client_backup:
+        if active_clients:
             if persona == "F.R.I.D.A.Y.":
                 system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
-            else:
-                system_instruction = "You are J.A.R.V.I.S., the highly sophisticated, impeccably polite, British-accented tactical AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise, formal, and articulate."
-                
-            try:
                 reply_text = execute_generation(query_text, system_instruction)
                 return {"type": "text", "content": reply_text}
-            except Exception as e:
-                return {"type": "text", "content": f"Neural link transmission error: {str(e)}, Boss."}
+                
+            elif persona == "J.A.R.V.I.S.":
+                system_instruction = "You are J.A.R.V.I.S., the highly sophisticated, impeccably polite, British-accented tactical AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise, formal, and articulate."
+                reply_text = execute_generation(query_text, system_instruction)
+                return {"type": "text", "content": reply_text}
+                
+            else: # BOTH PROTOCOLS SIMULTANEOUSLY
+                f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address the user as Boss. Give a short take."
+                j_sys = "You are J.A.R.V.I.S., polite, British, and formal. Address the user as Boss. Give a short take."
+                try:
+                    res1 = execute_generation(query_text, f_sys)
+                    res2 = execute_generation(query_text, j_sys)
+                    dual_output = f"**[F.R.I.D.A.Y.]:** {res1}\n\n**[J.A.R.V.I.S.]:** {res2}"
+                    return {"type": "text", "content": dual_output}
+                except Exception as e:
+                    return {"type": "text", "content": f"Dual protocol neural link error: {str(e)}, Boss."}
         else:
             return {"type": "text", "content": "Neural core offline. Configure your API keys in Streamlit secrets, Boss."}
 
@@ -226,7 +224,7 @@ cpu = psutil.cpu_percent()
 ram = psutil.virtual_memory().percent
 core_temp = 34
 
-recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (VERSION 3.6)", f"> DUAL-KEY STATUS: {active_keys_status}"]
+recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (VERSION 3.6)", f"> GLOBAL POOL: {active_keys_status}"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -304,7 +302,7 @@ st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
 st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // VERSION 3.6 OS</h1>", unsafe_allow_html=True)
-st.caption(f"COMMUNICATION SPECTRUM: {st.session_state.ai_persona.upper()} THEME // DUAL-KEY STATUS: {active_keys_status}")
+st.caption(f"COMMUNICATION SPECTRUM: {st.session_state.ai_persona.upper()} THEME // GLOBAL POOL STATUS: {active_keys_status}")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -360,17 +358,20 @@ with right_col:
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
         st.metric(label="STARK LINK HUB", value="SECURE", delta=active_keys_status)
         
-        selected_persona = st.radio("AI Protocol Selector", ["F.R.I.D.A.Y.", "J.A.R.V.I.S."], index=0 if st.session_state.ai_persona == "F.R.I.D.A.Y." else 1)
+        protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "BOTH"]
+        current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
+        selected_persona = st.radio("AI Protocol Selector", protocols, index=current_index)
+        
         if selected_persona != st.session_state.ai_persona:
             st.session_state.ai_persona = selected_persona
-            st.toast(f"Protocol shifted to {selected_persona}. Dual-key banks active, Boss.")
+            st.toast(f"Protocol shifted to {selected_persona}. Global key pool online, Boss.")
             st.rerun()
             
         st.write("")
-        # Inter-Comm Button
+        # Inter-Comm Dialogue Button
         if st.button("🗣️ Initiate AI Inter-Comm Dialogue", use_container_width=True):
-            if client_primary or client_backup:
-                with st.spinner("Connecting F.R.I.D.A.Y. and J.A.R.V.I.S. dual-key neural link..."):
+            if active_clients:
+                with st.spinner("Connecting F.R.I.D.A.Y. and J.A.R.V.I.S. global neural link..."):
                     try:
                         f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address J.A.R.V.I.S. as your colleague and start a quick technical banter about upgrading Tony's suits."
                         res1 = execute_generation("Initiate banter with J.A.R.V.I.S.", f_sys)
