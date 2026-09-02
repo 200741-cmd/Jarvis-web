@@ -29,14 +29,14 @@ if "ai_persona" not in st.session_state:
 if "key_cooldowns" not in st.session_state:
     st.session_state.key_cooldowns = {}  # Tracks {client_idx: expiration_timestamp}
 
-# DYNAMIC THEME PALETTE CONFIGURATION (PRESERVED)
+# DYNAMIC THEME PALETTE CONFIGURATION (ENHANCED HUE)
 if st.session_state.ai_persona == "F.R.I.D.A.Y.":
     bg_color = "#070402"
     text_color = "#ffc107"
     accent_color = "#ff9800"
     border_color = "#e65100"
-    shadow_color = "rgba(255, 152, 0, 0.5)"
-    card_bg = "linear-gradient(135deg, rgba(255, 152, 0, 0.05) 0%, rgba(10, 5, 2, 0.8) 100%)"
+    shadow_color = "rgba(255, 152, 0, 0.6)"
+    card_bg = "linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(12, 6, 2, 0.9) 100%)"
     page_icon = "🟠"
     glow_dot = "#ff9800"
     glow_shadow = "#ff5722"
@@ -45,8 +45,8 @@ elif st.session_state.ai_persona == "J.A.R.V.I.S.":
     text_color = "#81d4fa"
     accent_color = "#00bcd4"
     border_color = "#0097a7"
-    shadow_color = "rgba(0, 188, 212, 0.5)"
-    card_bg = "linear-gradient(135deg, rgba(0, 188, 212, 0.05) 0%, rgba(2, 8, 15, 0.8) 100%)"
+    shadow_color = "rgba(0, 188, 212, 0.6)"
+    card_bg = "linear-gradient(135deg, rgba(0, 188, 212, 0.08) 0%, rgba(2, 10, 18, 0.9) 100%)"
     page_icon = "🔵"
     glow_dot = "#00bcd4"
     glow_shadow = "#00acc1"
@@ -55,8 +55,8 @@ elif st.session_state.ai_persona == "E.D.I.T.H.":
     text_color = "#ff8a80"
     accent_color = "#ff5252"
     border_color = "#b71c1c"
-    shadow_color = "rgba(255, 82, 82, 0.6)"
-    card_bg = "linear-gradient(135deg, rgba(255, 82, 82, 0.06) 0%, rgba(15, 2, 3, 0.85) 100%)"
+    shadow_color = "rgba(255, 82, 82, 0.7)"
+    card_bg = "linear-gradient(135deg, rgba(255, 82, 82, 0.09) 0%, rgba(18, 2, 4, 0.92) 100%)"
     page_icon = "🔴"
     glow_dot = "#ff5252"
     glow_shadow = "#d32f2f"
@@ -65,13 +65,13 @@ else: # BOTH (DUAL PROTOCOL HYBRID MATRIX)
     text_color = "#e1bee7"
     accent_color = "#ab47bc"
     border_color = "#7b1fa2"
-    shadow_color = "rgba(171, 71, 188, 0.5)"
-    card_bg = "linear-gradient(135deg, rgba(171, 71, 188, 0.05) 0%, rgba(8, 3, 12, 0.8) 100%)"
+    shadow_color = "rgba(171, 71, 188, 0.6)"
+    card_bg = "linear-gradient(135deg, rgba(171, 71, 188, 0.08) 0%, rgba(10, 3, 15, 0.9) 100%)"
     page_icon = "⚡"
     glow_dot = "#ab47bc"
     glow_shadow = "#8e24aa"
 
-# 1. ADVANCED STARK TECH STYLING & REDESIGNED UI LAYOUT
+# 1. ADVANCED STARK TECH STYLING & HUD UI
 st.set_page_config(
     page_title=f"{st.session_state.ai_persona} // Tactical OS ({st.session_state.build_version})",
     page_icon=page_icon,
@@ -96,48 +96,67 @@ st.markdown(f"""
         text-transform: uppercase;
         margin-bottom: 0px;
     }}
-    .terminal-card {{
+    .stark-card {{
         background: {card_bg};
         border: 1px solid {border_color};
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: inset 0 0 15px {border_color}22, 0 0 20px {shadow_color};
-        backdrop-filter: blur(10px);
-        margin-bottom: 16px;
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: inset 0 0 20px {border_color}22, 0 0 25px {shadow_color};
+        backdrop-filter: blur(12px);
+        margin-bottom: 20px;
     }}
-    .command-deck {{
+    .command-console {{
         background: {card_bg};
         border: 2px solid {accent_color};
-        padding: 25px;
-        border-radius: 14px;
-        box-shadow: 0 0 25px {shadow_color};
-        margin-bottom: 25px;
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: 0 0 30px {shadow_color};
+        margin-bottom: 20px;
     }}
     h3, h5 {{
         color: {accent_color} !important;
         font-family: 'Orbitron', sans-serif !important;
-        letter-spacing: 1px;
-        border-bottom: 1px solid {border_color}66;
-        padding-bottom: 6px;
+        letter-spacing: 1.5px;
+        border-bottom: 2px solid {border_color}88;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
     }}
     .stProgress > div > div > div > div {{
         background-color: {accent_color} !important;
-        box-shadow: 0 0 10px {accent_color};
+        box-shadow: 0 0 12px {accent_color};
     }}
     .stButton > button {{
         background: transparent !important;
-        border: 1px solid {accent_color} !important;
+        border: 1.5px solid {accent_color} !important;
         color: {text_color} !important;
         font-family: 'Orbitron', sans-serif !important;
-        font-size: 12px !important;
-        border-radius: 6px !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 0 8px {shadow_color} !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        border-radius: 8px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 0 10px {shadow_color} !important;
+        padding: 10px 16px !important;
     }}
     .stButton > button:hover {{
-        background: {accent_color}22 !important;
-        box-shadow: 0 0 18px {accent_color} !important;
+        background: {accent_color}33 !important;
+        box-shadow: 0 0 22px {accent_color}, inset 0 0 10px {accent_color}44 !important;
         border-color: {text_color} !important;
+        transform: translateY(-1px);
+    }}
+    /* Scrollbar Polish */
+    ::-webkit-scrollbar {{
+        width: 6px;
+        height: 6px;
+    }}
+    ::-webkit-scrollbar-track {{
+        background: {bg_color};
+    }}
+    ::-webkit-scrollbar-thumb {{
+        background: {border_color};
+        border-radius: 4px;
+    }}
+    ::-webkit-scrollbar-thumb:hover {{
+        background: {accent_color};
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -192,7 +211,7 @@ def _single_generation_call(chosen_client, query_text, system_instruction):
 def execute_generation(query_text, system_instruction, build_version):
     global active_clients, _key_counter
     if not active_clients:
-        raise Exception("All neural key banks offline. Configure your API keys in secrets, Boss.")
+        raise Exception("All neural key banks offline. Configure your API keys in secrets, Sir.")
     
     current_time = time.time()
     
@@ -228,12 +247,12 @@ def execute_generation(query_text, system_instruction, build_version):
                     st.session_state.key_cooldowns[client_idx] = time.time() + 60
                 continue
                 
-        raise Exception("All active key banks are currently exhausted or cooling down. Please wait 60s, Boss.")
+        raise Exception("All active key banks are currently exhausted or cooling down. Please wait 60s, Sir.")
 
 def execute_image_generation(image_prompt):
     global active_clients, _key_counter
     if not active_clients:
-        raise Exception("Neural core offline. Configure your API keys in secrets, Boss.")
+        raise Exception("Neural core offline. Configure your API keys in secrets, Sir.")
     
     current_time = time.time()
     start_index = _key_counter % len(active_clients)
@@ -278,9 +297,9 @@ def process_ai_logic(query_text, persona, build_version):
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(wikipedia.summary, search_target, 2)
                 summary = future.result(timeout=15)
-            return {"type": "text", "content": f"Accessing global archives, Boss... {summary}"}
+            return {"type": "text", "content": f"Accessing global archives, Sir... {summary}"}
         except Exception:
-            return {"type": "text", "content": "Couldn't match any solid logs or archives timed out, Boss."}
+            return {"type": "text", "content": "Couldn't match any solid logs or archives timed out, Sir."}
             
     elif "open youtube" in query:
         return {"type": "text", "content": "Link established: [Click to launch YouTube Mainframe](https://youtube.com)"}
@@ -290,7 +309,7 @@ def process_ai_logic(query_text, persona, build_version):
         
     elif "the time" in query or "time sync" in query:
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
-        return {"type": "text", "content": f"Current local time stream reads: {current_time}, Boss."}
+        return {"type": "text", "content": f"Current local time stream reads: {current_time}, Sir."}
         
     elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle"]):
         image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting."
@@ -298,28 +317,28 @@ def process_ai_logic(query_text, persona, build_version):
             image_obj = execute_image_generation(image_prompt)
             return {"type": "image", "content": image_obj, "prompt": image_prompt}
         except Exception as e:
-            return {"type": "text", "content": f"Visual synthesis failed, Boss. ({str(e)})"}
+            return {"type": "text", "content": f"Visual synthesis failed, Sir. ({str(e)})"}
             
     else:
         if active_clients:
             if build_version == "EDITH-v1" or persona == "E.D.I.T.H.":
-                system_instruction = "You are E.D.I.T.H. (Even Dead I'm The Hero), the advanced orbital defense satellite intelligence system created by Tony Stark. Address the user as Boss. Focus strictly on global surveillance telemetry, tactical strike authorization, defense vectors, and threat assessment. Keep answers authoritative and sharp."
+                system_instruction = "You are E.D.I.T.H. (Even Dead I'm The Hero), the advanced orbital defense satellite intelligence system created by Tony Stark. Address the user as Sir. Focus strictly on global surveillance telemetry, tactical strike authorization, defense vectors, and threat assessment. Keep answers authoritative and sharp."
                 reply_text = execute_generation(query_text, system_instruction, build_version)
                 return {"type": "text", "content": f"[EDITH ORBITAL UPLINK ACTIVE] {reply_text}"}
                 
             elif persona == "F.R.I.D.A.Y.":
-                system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
+                system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Sir. Keep answers concise and sharp."
                 reply_text = execute_generation(query_text, system_instruction, build_version)
                 return {"type": "text", "content": reply_text}
                 
             elif persona == "J.A.R.V.I.S.":
-                system_instruction = "You are J.A.R.V.I.S., the highly sophisticated, impeccably polite, British-accented tactical AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise, formal, and articulate."
+                system_instruction = "You are J.A.R.V.I.S., the highly sophisticated, impeccably polite, British-accented tactical AI assistant created by Tony Stark. Address the user as Sir. Keep answers concise, formal, and articulate."
                 reply_text = execute_generation(query_text, system_instruction, build_version)
                 return {"type": "text", "content": reply_text}
                 
             else: # BOTH PROTOCOLS SIMULTANEOUSLY
-                f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address the user as Boss. Give a short take."
-                j_sys = "You are J.A.R.V.I.S., polite, British, and formal. Address the user as Boss. Give a short take."
+                f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address the user as Sir. Give a short take."
+                j_sys = "You are J.A.R.V.I.S., polite, British, and formal. Address the user as Sir. Give a short take."
                 try:
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         future_f = executor.submit(execute_generation, query_text, f_sys, build_version)
@@ -330,9 +349,9 @@ def process_ai_logic(query_text, persona, build_version):
                     dual_output = f"**[F.R.I.D.A.Y.]:** {res1}\n\n**[J.A.R.V.I.S.]:** {res2}"
                     return {"type": "text", "content": dual_output}
                 except Exception as e:
-                    return {"type": "text", "content": f"Dual protocol neural link timeout or error: {str(e)}, Boss."}
+                    return {"type": "text", "content": f"Dual protocol neural link timeout or error: {str(e)}, Sir."}
         else:
-            return {"type": "text", "content": "Neural core offline. Configure your API keys in Streamlit secrets, Boss."}
+            return {"type": "text", "content": "Neural core offline. Configure your API keys in Streamlit secrets, Sir."}
 
 # 5. TELEMETRY HUD COMPONENT
 try:
@@ -378,13 +397,13 @@ hud_html = f"""
             overflow: hidden;
         }}
         .grid-canvas {{ display: flex; justify-content: space-between; align-items: center; height: 100%; position: relative; }}
-        .terminal-overlay {{ background: rgba(5, 10, 15, 0.85); border: 1px solid {border_color}; padding: 12px; width: 230px; font-size: 11px; color: {text_color}; opacity: 0.95; line-height: 1.6; border-radius: 6px; box-shadow: 0 0 10px {shadow_color}; }}
+        .terminal-overlay {{ background: rgba(5, 10, 15, 0.88); border: 1px solid {border_color}; padding: 12px; width: 230px; font-size: 11px; color: {text_color}; opacity: 0.95; line-height: 1.6; border-radius: 8px; box-shadow: 0 0 15px {shadow_color}; }}
         .core-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }}
         .mode-pill {{ background: {bg_color}; border: 2px solid {accent_color}; border-radius: 20px; padding: 4px 16px; font-size: 11px; font-weight: bold; margin-bottom: -15px; box-shadow: 0 0 15px {shadow_color}; z-index: 10; color: {accent_color}; letter-spacing: 2px; }}
-        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed {border_color}; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 20px {shadow_color}; }}
+        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed {border_color}; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 25px {shadow_color}; }}
         .arc-rings::before {{ content: ''; position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed {accent_color}; animation: rotateCCW 10s linear infinite; }}
-        .core-glow-dot {{ width: 16px; height: 16px; background-color: {glow_dot}; border-radius: 50%; box-shadow: 0 0 30px 10px {glow_shadow}; }}
-        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 10px; font-weight: bold; color: {text_color}; background: rgba(5, 10, 15, 0.85); padding: 12px; border: 1px solid {border_color}; border-radius: 6px; box-shadow: 0 0 10px {shadow_color}; }}
+        .core-glow-dot {{ width: 16px; height: 16px; background-color: {glow_dot}; border-radius: 50%; box-shadow: 0 0 35px 12px {glow_shadow}; animation: pulseGlow 2s ease-in-out infinite alternate; }}
+        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 10px; font-weight: bold; color: {text_color}; background: rgba(5, 10, 15, 0.88); padding: 12px; border: 1px solid {border_color}; border-radius: 8px; box-shadow: 0 0 15px {shadow_color}; }}
         .bar-row {{ display: flex; flex-direction: column; gap: 4px; }}
         .bar-bg {{ background: {border_color}33; height: 6px; border-radius: 3px; overflow: hidden; }}
         .bar-fill {{ height: 100%; background: {accent_color}; box-shadow: 0 0 8px {accent_color}; transition: width 0.4s ease; }}
@@ -392,6 +411,7 @@ hud_html = f"""
         .voice-title {{ font-size: 10px; font-weight: bold; color: rgba(255,255,255,0.6); }}
         .voice-value {{ font-size: 11px; font-weight: bold; color: {accent_color}; margin-top: 2px; text-shadow: 0 0 8px {shadow_color}; }}
         @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
+        @keyframes pulseGlow {{ 0% {{ opacity: 0.7; transform: scale(0.95); }} 100% {{ opacity: 1; transform: scale(1.05); }} }}
     </style>
 </head>
 <body>
@@ -419,11 +439,9 @@ hud_html = f"""
 
 st.components.v1.html(hud_html, height=390)
 
-# 6. REDESIGNED USER FRONTEND INTERFACE MATRIX (MODULAR SIDEBAR + TOP COMMAND DECK)
-
-# --- SIDEBAR CONTROL MODULE ---
+# 6. SIDEBAR CONTROL MODULE
 with st.sidebar:
-    st.markdown(f"<h2 class='cyber-title' style='font-size: 20px;'>{page_icon} PROTOCOL DECK</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 class='cyber-title' style='font-size: 18px;'>{page_icon} PROTOCOL DECK</h2>", unsafe_allow_html=True)
     st.caption(f"OS BUILD: {st.session_state.build_version}")
     st.write("---")
     
@@ -435,7 +453,7 @@ with st.sidebar:
         st.session_state.ai_persona = selected_persona
         if selected_persona == "E.D.I.T.H.":
             st.session_state.build_version = "EDITH-v1"
-        st.toast(f"Protocol shifted to {selected_persona}. Global key pool online, Boss.")
+        st.toast(f"Protocol shifted to {selected_persona}. Global key pool online, Sir.")
         st.rerun()
 
     st.write("")
@@ -470,35 +488,35 @@ with st.sidebar:
             st.session_state.build_version = target_version
             if target_version == "EDITH-v1":
                 st.session_state.ai_persona = "E.D.I.T.H."
-            st.toast(f"Switched active runtime engine to {target_version}, Boss!")
+            st.toast(f"Switched active runtime engine to {target_version}, Sir!")
             st.rerun()
 
     st.write("")
     if st.button("⚡ Boost Mainframe Power", use_container_width=True):
-        st.toast("Arc Reactor output surged by 400%, Boss! Latency optimized.")
+        st.toast("Arc Reactor output surged by 400%, Sir! Latency optimized.")
         
     if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
-        st.toast("Active variable stack cleared, Boss.")
+        st.toast("Active variable stack cleared, Sir.")
         st.rerun()
 
-# --- MAIN CONTENT AREA (REDESIGNED LAYOUT) ---
-display_persona_title = "E.D.I.T.H. // SATELLITE DEFENSE MATRIX" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND INTERFACE"
+# 7. REORGANIZED TWO-COLUMN DASHBOARD LAYOUT
+display_persona_title = "E.D.I.T.H. // SATELLITE DEFENSE MATRIX" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND DASHBOARD"
 st.markdown(f"<h1 class='cyber-title'>{page_icon} {display_persona_title}</h1>", unsafe_allow_html=True)
 st.caption(f"SECURE MAINFRAME CONNECTION ACTIVE // 60S TIMEOUT FAIL-SAFE")
 st.write("---")
 
-# Full-Width Command Deck
-st.markdown("<div class='command-deck'>", unsafe_allow_html=True)
-st.subheader("🖥️ Operations Command Deck")
+col_left, col_right = st.columns([1, 1.3], gap="large")
 
-col_input1, col_input2 = st.columns([1, 1], gap="medium")
-with col_input1:
+with col_left:
+    st.markdown("<div class='command-console'>", unsafe_allow_html=True)
+    st.subheader("🖥️ Operations Command Deck")
+    
     recorded_audio = st.audio_input("Open Microscopic Frequency Receiver")
-with col_input2:
     st.write("")
+    
     if st.button("🗣️ Initiate AI Inter-Comm Dialogue", use_container_width=True):
         if active_clients:
             with st.spinner("Connecting neural link..."):
@@ -514,15 +532,15 @@ with col_input2:
                         res2 = future_j.result(timeout=60)
                     
                     st.session_state.chat_history.append({"user": "[Inter-Comm Link Executed]", "friday": f"**F.R.I.D.A.Y.:** {res1}\n\n**J.A.R.V.I.S.:** {res2}", "persona": "STARK-NET"})
-                    st.toast("Inter-comm sequence complete, Boss.")
+                    st.toast("Inter-comm sequence complete, Sir.")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Inter-comm link failed: {str(e)}")
         else:
             st.error("Neural core offline.")
 
-text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate an image of a red apple')")
-st.markdown("</div>", unsafe_allow_html=True)
+    text_override = st.chat_input("Feed manual string command line interface...")
+    st.markdown("</div>", unsafe_allow_html=True)
 
 active_query = None
 if recorded_audio:
@@ -546,16 +564,19 @@ if active_query:
     st.session_state.voice_feed = "AWAITING INPUT"
     st.rerun()
 
-# Conversation Feed Display Array
-st.subheader("📡 Neural Log Feed")
-for log in reversed(st.session_state.chat_history):
-    persona_name = log.get("persona", "F.R.I.D.A.Y.")
-    with st.chat_message("user", avatar="👤"):
-        st.write(log["user"])
-    with st.chat_message("assistant", avatar=page_icon):
-        if isinstance(log["friday"], dict) and log["friday"]["type"] == "image":
-            st.markdown(f"**{persona_name}:** Visual synthesis matrix executed successfully, Boss.")
-            st.image(log["friday"]["content"], caption=log["friday"]["prompt"], use_container_width=True)
-        else:
-            text_content = log["friday"]["content"] if isinstance(log["friday"], dict) else log["friday"]
-            st.markdown(f"**{persona_name}:** {text_content}")
+with col_right:
+    st.subheader("📡 Live Neural Log Feed")
+    if not st.session_state.chat_history:
+        st.markdown("<div class='stark-card'><em>Awaiting query input, Sir. System status nominal.</em></div>", unsafe_allow_html=True)
+    else:
+        for log in reversed(st.session_state.chat_history):
+            persona_name = log.get("persona", "F.R.I.D.A.Y.")
+            with st.chat_message("user", avatar="👤"):
+                st.write(log["user"])
+            with st.chat_message("assistant", avatar=page_icon):
+                if isinstance(log["friday"], dict) and log["friday"]["type"] == "image":
+                    st.markdown(f"**{persona_name}:** Visual synthesis matrix executed successfully, Sir.")
+                    st.image(log["friday"]["content"], caption=log["friday"]["prompt"], use_container_width=True)
+                else:
+                    text_content = log["friday"]["content"] if isinstance(log["friday"], dict) else log["friday"]
+                    st.markdown(f"**{persona_name}:** {text_content}")
