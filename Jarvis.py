@@ -26,6 +26,8 @@ if "build_version" not in st.session_state:
     st.session_state.build_version = "v3.6"
 if "tts_enabled" not in st.session_state:
     st.session_state.tts_enabled = True
+if "last_processed_query" not in st.session_state:
+    st.session_state.last_processed_query = ""
 
 # STARK INDUSTRIAL THEME STYLING
 st.markdown("""
@@ -191,7 +193,7 @@ with col1:
     recorded_audio = st.audio_input("Open Microscopic Frequency Receiver")
     st.write("")
     
-    text_override = st.chat_input("Feed manual string command line interface...")
+    text_override = st.chat_input("Feed manual string command line interface...", key="chat_input_field")
     st.markdown("</div>", unsafe_allow_html=True)
 
 active_query = None
@@ -208,9 +210,12 @@ if text_override:
     active_query = text_override
 
 with col2:
-    st.subheader("📡 Live Neural Stream (v3.6 Engine with TTS)")
+    st.subheader("📡 Live Neural Stream (v3.6 Engine)")
     
-    if active_query:
+    # Process only if it's a completely new query string
+    if active_query and active_query != st.session_state.last_processed_query:
+        st.session_state.last_processed_query = active_query
+        
         if not client:
             ai_response = "Error: Neural core offline. Please configure your 'API_KEY' in Streamlit secrets, Sir."
             audio_bytes = None
@@ -237,7 +242,6 @@ with col2:
                     )
                     ai_response = response.text
 
-                # Generate TTS Audio if enabled
                 audio_bytes = None
                 if st.session_state.tts_enabled:
                     tld_val = 'co.uk' if st.session_state.ai_persona in ["J.A.R.V.I.S.", "BOTH"] else 'com'
@@ -255,7 +259,7 @@ with col2:
         st.rerun()
 
     if not st.session_state.chat_history:
-        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. v3.6 systems fully operational with Text-to-Speech active.</em></div>", unsafe_allow_html=True)
+        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. v3.6 systems fully operational.</em></div>", unsafe_allow_html=True)
     else:
         for chat in reversed(st.session_state.chat_history):
             with st.chat_message("user", avatar="👤"):
@@ -265,7 +269,7 @@ with col2:
                 if chat.get("audio") and st.session_state.tts_enabled:
                     st.audio(chat["audio"], format="audio/mp3")
 
-# 6. BOTTOM CONTROL PANEL (REPLACING THE SIDEBAR)
+# 6. BOTTOM CONTROL PANEL
 st.write("---")
 st.markdown("<h3 class='cyber-title' style='font-size: 16px;'>⚙️ BOTTOM PROTOCOL DECK & ARCHIVE VAULT</h3>", unsafe_allow_html=True)
 
@@ -305,5 +309,6 @@ with bottom_col5:
     st.write("")
     if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
+        st.session_state.last_processed_query = ""
         st.toast("Active variable stack cleared, Sir.")
         st.rerun()
