@@ -169,7 +169,7 @@ def execute_generation(query_text, system_instruction):
             try:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_single_generation_call, chosen_client, query_text, system_instruction)
-                    result_text = future.result(timeout=12)
+                    result_text = future.result(timeout=60)
                     
                 if i > 0:
                     return f"[Failover Shifted to Key Index {client_idx + 1}] {result_text}"
