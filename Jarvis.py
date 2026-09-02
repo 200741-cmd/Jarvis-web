@@ -95,7 +95,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# OPTIMIZED FAST CLIENT INITIALIZATION (CACHED TO AVOID LATENCY)
+# OPTIMIZED FAST CLIENT INITIALIZATION (CACHED)
 @st.cache_resource
 def init_active_clients():
     raw_keys = [
@@ -129,10 +129,17 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. STREAMLINED ACTION MATRIX (GLOBAL POOL LOAD-BALANCING & FAILOVER)
+# 4. TIMEOUT-PROTECTED GENERATION ENGINE
+def _single_generation_call(chosen_client, query_text, system_instruction):
+    response = chosen_client.models.generate_content(
+        model='gemini-2.5-flash', 
+        contents=query_text,
+        config={'system_instruction': system_instruction}
+    )
+    return response.text
+
 def execute_generation(query_text, system_instruction):
     global active_clients
-    
     if not active_clients:
         raise Exception("All neural key banks offline. Configure your API keys in secrets, Boss.")
     
@@ -144,18 +151,20 @@ def execute_generation(query_text, system_instruction):
         st.session_state.key_rotation_toggle += 1
         
         try:
-            response = chosen_client.models.generate_content(
-                model='gemini-2.5-flash', 
-                contents=query_text,
-                config={'system_instruction': system_instruction}
-            )
+            # Wrap API call in a strict thread pool timeout to prevent infinite hanging
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_single_generation_call, chosen_client, query_text, system_instruction)
+                result_text = future.result(timeout=12) # 12 second hard limit
+                
             if i > 0:
-                return f"[Failover Shifted to Key Index {client_idx + 1}] {response.text}"
-            return response.text
+                return f"[Failover Shifted to Key Index {client_idx + 1}] {result_text}"
+            return result_text
+        except concurrent.futures.TimeoutError:
+            continue # Try next key if current one times out
         except Exception:
             continue
             
-    raise Exception("All active API keys in the global pool have encountered an error or exhaustion.")
+    raise Exception("Neural query timed out or key bank exhausted, Boss.")
 
 def process_ai_logic(query_text, persona):
     query = query_text.lower().strip()
@@ -163,9 +172,13 @@ def process_ai_logic(query_text, persona):
     if "wikipedia" in query:
         search_target = query.replace("wikipedia", "").strip()
         try:
-            return {"type": "text", "content": f"Accessing global archives, Boss... {wikipedia.summary(search_target, sentences=2)}"}
+            # Safety timeout wrapper for wikipedia
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(wikipedia.summary, search_target, 2)
+                summary = future.result(timeout=8)
+            return {"type": "text", "content": f"Accessing global archives, Boss... {summary}"}
         except Exception:
-            return {"type": "text", "content": "Couldn't match any solid logs in the database, Boss."}
+            return {"type": "text", "content": "Couldn't match any solid logs or archives timed out, Boss."}
             
     elif "open youtube" in query:
         return {"type": "text", "content": "Link established: [Click to launch YouTube Mainframe](https://youtube.com)"}
@@ -217,13 +230,13 @@ def process_ai_logic(query_text, persona):
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         future_f = executor.submit(execute_generation, query_text, f_sys)
                         future_j = executor.submit(execute_generation, query_text, j_sys)
-                        res1 = future_f.result()
-                        res2 = future_j.result()
+                        res1 = future_f.result(timeout=14)
+                        res2 = future_j.result(timeout=14)
                     
                     dual_output = f"**[F.R.I.D.A.Y.]:** {res1}\n\n**[J.A.R.V.I.S.]:** {res2}"
                     return {"type": "text", "content": dual_output}
                 except Exception as e:
-                    return {"type": "text", "content": f"Dual protocol neural link error: {str(e)}, Boss."}
+                    return {"type": "text", "content": f"Dual protocol neural link timeout or error: {str(e)}, Boss."}
         else:
             return {"type": "text", "content": "Neural core offline. Configure your API keys in Streamlit secrets, Boss."}
 
@@ -236,7 +249,7 @@ except Exception:
     ram = 40.0
 core_temp = 34
 
-recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (FAST-LOAD)", f"> GLOBAL POOL: {active_keys_status}"]
+recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (FAIL-SAFE SPEED)", f"> GLOBAL POOL: {active_keys_status}"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -391,14 +404,14 @@ with right_col:
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future_f = executor.submit(execute_generation, "Initiate banter with J.A.R.V.I.S.", f_sys)
                             future_j = executor.submit(execute_generation, "Reply to F.R.I.D.A.Y.", j_sys)
-                            res1 = future_f.result()
-                            res2 = future_j.result()
+                            res1 = future_f.result(timeout=12)
+                            res2 = future_j.result(timeout=12)
                         
                         st.session_state.chat_history.append({"user": "[Inter-Comm Link Executed]", "friday": f"**F.R.I.D.A.Y.:** {res1}\n\n**J.A.R.V.I.S.:** {res2}", "persona": "STARK-NET"})
                         st.toast("Inter-comm sequence complete, Boss.")
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Inter-comm link failed: {str(e)}")
+                        st.error(f"Inter-comm link timed out or failed: {str(e)}")
             else:
                 st.error("Neural core offline. Configure API keys in secrets, Boss.")
 
@@ -434,4 +447,4 @@ with right_col:
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
         st.toast("Active variable stack cleared, Boss.")
-        st.rerurn()
+        st.rerun()
