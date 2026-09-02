@@ -11,7 +11,7 @@ from PIL import Image
 
 # 1. PAGE CONFIG
 st.set_page_config(
-    page_title="F.R.I.D.A.Y. // Tactical OS",
+    page_title="F.R.I.D.A.Y. // Tactical OS (v3.6)",
     page_icon="🟠",
     layout="wide"
 )
@@ -35,7 +35,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. SECURE CLIENT INITIALIZATION
+# 3. SECURE CLIENT INITIALIZATION (v3.6 Engine Standard)
 @st.cache_resource
 def get_genai_client():
     api_key = None
@@ -50,9 +50,10 @@ def get_genai_client():
 
 client = get_genai_client()
 
-# 4. SIDEBAR CONTROL MODULE (RESTORED)
+# 4. SIDEBAR CONTROL MODULE
 with st.sidebar:
     st.markdown("<h2 class='cyber-title' style='font-size: 16px;'>PROTOCOL DECK</h2>", unsafe_allow_html=True)
+    st.caption("CORE ENGINE: v3.6")
     st.write("---")
     
     protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
@@ -69,7 +70,7 @@ with st.sidebar:
     st.write("---")
     with st.expander("🔑 Key Bank Status", expanded=True):
         if client:
-            st.markdown("<span style='color: #69f0ae; font-weight: bold;'>🟢 Primary Key: ONLINE</span>", unsafe_allow_html=True)
+            st.markdown("<span style='color: #69f0ae; font-weight: bold;'>🟢 Primary Key: ONLINE (v3.6)</span>", unsafe_allow_html=True)
         else:
             st.markdown("<span style='color: #ff5252; font-weight: bold;'>🔴 Neural Link: OFFLINE<br>(API Key missing in Secrets)</span>", unsafe_allow_html=True)
 
@@ -83,7 +84,7 @@ with st.sidebar:
 
     st.write("")
     if st.button("⚡ Boost Mainframe Power", use_container_width=True):
-        st.toast("Arc Reactor output surged by 400%, Sir! Latency optimized.")
+        st.toast("Arc Reactor output surged by 400%, Sir! v3.6 Latency optimized.")
         
     if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
@@ -94,7 +95,7 @@ with st.sidebar:
 cpu = psutil.cpu_percent(interval=None)
 ram = psutil.virtual_memory().percent
 link_status = "ONLINE" if client else "OFFLINE"
-engine_title = "EDITH SATELLITE DEFENSE" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND"
+engine_title = "EDITH SATELLITE DEFENSE (v3.6)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (v3.6)"
 
 hud_html = f"""
 <!DOCTYPE html>
@@ -137,7 +138,7 @@ hud_html = f"""
         .title-glow {{
             font-family: 'Orbitron', sans-serif;
             color: #ff9800;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             letter-spacing: 2px;
             text-shadow: 0 0 12px rgba(255, 152, 0, 0.7);
@@ -198,7 +199,7 @@ hud_html = f"""
         
         <div class="hud-center">
             <div class="title-glow">{engine_title}</div>
-            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME</div>
+            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME (v3.6)</div>
             <div class="arc-rings">
                 <div class="core-glow-dot"></div>
             </div>
@@ -245,7 +246,7 @@ if text_override:
     active_query = text_override
 
 with col2:
-    st.subheader("📡 Live Neural Stream")
+    st.subheader("📡 Live Neural Stream (v3.6 Engine)")
     
     if active_query:
         if not client:
@@ -279,7 +280,7 @@ with col2:
         st.rerun()
 
     if not st.session_state.chat_history:
-        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. Systems fully operational.</em></div>", unsafe_allow_html=True)
+        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. v3.6 systems fully operational.</em></div>", unsafe_allow_html=True)
     else:
         for chat in reversed(st.session_state.chat_history):
             with st.chat_message("user", avatar="👤"):
