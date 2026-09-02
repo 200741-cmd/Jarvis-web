@@ -51,7 +51,7 @@ else: # BOTH (DUAL PROTOCOL HYBRID MATRIX)
     border_color = "#8e24aa"
     shadow_color = "rgba(171, 71, 188, 0.7)"
     card_bg = "rgba(171, 71, 188, 0.04)"
-    page_icon = "🟣🔵"
+    page_icon = "⚡"
     glow_dot = "#ab47bc"
     glow_shadow = "#8e24aa"
 
