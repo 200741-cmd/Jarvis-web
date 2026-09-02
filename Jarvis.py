@@ -1,4 +1,5 @@
 import streamlit as st
+import speech_recognition as sr
 import datetime
 import wikipedia
 import psutil
@@ -20,6 +21,8 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "F.R.I.D.A.Y."
+if "build_version" not in st.session_state:
+    st.session_state.build_version = "v3.6"
 
 # STARK INDUSTRIAL THEME STYLING
 st.markdown("""
@@ -47,27 +50,51 @@ def get_genai_client():
 
 client = get_genai_client()
 
-# 4. SIDEBAR CONTROLS
+# 4. SIDEBAR CONTROL MODULE (RESTORED)
 with st.sidebar:
     st.markdown("<h2 class='cyber-title' style='font-size: 16px;'>PROTOCOL DECK</h2>", unsafe_allow_html=True)
     st.write("---")
-    persona = st.radio("Active AI Protocol", ["F.R.I.D.A.Y.", "J.A.R.V.I.S."])
-    st.session_state.ai_persona = persona
     
-    st.write("---")
-    if client:
-        st.markdown("<span style='color: #69f0ae;'>🟢 Neural Link: ONLINE</span>", unsafe_allow_html=True)
-    else:
-        st.markdown("<span style='color: #ff5252;'>🔴 Neural Link: OFFLINE<br>(API Key missing in Secrets)</span>", unsafe_allow_html=True)
-
-    if st.button("Clear Chat History", use_container_width=True):
-        st.session_state.chat_history = []
+    protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
+    current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
+    selected_persona = st.radio("Active AI Protocol Selector", protocols, index=current_index)
+    
+    if selected_persona != st.session_state.ai_persona:
+        st.session_state.ai_persona = selected_persona
+        if selected_persona == "E.D.I.T.H.":
+            st.session_state.build_version = "EDITH-v1"
+        st.toast(f"Protocol shifted to {selected_persona}, Sir.")
         st.rerun()
 
-# 5. INTEGRATED ARC REACTOR & TELEMETRY DASHBOARD HEADER
+    st.write("---")
+    with st.expander("🔑 Key Bank Status", expanded=True):
+        if client:
+            st.markdown("<span style='color: #69f0ae; font-weight: bold;'>🟢 Primary Key: ONLINE</span>", unsafe_allow_html=True)
+        else:
+            st.markdown("<span style='color: #ff5252; font-weight: bold;'>🔴 Neural Link: OFFLINE<br>(API Key missing in Secrets)</span>", unsafe_allow_html=True)
+
+    st.write("")
+    with st.expander("📂 Stark Archive Vault"):
+        build_options = ["v3.6", "EDITH-v1"]
+        selected_build = st.selectbox("Operational Engine", build_options, index=0)
+        if selected_build != st.session_state.build_version:
+            st.session_state.build_version = selected_build
+            st.rerun()
+
+    st.write("")
+    if st.button("⚡ Boost Mainframe Power", use_container_width=True):
+        st.toast("Arc Reactor output surged by 400%, Sir! Latency optimized.")
+        
+    if st.button("Flush Cache Matrices", use_container_width=True):
+        st.session_state.chat_history = []
+        st.toast("Active variable stack cleared, Sir.")
+        st.rerun()
+
+# 5. INTEGRATED MOVING ARC REACTOR & TELEMETRY DASHBOARD HEADER
 cpu = psutil.cpu_percent(interval=None)
 ram = psutil.virtual_memory().percent
 link_status = "ONLINE" if client else "OFFLINE"
+engine_title = "EDITH SATELLITE DEFENSE" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND"
 
 hud_html = f"""
 <!DOCTYPE html>
@@ -110,7 +137,7 @@ hud_html = f"""
         .title-glow {{
             font-family: 'Orbitron', sans-serif;
             color: #ff9800;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             letter-spacing: 2px;
             text-shadow: 0 0 12px rgba(255, 152, 0, 0.7);
@@ -134,6 +161,16 @@ hud_html = f"""
             justify-content: center;
             position: relative;
             box-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+            animation: rotateCW 12s linear infinite;
+        }}
+        .arc-rings::before {{
+            content: '';
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 2px dotted #ff9800;
+            animation: rotateCCW 8s linear infinite;
         }}
         .core-glow-dot {{
             width: 12px;
@@ -145,6 +182,8 @@ hud_html = f"""
         }}
         .bar-bg {{ background: rgba(230, 81, 0, 0.3); height: 6px; border-radius: 3px; overflow: hidden; margin-top: 2px; }}
         .bar-fill {{ height: 100%; background: #ff9800; box-shadow: 0 0 8px #ff9800; }}
+        @keyframes rotateCW {{ 100% {{ transform: rotate(360deg); }} }}
+        @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
         @keyframes pulseGlow {{ 0% {{ opacity: 0.7; transform: scale(0.95); }} 100% {{ opacity: 1; transform: scale(1.05); }} }}
     </style>
 </head>
@@ -158,9 +197,11 @@ hud_html = f"""
         </div>
         
         <div class="hud-center">
-            <div class="title-glow">TACTICAL COMMAND DASHBOARD</div>
-            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME SYSTEM</div>
-            <div class="arc-rings"><div class="core-glow-dot"></div></div>
+            <div class="title-glow">{engine_title}</div>
+            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME</div>
+            <div class="arc-rings">
+                <div class="core-glow-dot"></div>
+            </div>
         </div>
 
         <div class="hud-right">
@@ -177,34 +218,64 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=240)
 st.write("---")
 
-# 6. MAIN CONTENT LAYOUT (Input & Chat Stream)
+# 6. MAIN CONTENT LAYOUT (Command Deck & Live Stream)
 col1, col2 = st.columns([1, 1.5], gap="large")
 
 with col1:
     st.markdown("<div class='stark-card'>", unsafe_allow_html=True)
-    st.subheader("🖥️ Command Input")
-    user_input = st.chat_input("Enter command query for mainframe...")
+    st.subheader("🖥️ Command Deck")
+    
+    recorded_audio = st.audio_input("Open Microscopic Frequency Receiver")
+    st.write("")
+    
+    text_override = st.chat_input("Feed manual string command line interface...")
     st.markdown("</div>", unsafe_allow_html=True)
+
+active_query = None
+if recorded_audio:
+    recognizer = sr.Recognizer()
+    try:
+        with sr.AudioFile(io.BytesIO(recorded_audio.read())) as source:
+            audio_data = recognizer.record(source)
+        active_query = recognizer.recognize_google(audio_data, language='en-US')
+    except Exception:
+        active_query = "Error decoding audio waveform stream."
+
+if text_override:
+    active_query = text_override
 
 with col2:
     st.subheader("📡 Live Neural Stream")
     
-    if user_input:
+    if active_query:
         if not client:
             ai_response = "Error: Neural core offline. Please configure your 'API_KEY' in Streamlit secrets, Sir."
         else:
             try:
-                system_prompt = f"You are {st.session_state.ai_persona}, an advanced AI assistant created by Tony Stark. Always address the user as Sir. Keep answers sharp, high-tech, and concise."
-                response = client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=user_input,
-                    config={'system_instruction': system_prompt}
-                )
-                ai_response = response.text
+                query_lower = active_query.lower()
+                if "wikipedia" in query_lower:
+                    search_target = query_lower.replace("wikipedia", "").strip()
+                    ai_response = wikipedia.summary(search_target, sentences=2)
+                else:
+                    if st.session_state.ai_persona == "E.D.I.T.H." or st.session_state.build_version == "EDITH-v1":
+                        sys_inst = "You are E.D.I.T.H., orbital defense satellite system. Address the user as Sir. Focus on surveillance and tactical metrics."
+                    elif st.session_state.ai_persona == "J.A.R.V.I.S.":
+                        sys_inst = "You are J.A.R.V.I.S., polite, formal, British-accented assistant. Address the user as Sir."
+                    elif st.session_state.ai_persona == "BOTH":
+                        sys_inst = "Provide a joint perspective combining F.R.I.D.A.Y. and J.A.R.V.I.S. traits. Address the user as Sir."
+                    else:
+                        sys_inst = "You are F.R.I.D.A.Y., witty and sharp AI. Address the user as Sir."
+
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=active_query,
+                        config={'system_instruction': sys_inst}
+                    )
+                    ai_response = response.text
             except Exception as e:
                 ai_response = f"Neural transmission error encountered, Sir: `{str(e)}`"
                 
-        st.session_state.chat_history.append({"user": user_input, "bot": ai_response})
+        st.session_state.chat_history.append({"user": active_query, "bot": ai_response})
         st.rerun()
 
     if not st.session_state.chat_history:
