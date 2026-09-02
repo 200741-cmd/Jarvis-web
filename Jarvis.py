@@ -139,7 +139,7 @@ def transcribe_audio(audio_buffer):
 # 4. VERSION-AWARE GENERATION ENGINE (GEMINI-3.6-FLASH & 60-SEC TIMER)
 def _single_generation_call(chosen_client, query_text, system_instruction):
     response = chosen_client.models.generate_content(
-        model='gemini-3.6-flash', 
+        model='gemini-3.6-flash',
         contents=query_text,
         config={'system_instruction': system_instruction}
     )
@@ -166,15 +166,17 @@ def execute_generation(query_text, system_instruction, build_version):
             try:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_single_generation_call, chosen_client, query_text, system_instruction)
-                    # 60 Second Timer Guard
                     result_text = future.result(timeout=60)
                     
                 if i > 0:
                     return f"[Failover Shifted to Key Index {client_idx + 1}] {result_text}"
                 return result_text
-            except Exception:
+            except Exception as e:
+                # Logs the exact failure reason in your terminal/logs instead of hiding it silently
+                print(f"⚠️ Key Index {client_idx + 1} exception details: {str(e)}")
                 continue
-        raise Exception("Neural query timed out after 60s or key bank exhausted, Boss.")
+                
+        raise Exception("Neural query failed across all key banks. Check server logs for exact error, Boss.")
 
 def process_ai_logic(query_text, persona, build_version):
     query = query_text.lower().strip()
