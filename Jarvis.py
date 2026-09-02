@@ -12,7 +12,7 @@ from PIL import Image
 
 # 1. PAGE CONFIG
 st.set_page_config(
-    page_title="F.R.I.D.A.Y. // Tactical OS (v3.6)",
+    page_title="F.R.I.D.A.Y. // Tactical OS (v3.5 Lite)",
     page_icon="🟠",
     layout="wide"
 )
@@ -23,7 +23,7 @@ if "chat_history" not in st.session_state:
 if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "F.R.I.D.A.Y."
 if "build_version" not in st.session_state:
-    st.session_state.build_version = "v3.6"
+    st.session_state.build_version = "v3.5-lite"
 if "tts_enabled" not in st.session_state:
     st.session_state.tts_enabled = True
 if "processing_query" not in st.session_state:
@@ -69,7 +69,7 @@ client = get_genai_client()
 cpu = psutil.cpu_percent(interval=None)
 ram = psutil.virtual_memory().percent
 link_status = "ONLINE" if client else "OFFLINE"
-engine_title = f"EDITH SATELLITE DEFENSE (gemini-3.6-flash)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (gemini-3.6-flash)"
+engine_title = f"EDITH SATELLITE DEFENSE (gemini-3.5-flash-lite)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (gemini-3.5-flash-lite)"
 
 hud_html = f"""
 <!DOCTYPE html>
@@ -173,7 +173,7 @@ hud_html = f"""
         
         <div class="hud-center">
             <div class="title-glow">{engine_title}</div>
-            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME (gemini-3.6-flash)</div>
+            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME (gemini-3.5-flash-lite)</div>
             <div class="arc-rings">
                 <div class="core-glow-dot"></div>
             </div>
@@ -244,6 +244,7 @@ with col2:
                     else:
                         sys_inst = "You are F.R.I.D.A.Y., witty and sharp AI. Address the user as Sir."
 
+                    # Using gemini-3.5-flash-lite for fast response generation
                     response = client.models.generate_content(
                         model='gemini-3.5-flash-lite',
                         contents=active_query,
@@ -253,7 +254,15 @@ with col2:
 
                 audio_bytes = None
                 if st.session_state.tts_enabled:
-                    tld_val = 'co.uk' if st.session_state.ai_persona in ["J.A.R.V.I.S.", "BOTH"] else 'com'
+                    # Character Voice Accent Mapping
+                    tld_mapping = {
+                        "F.R.I.D.A.Y.": "ie",    # Irish accent mapping
+                        "J.A.R.V.I.S.": "co.uk", # British accent mapping
+                        "E.D.I.T.H.": "com",     # American accent mapping
+                        "BOTH": "co.uk"
+                    }
+                    tld_val = tld_mapping.get(st.session_state.ai_persona, "com")
+                    
                     tts = gTTS(text=ai_response, lang='en', tld=tld_val)
                     fp = io.BytesIO()
                     tts.write_to_fp(fp)
@@ -269,7 +278,7 @@ with col2:
         st.rerun()
 
     if not st.session_state.chat_history:
-        st.markdown(f"<div class='stark-card'><em>Awaiting query inputs, Sir. {st.session_state.ai_persona} protocols active.</em></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='stark-card'><em>Awaiting query inputs, Sir. gemini-3.5-flash-lite core online.</em></div>", unsafe_allow_html=True)
     else:
         for chat in reversed(st.session_state.chat_history):
             with st.chat_message("user", avatar="👤"):
@@ -293,11 +302,11 @@ with bottom_col1:
         st.session_state.ai_persona = selected_persona
         if selected_persona == "E.D.I.T.H.":
             st.session_state.build_version = "EDITH-v1"
-        st.toast(f"Protocol shifted to {selected_persona}, Sir. Visual interface updated.")
+        st.toast(f"Protocol shifted to {selected_persona}, Sir. Theme and voice profiles updated.")
         st.rerun()
 
 with bottom_col2:
-    build_options = ["v3.6", "EDITH-v1"]
+    build_options = ["v3.5-lite", "EDITH-v1"]
     current_b_idx = build_options.index(st.session_state.build_version) if st.session_state.build_version in build_options else 0
     selected_build = st.selectbox("Operational Engine", build_options, index=current_b_idx)
     if selected_build != st.session_state.build_version:
@@ -313,7 +322,7 @@ with bottom_col3:
 with bottom_col4:
     st.write("")
     if st.button("⚡ Boost Mainframe Power", use_container_width=True):
-        st.toast("Arc Reactor output surged by 400%, Sir! gemini-3.6-flash latency optimized.")
+        st.toast("Arc Reactor output surged by 400%, Sir! gemini-3.5-flash-lite throughput optimized.")
 
 with bottom_col5:
     st.write("")
