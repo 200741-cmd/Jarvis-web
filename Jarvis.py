@@ -26,8 +26,8 @@ if "build_version" not in st.session_state:
     st.session_state.build_version = "v3.6"
 if "tts_enabled" not in st.session_state:
     st.session_state.tts_enabled = True
-if "last_processed_query" not in st.session_state:
-    st.session_state.last_processed_query = ""
+if "processing_query" not in st.session_state:
+    st.session_state.processing_query = None
 
 # STARK INDUSTRIAL THEME STYLING
 st.markdown("""
@@ -59,7 +59,7 @@ client = get_genai_client()
 cpu = psutil.cpu_percent(interval=None)
 ram = psutil.virtual_memory().percent
 link_status = "ONLINE" if client else "OFFLINE"
-engine_title = "EDITH SATELLITE DEFENSE (v3.6)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (v3.6)"
+engine_title = "EDITH SATELLITE DEFENSE (3.6-flash)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (3.6-flash)"
 
 hud_html = f"""
 <!DOCTYPE html>
@@ -163,7 +163,7 @@ hud_html = f"""
         
         <div class="hud-center">
             <div class="title-glow">{engine_title}</div>
-            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME (v3.6)</div>
+            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME (3.6-flash)</div>
             <div class="arc-rings">
                 <div class="core-glow-dot"></div>
             </div>
@@ -210,11 +210,10 @@ if text_override:
     active_query = text_override
 
 with col2:
-    st.subheader("📡 Live Neural Stream (v3.6 Engine)")
+    st.subheader("📡 Live Neural Stream (3.6-flash Engine)")
     
-    # Process only if it's a completely new query string
-    if active_query and active_query != st.session_state.last_processed_query:
-        st.session_state.last_processed_query = active_query
+    if active_query and active_query != st.session_state.processing_query:
+        st.session_state.processing_query = active_query
         
         if not client:
             ai_response = "Error: Neural core offline. Please configure your 'API_KEY' in Streamlit secrets, Sir."
@@ -236,7 +235,7 @@ with col2:
                         sys_inst = "You are F.R.I.D.A.Y., witty and sharp AI. Address the user as Sir."
 
                     response = client.models.generate_content(
-                        model='gemini-3.6-flash',
+                        model='3.6-flash',
                         contents=active_query,
                         config={'system_instruction': sys_inst}
                     )
@@ -256,10 +255,11 @@ with col2:
                 audio_bytes = None
                 
         st.session_state.chat_history.append({"user": active_query, "bot": ai_response, "audio": audio_bytes})
+        st.session_state.processing_query = None
         st.rerun()
 
     if not st.session_state.chat_history:
-        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. v3.6 systems fully operational.</em></div>", unsafe_allow_html=True)
+        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. 3.6-flash systems fully operational.</em></div>", unsafe_allow_html=True)
     else:
         for chat in reversed(st.session_state.chat_history):
             with st.chat_message("user", avatar="👤"):
@@ -303,12 +303,12 @@ with bottom_col3:
 with bottom_col4:
     st.write("")
     if st.button("⚡ Boost Mainframe Power", use_container_width=True):
-        st.toast("Arc Reactor output surged by 400%, Sir! v3.6 Latency optimized.")
+        st.toast("Arc Reactor output surged by 400%, Sir! 3.6-flash latency optimized.")
 
 with bottom_col5:
     st.write("")
     if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
-        st.session_state.last_processed_query = ""
+        st.session_state.processing_query = None
         st.toast("Active variable stack cleared, Sir.")
         st.rerun()
