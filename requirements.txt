@@ -1,5 +1,7 @@
+streamlit
 google-genai
 SpeechRecognition
-streamlit
 wikipedia
 psutil
+Pillow
+gTTS
