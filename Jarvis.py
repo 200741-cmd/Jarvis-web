@@ -29,7 +29,7 @@ if "ai_persona" not in st.session_state:
 if "key_cooldowns" not in st.session_state:
     st.session_state.key_cooldowns = {}  # Tracks {client_idx: expiration_timestamp}
 
-# DYNAMIC THEME PALETTE CONFIGURATION
+# DYNAMIC THEME PALETTE CONFIGURATION (INCLUDING E.D.I.T.H.)
 if st.session_state.ai_persona == "F.R.I.D.A.Y.":
     bg_color = "#070402"
     text_color = "#ffc107"
@@ -50,6 +50,16 @@ elif st.session_state.ai_persona == "J.A.R.V.I.S.":
     page_icon = "🔵"
     glow_dot = "#00bcd4"
     glow_shadow = "#00acc1"
+elif st.session_state.ai_persona == "E.D.I.T.H.":
+    bg_color = "#0a0203"
+    text_color = "#ff8a80"
+    accent_color = "#ff5252"
+    border_color = "#b71c1c"
+    shadow_color = "rgba(255, 82, 82, 0.6)"
+    card_bg = "linear-gradient(135deg, rgba(255, 82, 82, 0.06) 0%, rgba(15, 2, 3, 0.85) 100%)"
+    page_icon = "🔴"
+    glow_dot = "#ff5252"
+    glow_shadow = "#d32f2f"
 else: # BOTH (DUAL PROTOCOL HYBRID MATRIX)
     bg_color = "#050308"
     text_color = "#e1bee7"
@@ -105,7 +115,6 @@ st.markdown(f"""
         background-color: {accent_color} !important;
         box-shadow: 0 0 10px {accent_color};
     }}
-    /* Custom button aesthetics */
     .stButton > button {{
         background: transparent !important;
         border: 1px solid {accent_color} !important;
@@ -120,7 +129,7 @@ st.markdown(f"""
         background: {accent_color}22 !important;
         box-shadow: 0 0 15px {accent_color} !important;
         border-color: {text_color} !important;
-    }}
+            }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -298,6 +307,11 @@ def process_ai_logic(query_text, persona, build_version):
                 reply_text = execute_generation(query_text, system_instruction, build_version)
                 return {"type": "text", "content": reply_text}
                 
+            elif persona == "E.D.I.T.H.":
+                system_instruction = "You are E.D.I.T.H. (Even Dead I'm The Hero), the advanced tactical defense satellite intelligence system created by Tony Stark. Address the user as Boss. Focus on global satellite surveillance data, tactical precision, defense protocols, and tactical insights. Keep answers authoritative and concise."
+                reply_text = execute_generation(query_text, system_instruction, build_version)
+                return {"type": "text", "content": reply_text}
+                
             else: # BOTH PROTOCOLS SIMULTANEOUSLY
                 f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address the user as Boss. Give a short take."
                 j_sys = "You are J.A.R.V.I.S., polite, British, and formal. Address the user as Boss. Give a short take."
@@ -455,7 +469,7 @@ with right_col:
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
         st.metric(label="STARK LINK HUB (3.6-FLASH)", value="SECURE", delta=active_keys_status)
         
-        # LIVE AUTO-REFRESHING COOLDOWN MATRIX FRAGMENT (Fixes the static 'Ready' bug)
+        # LIVE AUTO-REFRESHING COOLDOWN MATRIX FRAGMENT
         @st.fragment(run_every=1)
         def render_cooldown_matrix():
             st.markdown("##### 🔑 Key Bank Cooldown Matrix")
@@ -473,7 +487,7 @@ with right_col:
         render_cooldown_matrix()
                 
         st.write("")
-        protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "BOTH"]
+        protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
         current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
         selected_persona = st.radio("AI Protocol Selector", protocols, index=current_index)
         
