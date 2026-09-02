@@ -29,14 +29,24 @@ if "tts_enabled" not in st.session_state:
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 
-# STARK INDUSTRIAL THEME STYLING
-st.markdown("""
+# DYNAMIC THEME ENGINE (Changes based on active protocol)
+persona_colors = {
+    "F.R.I.D.A.Y.": {"primary": "#ff9800", "border": "#e65100", "glow": "rgba(255, 152, 0, 0.6)", "bg": "#070402"},
+    "J.A.R.V.I.S.": {"primary": "#00e5ff", "border": "#0091ea", "glow": "rgba(0, 229, 255, 0.6)", "bg": "#02060a"},
+    "E.D.I.T.H.":   {"primary": "#ff1744", "border": "#d50000", "glow": "rgba(255, 23, 68, 0.6)", "bg": "#0a0203"},
+    "BOTH":         {"primary": "#d500f9", "border": "#aa00ff", "glow": "rgba(213, 0, 249, 0.6)", "bg": "#06020a"}
+}
+
+active_theme = persona_colors.get(st.session_state.ai_persona, persona_colors["F.R.I.D.A.Y."])
+
+# DYNAMIC STARK INDUSTRIAL THEME STYLING
+st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap');
-    .stApp { background-color: #070402; color: #ffc107; font-family: 'Share Tech Mono', monospace; }
-    .cyber-title { color: #ff9800; font-family: 'Orbitron', sans-serif; text-shadow: 0 0 15px rgba(255, 152, 0, 0.6); font-weight: 900; letter-spacing: 3px; }
-    .stark-card { background: linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(12, 6, 2, 0.9) 100%); border: 1px solid #e65100; padding: 20px; border-radius: 12px; box-shadow: 0 0 20px rgba(255, 152, 0, 0.4); margin-bottom: 15px; }
-    .stButton > button { background: transparent !important; border: 1.5px solid #ff9800 !important; color: #ffc107 !important; font-family: 'Orbitron' !important; font-weight: 700 !important; border-radius: 8px !important; }
+    .stApp {{ background-color: {active_theme['bg']}; color: {active_theme['primary']}; font-family: 'Share Tech Mono', monospace; transition: background-color 0.5s ease; }}
+    .cyber-title {{ color: {active_theme['primary']}; font-family: 'Orbitron', sans-serif; text-shadow: 0 0 15px {active_theme['glow']}; font-weight: 900; letter-spacing: 3px; }}
+    .stark-card {{ background: linear-gradient(135deg, {active_theme['glow']} 0%, {active_theme['bg']} 90%); border: 1px solid {active_theme['border']}; padding: 20px; border-radius: 12px; box-shadow: 0 0 20px {active_theme['glow']}; margin-bottom: 15px; }}
+    .stButton > button {{ background: transparent !important; border: 1.5px solid {active_theme['primary']} !important; color: {active_theme['primary']} !important; font-family: 'Orbitron' !important; font-weight: 700 !important; border-radius: 8px !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -59,7 +69,7 @@ client = get_genai_client()
 cpu = psutil.cpu_percent(interval=None)
 ram = psutil.virtual_memory().percent
 link_status = "ONLINE" if client else "OFFLINE"
-engine_title = "EDITH SATELLITE DEFENSE (gemini-3.6-flash)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (gemini-3.6-flash)"
+engine_title = f"EDITH SATELLITE DEFENSE (gemini-3.6-flash)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (gemini-3.6-flash)"
 
 hud_html = f"""
 <!DOCTYPE html>
@@ -67,13 +77,13 @@ hud_html = f"""
 <head>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Share Tech Mono', monospace; }}
-        body {{ background-color: transparent; color: #ffc107; }}
+        body {{ background-color: transparent; color: {active_theme['primary']}; }}
         .hud-container {{
-            background: linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(12, 6, 2, 0.95) 100%);
-            border: 2px solid #e65100;
+            background: linear-gradient(135deg, {active_theme['glow']} 0%, {active_theme['bg']} 95%);
+            border: 2px solid {active_theme['border']};
             border-radius: 16px;
             padding: 20px;
-            box-shadow: inset 0 0 25px rgba(230, 81, 0, 0.3), 0 0 30px rgba(255, 152, 0, 0.5);
+            box-shadow: inset 0 0 25px {active_theme['border']}, 0 0 30px {active_theme['glow']};
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -89,9 +99,9 @@ hud_html = f"""
             font-size: 12px;
             background: rgba(5, 10, 15, 0.7);
             padding: 12px;
-            border: 1px solid #e65100;
+            border: 1px solid {active_theme['border']};
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(255, 152, 0, 0.2);
+            box-shadow: 0 0 10px {active_theme['glow']};
         }}
         .hud-center {{
             display: flex;
@@ -101,11 +111,11 @@ hud_html = f"""
         }}
         .title-glow {{
             font-family: 'Orbitron', sans-serif;
-            color: #ff9800;
+            color: {active_theme['primary']};
             font-size: 15px;
             font-weight: 900;
             letter-spacing: 2px;
-            text-shadow: 0 0 12px rgba(255, 152, 0, 0.7);
+            text-shadow: 0 0 12px {active_theme['glow']};
             margin-bottom: 4px;
             text-align: center;
         }}
@@ -120,12 +130,12 @@ hud_html = f"""
             width: 90px;
             height: 90px;
             border-radius: 50%;
-            border: 2px dashed #e65100;
+            border: 2px dashed {active_theme['border']};
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+            box-shadow: 0 0 20px {active_theme['glow']};
             animation: rotateCW 12s linear infinite;
         }}
         .arc-rings::before {{
@@ -134,19 +144,19 @@ hud_html = f"""
             width: 70px;
             height: 70px;
             border-radius: 50%;
-            border: 2px dotted #ff9800;
+            border: 2px dotted {active_theme['primary']};
             animation: rotateCCW 8s linear infinite;
         }}
         .core-glow-dot {{
             width: 12px;
             height: 12px;
-            background-color: #ff9800;
+            background-color: {active_theme['primary']};
             border-radius: 50%;
-            box-shadow: 0 0 25px 8px #ff5722;
+            box-shadow: 0 0 25px 8px {active_theme['border']};
             animation: pulseGlow 2s ease-in-out infinite alternate;
         }}
-        .bar-bg {{ background: rgba(230, 81, 0, 0.3); height: 6px; border-radius: 3px; overflow: hidden; margin-top: 2px; }}
-        .bar-fill {{ height: 100%; background: #ff9800; box-shadow: 0 0 8px #ff9800; }}
+        .bar-bg {{ background: {active_theme['border']}; opacity: 0.4; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 2px; }}
+        .bar-fill {{ height: 100%; background: {active_theme['primary']}; box-shadow: 0 0 8px {active_theme['primary']}; }}
         @keyframes rotateCW {{ 100% {{ transform: rotate(360deg); }} }}
         @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
         @keyframes pulseGlow {{ 0% {{ opacity: 0.7; transform: scale(0.95); }} 100% {{ opacity: 1; transform: scale(1.05); }} }}
@@ -210,7 +220,7 @@ if text_override:
     active_query = text_override
 
 with col2:
-    st.subheader("📡 Live Neural Stream (gemini-3.6-flash Engine)")
+    st.subheader(f"📡 Live Neural Stream ({st.session_state.ai_persona} Core)")
     
     if active_query and active_query != st.session_state.processing_query:
         st.session_state.processing_query = active_query
@@ -259,7 +269,7 @@ with col2:
         st.rerun()
 
     if not st.session_state.chat_history:
-        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. gemini-3.6-flash systems fully operational.</em></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='stark-card'><em>Awaiting query inputs, Sir. {st.session_state.ai_persona} protocols active.</em></div>", unsafe_allow_html=True)
     else:
         for chat in reversed(st.session_state.chat_history):
             with st.chat_message("user", avatar="👤"):
@@ -283,7 +293,7 @@ with bottom_col1:
         st.session_state.ai_persona = selected_persona
         if selected_persona == "E.D.I.T.H.":
             st.session_state.build_version = "EDITH-v1"
-        st.toast(f"Protocol shifted to {selected_persona}, Sir.")
+        st.toast(f"Protocol shifted to {selected_persona}, Sir. Visual interface updated.")
         st.rerun()
 
 with bottom_col2:
