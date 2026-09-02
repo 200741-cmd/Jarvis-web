@@ -236,7 +236,7 @@ with col2:
                         sys_inst = "You are F.R.I.D.A.Y., witty and sharp AI. Address the user as Sir."
 
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3.6-flash',
                         contents=active_query,
                         config={'system_instruction': sys_inst}
                     )
