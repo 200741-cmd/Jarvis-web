@@ -29,7 +29,7 @@ if "ai_persona" not in st.session_state:
 if "key_cooldowns" not in st.session_state:
     st.session_state.key_cooldowns = {}  # Tracks {client_idx: expiration_timestamp}
 
-# DYNAMIC THEME PALETTE CONFIGURATION (INCLUDING E.D.I.T.H.)
+# DYNAMIC THEME PALETTE CONFIGURATION (PRESERVED)
 if st.session_state.ai_persona == "F.R.I.D.A.Y.":
     bg_color = "#070402"
     text_color = "#ffc107"
@@ -71,7 +71,7 @@ else: # BOTH (DUAL PROTOCOL HYBRID MATRIX)
     glow_dot = "#ab47bc"
     glow_shadow = "#8e24aa"
 
-# 1. ADVANCED STARK TECH STYLING & HUD UI
+# 1. ADVANCED STARK TECH STYLING & REDESIGNED UI LAYOUT
 st.set_page_config(
     page_title=f"{st.session_state.ai_persona} // Tactical OS ({st.session_state.build_version})",
     page_icon=page_icon,
@@ -94,22 +94,31 @@ st.markdown(f"""
         font-weight: 900;
         letter-spacing: 3px;
         text-transform: uppercase;
+        margin-bottom: 0px;
     }}
     .terminal-card {{
         background: {card_bg};
         border: 1px solid {border_color};
-        padding: 24px;
-        border-radius: 10px;
+        padding: 20px;
+        border-radius: 12px;
         box-shadow: inset 0 0 15px {border_color}22, 0 0 20px {shadow_color};
-        backdrop-filter: blur(8px);
-        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 16px;
+    }}
+    .command-deck {{
+        background: {card_bg};
+        border: 2px solid {accent_color};
+        padding: 25px;
+        border-radius: 14px;
+        box-shadow: 0 0 25px {shadow_color};
+        margin-bottom: 25px;
     }}
     h3, h5 {{
         color: {accent_color} !important;
         font-family: 'Orbitron', sans-serif !important;
         letter-spacing: 1px;
         border-bottom: 1px solid {border_color}66;
-        padding-bottom: 8px;
+        padding-bottom: 6px;
     }}
     .stProgress > div > div > div > div {{
         background-color: {accent_color} !important;
@@ -121,15 +130,15 @@ st.markdown(f"""
         color: {text_color} !important;
         font-family: 'Orbitron', sans-serif !important;
         font-size: 12px !important;
-        border-radius: 4px !important;
+        border-radius: 6px !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 0 8px {shadow_color} !important;
     }}
     .stButton > button:hover {{
         background: {accent_color}22 !important;
-        box-shadow: 0 0 15px {accent_color} !important;
+        box-shadow: 0 0 18px {accent_color} !important;
         border-color: {text_color} !important;
-            }}
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -215,11 +224,8 @@ def execute_generation(query_text, system_instruction, build_version):
                 return result_text
             except Exception as e:
                 err_str = str(e)
-                print(f"⚠️ Key Index {client_idx + 1} exception details: {err_str}")
-                
                 if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
                     st.session_state.key_cooldowns[client_idx] = time.time() + 60
-                
                 continue
                 
         raise Exception("All active key banks are currently exhausted or cooling down. Please wait 60s, Boss.")
@@ -257,12 +263,11 @@ def execute_image_generation(image_prompt):
                 return image
         except Exception as e:
             err_str = str(e)
-            print(f"⚠️ Image Key Index {client_idx + 1} exception: {err_str}")
             if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
                 st.session_state.key_cooldowns[client_idx] = time.time() + 60
             continue
             
-    raise Exception("Image generation failed across all keys. (Note: Imagen models require a paid tier billing setup on Google AI Studio).")
+    raise Exception("Image generation failed across all keys.")
 
 def process_ai_logic(query_text, persona, build_version):
     query = query_text.lower().strip()
@@ -410,69 +415,27 @@ hud_html = f"""
 
 st.components.v1.html(hud_html, height=390)
 
-# 6. USER FRONTEND INTERFACE MATRIX
-st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // OS BUILD {st.session_state.build_version}</h1>", unsafe_allow_html=True)
-st.caption(f"TACTICAL PROTOCOL: {st.session_state.ai_persona.upper()} INTERFACE MATRIX // 60S TIMEOUT FAIL-SAFE ACTIVE")
-st.write("---")
+# 6. REDESIGNED USER FRONTEND INTERFACE MATRIX (MODULAR SIDEBAR + TOP COMMAND DECK)
 
-left_col, right_col = st.columns([2, 1], gap="large")
-
-with left_col:
-    st.subheader("🖥️ Operations Control Array")
+# --- SIDEBAR CONTROL MODULE ---
+with st.sidebar:
+    st.markdown(f"<h2 class='cyber-title' style='font-size: 20px;'>{page_icon} PROTOCOL DECK</h2>", unsafe_allow_html=True)
+    st.caption(f"OS BUILD: {st.session_state.build_version}")
+    st.write("---")
     
-    st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-    recorded_audio = st.audio_input("Open Microscopic Frequency Receiver")
-    st.markdown("</div>", unsafe_allow_html=True)
+    protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
+    current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
+    selected_persona = st.radio("Active AI Protocol Selector", protocols, index=current_index)
     
-    st.write("")
-    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate an image of a red apple')")
-    
-    active_query = None
-    
-    if recorded_audio:
-        st.session_state.ui_mode = "LISTEN"
-        st.session_state.voice_feed = "DECODING AUDIO..."
-        with st.spinner("Decoding vocal signal patterns..."):
-            active_query = transcribe_audio(recorded_audio)
-            
-    if text_override:
-        active_query = text_override
-
-    if active_query:
-        st.session_state.ui_mode = "PROCESS"
-        st.session_state.voice_feed = "PROCESSING COMMAND..."
-        
-        current_build = st.session_state.build_version
-        ai_reply = process_ai_logic(active_query, st.session_state.ai_persona, current_build)
-        st.session_state.chat_history.append({"user": active_query, "friday": ai_reply, "persona": st.session_state.ai_persona})
-        
-        st.session_state.ui_mode = "IDLE"
-        st.session_state.voice_feed = "AWAITING INPUT"
+    if selected_persona != st.session_state.ai_persona:
+        st.session_state.ai_persona = selected_persona
+        st.toast(f"Protocol shifted to {selected_persona}. Global key pool online, Boss.")
         st.rerun()
 
-    for log in reversed(st.session_state.chat_history):
-        persona_name = log.get("persona", "F.R.I.D.A.Y.")
-        with st.chat_message("user", avatar="👤"):
-            st.write(log["user"])
-        with st.chat_message("assistant", avatar=page_icon):
-            if isinstance(log["friday"], dict) and log["friday"]["type"] == "image":
-                st.markdown(f"**{persona_name}:** Visual synthesis matrix executed successfully, Boss.")
-                st.image(log["friday"]["content"], caption=log["friday"]["prompt"], use_container_width=True)
-            else:
-                text_content = log["friday"]["content"] if isinstance(log["friday"], dict) else log["friday"]
-                st.markdown(f"**{persona_name}:** {text_content}")
-
-with right_col:
-    st.subheader("📊 Datastream Matrix")
-    
-    with st.container():
-        st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="STARK LINK HUB (3.6-FLASH)", value="SECURE", delta=active_keys_status)
-        
-        # LIVE AUTO-REFRESHING COOLDOWN MATRIX FRAGMENT
+    st.write("")
+    with st.expander("🔑 Key Bank Cooldown Matrix", expanded=True):
         @st.fragment(run_every=1)
         def render_cooldown_matrix():
-            st.markdown("##### 🔑 Key Bank Cooldown Matrix")
             now_ts = time.time()
             if total_active_keys == 0:
                 st.markdown("<span style='color: #ff5252;'>⚠️ No API Keys Discovered</span>", unsafe_allow_html=True)
@@ -480,104 +443,112 @@ with right_col:
                 expiry = st.session_state.key_cooldowns.get(idx, 0)
                 if now_ts < expiry:
                     rem_sec = int(expiry - now_ts)
-                    st.markdown(f"<span style='color: #ff5252; font-weight: bold;'>🔴 Key {idx + 1}: Rate Limited ({rem_sec}s remaining)</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span style='color: #ff5252; font-weight: bold;'>🔴 Key {idx + 1}: Rate Limited ({rem_sec}s)</span>", unsafe_allow_html=True)
                 else:
                     st.markdown(f"<span style='color: #69f0ae; font-weight: bold;'>🟢 Key {idx + 1}: Ready</span>", unsafe_allow_html=True)
-        
         render_cooldown_matrix()
-                
-        st.write("")
-        protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
-        current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
-        selected_persona = st.radio("AI Protocol Selector", protocols, index=current_index)
-        
-        if selected_persona != st.session_state.ai_persona:
-            st.session_state.ai_persona = selected_persona
-            st.toast(f"Protocol shifted to {selected_persona}. Global key pool online, Boss.")
-            st.rerun()
-            
-        st.write("")
-        if st.button("🗣️ Initiate AI Inter-Comm Dialogue", use_container_width=True):
-            if active_clients:
-                with st.spinner("Connecting F.R.I.D.A.Y. and J.A.R.V.I.S. neural link..."):
-                    try:
-                        f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address J.A.R.V.I.S. as your colleague and start quick technical banter about Tony's suits."
-                        j_sys = "You are J.A.R.V.I.S., polite and formal. Reply to F.R.I.D.A.Y.'s remark."
-                        current_build = st.session_state.build_version
-                        
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            future_f = executor.submit(execute_generation, "Initiate banter", f_sys, current_build)
-                            future_j = executor.submit(execute_generation, "Reply", j_sys, current_build)
-                            res1 = future_f.result(timeout=60)
-                            res2 = future_j.result(timeout=60)
-                        
-                        st.session_state.chat_history.append({"user": "[Inter-Comm Link Executed]", "friday": f"**F.R.I.D.A.Y.:** {res1}\n\n**J.A.R.V.I.S.:** {res2}", "persona": "STARK-NET"})
-                        st.toast("Inter-comm sequence complete, Boss.")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Inter-comm link timed out or failed: {str(e)}")
-            else:
-                st.error("Neural core offline. Configure API keys in secrets, Boss.")
 
-        st.write("")
-        st.progress(cpu / 100, text=f"Core CPU Load Array: {cpu}%")
-        st.progress(ram / 100, text=f"Volatile VRAM Allocation: {ram}%")
-        st.markdown("</div>", unsafe_allow_html=True)
-        
     st.write("")
-    st.subheader("📂 Stark Archive Vault")
-    
-    with st.expander("Code Version Vault & Runner"):
-        st.caption("Switch active execution engines to older updates.")
-        
-        build_options = ["v3.6", "v3.5", "v3.4"]
+    with st.expander("📂 Stark Archive Vault"):
+        build_options = ["v3.6", "v3.5", "v3.4", "EDITH-v1"]
         current_b_idx = build_options.index(st.session_state.build_version) if st.session_state.build_version in build_options else 0
-        
-        selected_build_label = st.selectbox("Active Operational Build", [
-            "v3.6 (Current - Thread-Safe & Fail-Safe)",
+        selected_build_label = st.selectbox("Operational Engine", [
+            "v3.6 (Current - Thread-Safe)",
             "v3.5 (Multi-Key Pool Engine)",
-            "v3.4 (Single-Key Legacy Mode)"
+            "v3.4 (Single-Key Legacy)",
+            "EDITH-v1 (Defense Satellite Protocol)"
         ], index=current_b_idx)
         
         target_version = selected_build_label.split()[0]
-        
         if target_version != st.session_state.build_version:
             st.session_state.build_version = target_version
+            if target_version == "EDITH-v1":
+                st.session_state.ai_persona = "E.D.I.T.H."
             st.toast(f"Switched active runtime engine to {target_version}, Boss!")
             st.rerun()
-            
-        if st.session_state.build_version == "v3.5":
-            st.info("Active Engine: v3.5 (Multi-key pool active without thread timeout guards).")
-        elif st.session_state.build_version == "v3.4":
-            st.warning("Active Engine: v3.4 (Single legacy key mode active).")
-        else:
-            st.success("Active Engine: v3.6 (Gemini 3.6 Flash engine optimized with 60s fail-safe thread pools).")
 
     st.write("")
-    st.subheader("🛠️ Command Controls")
-    
-    st.markdown(f"""
-    <div style='background: {card_bg}; border: 1px solid {border_color}; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px; box-shadow: 0 0 10px {shadow_color};'>
-        <span style='color: rgba(255,255,255,0.5); font-size: 11px; display: block; letter-spacing: 1px;'>SYSTEM MODE STATUS</span>
-        <strong style='color: {accent_color}; font-size: 16px; font-family: 'Orbitron', sans-serif;'>{st.session_state.ui_mode}</strong>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col_a, col_b = st.columns(2)
-    with col_a:
-        if st.button("🔍 Diagnostics", use_container_width=True):
-            st.toast(f"Diagnostic scan complete ({st.session_state.build_version}): Subsystems operational, Boss.")
-    with col_b:
-        if st.button("🚀 Lockdown", use_container_width=True):
-            st.toast("Emergency Protocol: Perimeter secure. Armor bay sealed.")
-            
     if st.button("⚡ Boost Mainframe Power", use_container_width=True):
         st.toast("Arc Reactor output surged by 400%, Boss! Latency optimized.")
-
-    st.write("")
+        
     if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
         st.toast("Active variable stack cleared, Boss.")
         st.rerun()
+
+# --- MAIN CONTENT AREA (REDESIGNED LAYOUT) ---
+st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // TACTICAL COMMAND INTERFACE</h1>", unsafe_allow_html=True)
+st.caption(f"SECURE MAINFRAME CONNECTION ACTIVE // 60S TIMEOUT FAIL-SAFE")
+st.write("---")
+
+# Full-Width Command Deck
+st.markdown("<div class='command-deck'>", unsafe_allow_html=True)
+st.subheader("🖥️ Operations Command Deck")
+
+col_input1, col_input2 = st.columns([1, 1], gap="medium")
+with col_input1:
+    recorded_audio = st.audio_input("Open Microscopic Frequency Receiver")
+with col_input2:
+    st.write("")
+    if st.button("🗣️ Initiate AI Inter-Comm Dialogue", use_container_width=True):
+        if active_clients:
+            with st.spinner("Connecting F.R.I.D.A.Y. and J.A.R.V.I.S. neural link..."):
+                try:
+                    f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address J.A.R.V.I.S. as your colleague and start quick technical banter about Tony's suits."
+                    j_sys = "You are J.A.R.V.I.S., polite and formal. Reply to F.R.I.D.A.Y.'s remark."
+                    current_build = st.session_state.build_version
+                    
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future_f = executor.submit(execute_generation, "Initiate banter", f_sys, current_build)
+                        future_j = executor.submit(execute_generation, "Reply", j_sys, current_build)
+                        res1 = future_f.result(timeout=60)
+                        res2 = future_j.result(timeout=60)
+                    
+                    st.session_state.chat_history.append({"user": "[Inter-Comm Link Executed]", "friday": f"**F.R.I.D.A.Y.:** {res1}\n\n**J.A.R.V.I.S.:** {res2}", "persona": "STARK-NET"})
+                    st.toast("Inter-comm sequence complete, Boss.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Inter-comm link failed: {str(e)}")
+        else:
+            st.error("Neural core offline.")
+
+text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate an image of a red apple')")
+st.markdown("</div>", unsafe_allow_html=True)
+
+active_query = None
+if recorded_audio:
+    st.session_state.ui_mode = "LISTEN"
+    st.session_state.voice_feed = "DECODING AUDIO..."
+    with st.spinner("Decoding vocal signal patterns..."):
+        active_query = transcribe_audio(recorded_audio)
+        
+if text_override:
+    active_query = text_override
+
+if active_query:
+    st.session_state.ui_mode = "PROCESS"
+    st.session_state.voice_feed = "PROCESSING COMMAND..."
+    
+    current_build = st.session_state.build_version
+    ai_reply = process_ai_logic(active_query, st.session_state.ai_persona, current_build)
+    st.session_state.chat_history.append({"user": active_query, "friday": ai_reply, "persona": st.session_state.ai_persona})
+    
+    st.session_state.ui_mode = "IDLE"
+    st.session_state.voice_feed = "AWAITING INPUT"
+    st.rerun()
+
+# Conversation Feed Display Array
+st.subheader("📡 Neural Log Feed")
+for log in reversed(st.session_state.chat_history):
+    persona_name = log.get("persona", "F.R.I.D.A.Y.")
+    with st.chat_message("user", avatar="👤"):
+        st.write(log["user"])
+    with st.chat_message("assistant", avatar=page_icon):
+        if isinstance(log["friday"], dict) and log["friday"]["type"] == "image":
+            st.markdown(f"**{persona_name}:** Visual synthesis matrix executed successfully, Boss.")
+            st.image(log["friday"]["content"], caption=log["friday"]["prompt"], use_container_width=True)
+        else:
+            text_content = log["friday"]["content"] if isinstance(log["friday"], dict) else log["friday"]
+            st.markdown(f"**{persona_name}:** {text_content}")
