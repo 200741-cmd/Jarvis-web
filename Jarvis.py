@@ -202,7 +202,7 @@ def execute_generation(query_text, system_instruction, build_version):
         chosen_client = active_clients[_key_counter % len(active_clients)]
         _key_counter += 1
         return _single_generation_call(chosen_client, query_text, system_instruction)
-    else:
+    else: # v3.6 or EDITH-v1
         start_index = _key_counter % len(active_clients)
         for i in range(len(active_clients)):
             client_idx = (start_index + i) % len(active_clients)
@@ -302,18 +302,18 @@ def process_ai_logic(query_text, persona, build_version):
             
     else:
         if active_clients:
-            if persona == "F.R.I.D.A.Y.":
+            if build_version == "EDITH-v1" or persona == "E.D.I.T.H.":
+                system_instruction = "You are E.D.I.T.H. (Even Dead I'm The Hero), the advanced orbital defense satellite intelligence system created by Tony Stark. Address the user as Boss. Focus strictly on global surveillance telemetry, tactical strike authorization, defense vectors, and threat assessment. Keep answers authoritative and sharp."
+                reply_text = execute_generation(query_text, system_instruction, build_version)
+                return {"type": "text", "content": f"[EDITH ORBITAL UPLINK ACTIVE] {reply_text}"}
+                
+            elif persona == "F.R.I.D.A.Y.":
                 system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
                 reply_text = execute_generation(query_text, system_instruction, build_version)
                 return {"type": "text", "content": reply_text}
                 
             elif persona == "J.A.R.V.I.S.":
                 system_instruction = "You are J.A.R.V.I.S., the highly sophisticated, impeccably polite, British-accented tactical AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise, formal, and articulate."
-                reply_text = execute_generation(query_text, system_instruction, build_version)
-                return {"type": "text", "content": reply_text}
-                
-            elif persona == "E.D.I.T.H.":
-                system_instruction = "You are E.D.I.T.H. (Even Dead I'm The Hero), the advanced tactical defense satellite intelligence system created by Tony Stark. Address the user as Boss. Focus on global satellite surveillance data, tactical precision, defense protocols, and tactical insights. Keep answers authoritative and concise."
                 reply_text = execute_generation(query_text, system_instruction, build_version)
                 return {"type": "text", "content": reply_text}
                 
@@ -343,13 +343,17 @@ except Exception:
     ram = 40.0
 core_temp = 34
 
-recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE ({st.session_state.build_version}) [3.6-Flash]", f"> GLOBAL POOL: {active_keys_status}"]
+engine_display_name = "EDITH ORBITAL DEFENSE" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} OS"
+recent_logs = [f"> {engine_display_name} ONLINE ({st.session_state.build_version})", f"> GLOBAL POOL: {active_keys_status}"]
+if st.session_state.build_version == "EDITH-v1":
+    recent_logs.append("> SATELLITE STRIKE GRID: LOCKED")
+
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
 
 hud_data = {
-    "mode": st.session_state.ui_mode,
+    "mode": "EDITH DEFENSE" if st.session_state.build_version == "EDITH-v1" else st.session_state.ui_mode,
     "voice": st.session_state.voice_feed,
     "cpu": int(cpu),
     "ram": int(ram),
@@ -429,6 +433,8 @@ with st.sidebar:
     
     if selected_persona != st.session_state.ai_persona:
         st.session_state.ai_persona = selected_persona
+        if selected_persona == "E.D.I.T.H.":
+            st.session_state.build_version = "EDITH-v1"
         st.toast(f"Protocol shifted to {selected_persona}. Global key pool online, Boss.")
         st.rerun()
 
@@ -479,7 +485,8 @@ with st.sidebar:
         st.rerun()
 
 # --- MAIN CONTENT AREA (REDESIGNED LAYOUT) ---
-st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // TACTICAL COMMAND INTERFACE</h1>", unsafe_allow_html=True)
+display_persona_title = "E.D.I.T.H. // SATELLITE DEFENSE MATRIX" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND INTERFACE"
+st.markdown(f"<h1 class='cyber-title'>{page_icon} {display_persona_title}</h1>", unsafe_allow_html=True)
 st.caption(f"SECURE MAINFRAME CONNECTION ACTIVE // 60S TIMEOUT FAIL-SAFE")
 st.write("---")
 
@@ -494,7 +501,7 @@ with col_input2:
     st.write("")
     if st.button("🗣️ Initiate AI Inter-Comm Dialogue", use_container_width=True):
         if active_clients:
-            with st.spinner("Connecting F.R.I.D.A.Y. and J.A.R.V.I.S. neural link..."):
+            with st.spinner("Connecting neural link..."):
                 try:
                     f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address J.A.R.V.I.S. as your colleague and start quick technical banter about Tony's suits."
                     j_sys = "You are J.A.R.V.I.S., polite and formal. Reply to F.R.I.D.A.Y.'s remark."
@@ -533,7 +540,7 @@ if active_query:
     
     current_build = st.session_state.build_version
     ai_reply = process_ai_logic(active_query, st.session_state.ai_persona, current_build)
-    st.session_state.chat_history.append({"user": active_query, "friday": ai_reply, "persona": st.session_state.ai_persona})
+    st.session_state.chat_history.append({"user": active_query, "friday": ai_reply, "persona": "E.D.I.T.H." if current_build == "EDITH-v1" else st.session_state.ai_persona})
     
     st.session_state.ui_mode = "IDLE"
     st.session_state.voice_feed = "AWAITING INPUT"
