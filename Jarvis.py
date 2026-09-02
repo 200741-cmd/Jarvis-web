@@ -15,7 +15,7 @@ import json
 # GLOBAL THREAD-SAFE COUNTER FOR KEY ROTATION
 _key_counter = 0
 
-# 2. STATE PERSISTENCE & MEMORY ENGINE (FIXED INITIALIZATION ORDER)
+# 2. STATE PERSISTENCE & MEMORY ENGINE
 if "build_version" not in st.session_state:
     st.session_state.build_version = "v3.6"
 if "chat_history" not in st.session_state:
@@ -102,11 +102,9 @@ st.markdown(f"""
 @st.cache_resource
 def init_active_clients(build_ver):
     if build_ver == "v3.4":
-        # v3.4 Mode: Single legacy key fallback only
         k = st.secrets.get("API_KEY", "")
         return [genai.Client(api_key=k)] if k.strip() else []
     else:
-        # v3.5 & v3.6 Mode: Multi-key pool bank
         raw_keys = [
             st.secrets.get("API_KEY_1", ""),
             st.secrets.get("API_KEY_2", ""),
@@ -138,7 +136,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. VERSION-AWARE GENERATION ENGINE
+# 4. VERSION-AWARE GENERATION ENGINE (GEMINI-3.6-FLASH & 60-SEC TIMER)
 def _single_generation_call(chosen_client, query_text, system_instruction):
     response = chosen_client.models.generate_content(
         model='gemini-3.6-flash', 
@@ -147,15 +145,14 @@ def _single_generation_call(chosen_client, query_text, system_instruction):
     )
     return response.text
 
-def execute_generation(query_text, system_instruction):
+def execute_generation(query_text, system_instruction, build_version):
     global active_clients, _key_counter
     if not active_clients:
         raise Exception("All neural key banks offline. Configure your API keys in secrets, Boss.")
     
-    # Behavior adapts based on chosen build version
-    if st.session_state.build_version == "v3.4":
+    if build_version == "v3.4":
         return _single_generation_call(active_clients[0], query_text, system_instruction)
-    elif st.session_state.build_version == "v3.5":
+    elif build_version == "v3.5":
         chosen_client = active_clients[_key_counter % len(active_clients)]
         _key_counter += 1
         return _single_generation_call(chosen_client, query_text, system_instruction)
@@ -169,6 +166,7 @@ def execute_generation(query_text, system_instruction):
             try:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_single_generation_call, chosen_client, query_text, system_instruction)
+                    # 60 Second Timer Guard
                     result_text = future.result(timeout=60)
                     
                 if i > 0:
@@ -176,9 +174,9 @@ def execute_generation(query_text, system_instruction):
                 return result_text
             except Exception:
                 continue
-        raise Exception("Neural query timed out or key bank exhausted, Boss.")
+        raise Exception("Neural query timed out after 60s or key bank exhausted, Boss.")
 
-def process_ai_logic(query_text, persona):
+def process_ai_logic(query_text, persona, build_version):
     query = query_text.lower().strip()
     
     if "wikipedia" in query:
@@ -186,7 +184,7 @@ def process_ai_logic(query_text, persona):
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(wikipedia.summary, search_target, 2)
-                summary = future.result(timeout=8)
+                summary = future.result(timeout=15)
             return {"type": "text", "content": f"Accessing global archives, Boss... {summary}"}
         except Exception:
             return {"type": "text", "content": "Couldn't match any solid logs or archives timed out, Boss."}
@@ -226,12 +224,12 @@ def process_ai_logic(query_text, persona):
         if active_clients:
             if persona == "F.R.I.D.A.Y.":
                 system_instruction = "You are F.R.I.D.A.Y., the advanced, witty, and loyal AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise and sharp."
-                reply_text = execute_generation(query_text, system_instruction)
+                reply_text = execute_generation(query_text, system_instruction, build_version)
                 return {"type": "text", "content": reply_text}
                 
             elif persona == "J.A.R.V.I.S.":
                 system_instruction = "You are J.A.R.V.I.S., the highly sophisticated, impeccably polite, British-accented tactical AI assistant created by Tony Stark. Address the user as Boss. Keep answers concise, formal, and articulate."
-                reply_text = execute_generation(query_text, system_instruction)
+                reply_text = execute_generation(query_text, system_instruction, build_version)
                 return {"type": "text", "content": reply_text}
                 
             else: # BOTH PROTOCOLS SIMULTANEOUSLY
@@ -239,10 +237,10 @@ def process_ai_logic(query_text, persona):
                 j_sys = "You are J.A.R.V.I.S., polite, British, and formal. Address the user as Boss. Give a short take."
                 try:
                     with concurrent.futures.ThreadPoolExecutor() as executor:
-                        future_f = executor.submit(execute_generation, query_text, f_sys)
-                        future_j = executor.submit(execute_generation, query_text, j_sys)
-                        res1 = future_f.result(timeout=14)
-                        res2 = future_j.result(timeout=14)
+                        future_f = executor.submit(execute_generation, query_text, f_sys, build_version)
+                        future_j = executor.submit(execute_generation, query_text, j_sys, build_version)
+                        res1 = future_f.result(timeout=60)
+                        res2 = future_j.result(timeout=60)
                     
                     dual_output = f"**[F.R.I.D.A.Y.]:** {res1}\n\n**[J.A.R.V.I.S.]:** {res2}"
                     return {"type": "text", "content": dual_output}
@@ -260,7 +258,7 @@ except Exception:
     ram = 40.0
 core_temp = 34
 
-recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE ({st.session_state.build_version})", f"> GLOBAL POOL: {active_keys_status}"]
+recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE ({st.session_state.build_version}) [3.6-Flash]", f"> GLOBAL POOL: {active_keys_status}"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -337,8 +335,8 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // OS BUILD {st.session_state.build_version}</h1>", unsafe_allow_html=True)
-st.caption(f"COMMUNICATION SPECTRUM: {st.session_state.ai_persona.upper()} THEME // ENGINE PROFILE: {st.session_state.build_version}")
+st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // OS BUILD {st.session_state.build_version} [gemini-3.6-flash]</h1>", unsafe_allow_html=True)
+st.caption(f"COMMUNICATION SPECTRUM: {st.session_state.ai_persona.upper()} THEME // ENGINE PROFILE: 60s Timeout Guard Enabled")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -351,7 +349,7 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.write("")
-    text_override = st.chat_input("Feed manual string command line interface...")
+    text_override = st.chat_input("Feed manual string command line interface... (e.g., 'Generate an image of a red apple')")
     
     active_query = None
     
@@ -368,7 +366,8 @@ with left_col:
         st.session_state.ui_mode = "PROCESS"
         st.session_state.voice_feed = "PROCESSING COMMAND..."
         
-        ai_reply = process_ai_logic(active_query, st.session_state.ai_persona)
+        current_build = st.session_state.build_version
+        ai_reply = process_ai_logic(active_query, st.session_state.ai_persona, current_build)
         st.session_state.chat_history.append({"user": active_query, "friday": ai_reply, "persona": st.session_state.ai_persona})
         
         st.session_state.ui_mode = "IDLE"
@@ -392,7 +391,7 @@ with right_col:
     
     with st.container():
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
-        st.metric(label="STARK LINK HUB", value="SECURE", delta=active_keys_status)
+        st.metric(label="STARK LINK HUB (3.6-FLASH)", value="SECURE", delta=active_keys_status)
         
         protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "BOTH"]
         current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
@@ -410,12 +409,13 @@ with right_col:
                     try:
                         f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address J.A.R.V.I.S. as your colleague and start quick technical banter about Tony's suits."
                         j_sys = "You are J.A.R.V.I.S., polite and formal. Reply to F.R.I.D.A.Y.'s remark."
+                        current_build = st.session_state.build_version
                         
                         with concurrent.futures.ThreadPoolExecutor() as executor:
-                            future_f = executor.submit(execute_generation, "Initiate banter", f_sys)
-                            future_j = executor.submit(execute_generation, "Reply", j_sys)
-                            res1 = future_f.result(timeout=12)
-                            res2 = future_j.result(timeout=12)
+                            future_f = executor.submit(execute_generation, "Initiate banter", f_sys, current_build)
+                            future_j = executor.submit(execute_generation, "Reply", j_sys, current_build)
+                            res1 = future_f.result(timeout=60)
+                            res2 = future_j.result(timeout=60)
                         
                         st.session_state.chat_history.append({"user": "[Inter-Comm Link Executed]", "friday": f"**F.R.I.D.A.Y.:** {res1}\n\n**J.A.R.V.I.S.:** {res2}", "persona": "STARK-NET"})
                         st.toast("Inter-comm sequence complete, Boss.")
@@ -457,7 +457,7 @@ with right_col:
         elif st.session_state.build_version == "v3.4":
             st.warning("Active Engine: v3.4 (Single legacy key mode active).")
         else:
-            st.success("Active Engine: v3.6 (Fully optimized with fail-safe thread pools).")
+            st.success("Active Engine: v3.6 (Gemini 3.6 Flash engine optimized with 60s fail-safe thread pools).")
 
     st.write("")
     st.subheader("🛠 Honor Command Controls")
