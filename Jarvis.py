@@ -59,7 +59,7 @@ client = get_genai_client()
 cpu = psutil.cpu_percent(interval=None)
 ram = psutil.virtual_memory().percent
 link_status = "ONLINE" if client else "OFFLINE"
-engine_title = "EDITH SATELLITE DEFENSE (3.6-flash)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (3.6-flash)"
+engine_title = "EDITH SATELLITE DEFENSE (gemini-3.6-flash)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (gemini-3.6-flash)"
 
 hud_html = f"""
 <!DOCTYPE html>
@@ -163,7 +163,7 @@ hud_html = f"""
         
         <div class="hud-center">
             <div class="title-glow">{engine_title}</div>
-            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME (3.6-flash)</div>
+            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME (gemini-3.6-flash)</div>
             <div class="arc-rings">
                 <div class="core-glow-dot"></div>
             </div>
@@ -210,7 +210,7 @@ if text_override:
     active_query = text_override
 
 with col2:
-    st.subheader("📡 Live Neural Stream (3.6-flash Engine)")
+    st.subheader("📡 Live Neural Stream (gemini-3.6-flash Engine)")
     
     if active_query and active_query != st.session_state.processing_query:
         st.session_state.processing_query = active_query
@@ -235,7 +235,7 @@ with col2:
                         sys_inst = "You are F.R.I.D.A.Y., witty and sharp AI. Address the user as Sir."
 
                     response = client.models.generate_content(
-                        model='3.6-flash',
+                        model='gemini-3.6-flash',
                         contents=active_query,
                         config={'system_instruction': sys_inst}
                     )
@@ -259,7 +259,7 @@ with col2:
         st.rerun()
 
     if not st.session_state.chat_history:
-        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. 3.6-flash systems fully operational.</em></div>", unsafe_allow_html=True)
+        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. gemini-3.6-flash systems fully operational.</em></div>", unsafe_allow_html=True)
     else:
         for chat in reversed(st.session_state.chat_history):
             with st.chat_message("user", avatar="👤"):
@@ -303,7 +303,7 @@ with bottom_col3:
 with bottom_col4:
     st.write("")
     if st.button("⚡ Boost Mainframe Power", use_container_width=True):
-        st.toast("Arc Reactor output surged by 400%, Sir! 3.6-flash latency optimized.")
+        st.toast("Arc Reactor output surged by 400%, Sir! gemini-3.6-flash latency optimized.")
 
 with bottom_col5:
     st.write("")
