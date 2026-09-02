@@ -141,7 +141,7 @@ def transcribe_audio(audio_buffer):
 # 4. VERSION-AWARE GENERATION ENGINE
 def _single_generation_call(chosen_client, query_text, system_instruction):
     response = chosen_client.models.generate_content(
-        model='gemini-3.5-flash', 
+        model='gemini-3.6-flash', 
         contents=query_text,
         config={'system_instruction': system_instruction}
     )
