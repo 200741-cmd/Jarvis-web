@@ -5,6 +5,7 @@ import wikipedia
 import psutil
 import io
 import time
+from gtts import gTTS
 from google import genai
 from google.genai import types
 from PIL import Image
@@ -23,6 +24,8 @@ if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "F.R.I.D.A.Y."
 if "build_version" not in st.session_state:
     st.session_state.build_version = "v3.6"
+if "tts_enabled" not in st.session_state:
+    st.session_state.tts_enabled = True
 
 # STARK INDUSTRIAL THEME STYLING
 st.markdown("""
@@ -35,7 +38,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. SECURE CLIENT INITIALIZATION (v3.6 Engine Standard)
+# 3. SECURE CLIENT INITIALIZATION
 @st.cache_resource
 def get_genai_client():
     api_key = None
@@ -50,48 +53,7 @@ def get_genai_client():
 
 client = get_genai_client()
 
-# 4. SIDEBAR CONTROL MODULE
-with st.sidebar:
-    st.markdown("<h2 class='cyber-title' style='font-size: 16px;'>PROTOCOL DECK</h2>", unsafe_allow_html=True)
-    st.caption("CORE ENGINE: v3.6")
-    st.write("---")
-    
-    protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
-    current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
-    selected_persona = st.radio("Active AI Protocol Selector", protocols, index=current_index)
-    
-    if selected_persona != st.session_state.ai_persona:
-        st.session_state.ai_persona = selected_persona
-        if selected_persona == "E.D.I.T.H.":
-            st.session_state.build_version = "EDITH-v1"
-        st.toast(f"Protocol shifted to {selected_persona}, Sir.")
-        st.rerun()
-
-    st.write("---")
-    with st.expander("🔑 Key Bank Status", expanded=True):
-        if client:
-            st.markdown("<span style='color: #69f0ae; font-weight: bold;'>🟢 Primary Key: ONLINE (v3.6)</span>", unsafe_allow_html=True)
-        else:
-            st.markdown("<span style='color: #ff5252; font-weight: bold;'>🔴 Neural Link: OFFLINE<br>(API Key missing in Secrets)</span>", unsafe_allow_html=True)
-
-    st.write("")
-    with st.expander("📂 Stark Archive Vault"):
-        build_options = ["v3.6", "EDITH-v1"]
-        selected_build = st.selectbox("Operational Engine", build_options, index=0)
-        if selected_build != st.session_state.build_version:
-            st.session_state.build_version = selected_build
-            st.rerun()
-
-    st.write("")
-    if st.button("⚡ Boost Mainframe Power", use_container_width=True):
-        st.toast("Arc Reactor output surged by 400%, Sir! v3.6 Latency optimized.")
-        
-    if st.button("Flush Cache Matrices", use_container_width=True):
-        st.session_state.chat_history = []
-        st.toast("Active variable stack cleared, Sir.")
-        st.rerun()
-
-# 5. INTEGRATED MOVING ARC REACTOR & TELEMETRY DASHBOARD HEADER
+# 4. INTEGRATED MOVING ARC REACTOR & TELEMETRY DASHBOARD HEADER
 cpu = psutil.cpu_percent(interval=None)
 ram = psutil.virtual_memory().percent
 link_status = "ONLINE" if client else "OFFLINE"
@@ -219,7 +181,7 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=240)
 st.write("---")
 
-# 6. MAIN CONTENT LAYOUT (Command Deck & Live Stream)
+# 5. MAIN CONTENT LAYOUT (Command Deck & Live Stream)
 col1, col2 = st.columns([1, 1.5], gap="large")
 
 with col1:
@@ -246,11 +208,12 @@ if text_override:
     active_query = text_override
 
 with col2:
-    st.subheader("📡 Live Neural Stream (v3.6 Engine)")
+    st.subheader("📡 Live Neural Stream (v3.6 Engine with TTS)")
     
     if active_query:
         if not client:
             ai_response = "Error: Neural core offline. Please configure your 'API_KEY' in Streamlit secrets, Sir."
+            audio_bytes = None
         else:
             try:
                 query_lower = active_query.lower()
@@ -273,17 +236,74 @@ with col2:
                         config={'system_instruction': sys_inst}
                     )
                     ai_response = response.text
+
+                # Generate TTS Audio if enabled
+                audio_bytes = None
+                if st.session_state.tts_enabled:
+                    tld_val = 'co.uk' if st.session_state.ai_persona in ["J.A.R.V.I.S.", "BOTH"] else 'com'
+                    tts = gTTS(text=ai_response, lang='en', tld=tld_val)
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    fp.seek(0)
+                    audio_bytes = fp.read()
+
             except Exception as e:
                 ai_response = f"Neural transmission error encountered, Sir: `{str(e)}`"
+                audio_bytes = None
                 
-        st.session_state.chat_history.append({"user": active_query, "bot": ai_response})
+        st.session_state.chat_history.append({"user": active_query, "bot": ai_response, "audio": audio_bytes})
         st.rerun()
 
     if not st.session_state.chat_history:
-        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. v3.6 systems fully operational.</em></div>", unsafe_allow_html=True)
+        st.markdown("<div class='stark-card'><em>Awaiting query inputs, Sir. v3.6 systems fully operational with Text-to-Speech active.</em></div>", unsafe_allow_html=True)
     else:
         for chat in reversed(st.session_state.chat_history):
             with st.chat_message("user", avatar="👤"):
                 st.write(chat["user"])
             with st.chat_message("assistant", avatar="🟠"):
                 st.write(chat["bot"])
+                if chat.get("audio") and st.session_state.tts_enabled:
+                    st.audio(chat["audio"], format="audio/mp3")
+
+# 6. BOTTOM CONTROL PANEL (REPLACING THE SIDEBAR)
+st.write("---")
+st.markdown("<h3 class='cyber-title' style='font-size: 16px;'>⚙️ BOTTOM PROTOCOL DECK & ARCHIVE VAULT</h3>", unsafe_allow_html=True)
+
+bottom_col1, bottom_col2, bottom_col3, bottom_col4, bottom_col5 = st.columns(5, gap="medium")
+
+with bottom_col1:
+    protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
+    current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
+    selected_persona = st.selectbox("Active AI Protocol Selector", protocols, index=current_index)
+    if selected_persona != st.session_state.ai_persona:
+        st.session_state.ai_persona = selected_persona
+        if selected_persona == "E.D.I.T.H.":
+            st.session_state.build_version = "EDITH-v1"
+        st.toast(f"Protocol shifted to {selected_persona}, Sir.")
+        st.rerun()
+
+with bottom_col2:
+    build_options = ["v3.6", "EDITH-v1"]
+    current_b_idx = build_options.index(st.session_state.build_version) if st.session_state.build_version in build_options else 0
+    selected_build = st.selectbox("Operational Engine", build_options, index=current_b_idx)
+    if selected_build != st.session_state.build_version:
+        st.session_state.build_version = selected_build
+        st.rerun()
+
+with bottom_col3:
+    tts_toggle = st.checkbox("Audio Voice Feedback (TTS)", value=st.session_state.tts_enabled)
+    if tts_toggle != st.session_state.tts_enabled:
+        st.session_state.tts_enabled = tts_toggle
+        st.rerun()
+
+with bottom_col4:
+    st.write("")
+    if st.button("⚡ Boost Mainframe Power", use_container_width=True):
+        st.toast("Arc Reactor output surged by 400%, Sir! v3.6 Latency optimized.")
+
+with bottom_col5:
+    st.write("")
+    if st.button("Flush Cache Matrices", use_container_width=True):
+        st.session_state.chat_history = []
+        st.toast("Active variable stack cleared, Sir.")
+        st.rerun()
