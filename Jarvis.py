@@ -26,6 +26,8 @@ if "voice_feed" not in st.session_state:
     st.session_state.voice_feed = "AWAITING INPUT"
 if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "F.R.I.D.A.Y."
+if "key_cooldowns" not in st.session_state:
+    st.session_state.key_cooldowns = {}  # Tracks {client_idx: expiration_timestamp}
 
 # DYNAMIC THEME PALETTE CONFIGURATION
 if st.session_state.ai_persona == "F.R.I.D.A.Y.":
@@ -136,7 +138,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. VERSION-AWARE GENERATION ENGINE (GEMINI-3.6-FLASH & 60-SEC TIMER)
+# 4. VERSION-AWARE GENERATION ENGINE WITH COOLDOWN SKIPPING
 def _single_generation_call(chosen_client, query_text, system_instruction):
     response = chosen_client.models.generate_content(
         model='gemini-3.6-flash',
@@ -150,6 +152,8 @@ def execute_generation(query_text, system_instruction, build_version):
     if not active_clients:
         raise Exception("All neural key banks offline. Configure your API keys in secrets, Boss.")
     
+    current_time = time.time()
+    
     if build_version == "v3.4":
         return _single_generation_call(active_clients[0], query_text, system_instruction)
     elif build_version == "v3.5":
@@ -157,9 +161,15 @@ def execute_generation(query_text, system_instruction, build_version):
         _key_counter += 1
         return _single_generation_call(chosen_client, query_text, system_instruction)
     else:
+        # Intelligent Failover with Cooldown Filter
         start_index = _key_counter % len(active_clients)
         for i in range(len(active_clients)):
             client_idx = (start_index + i) % len(active_clients)
+            
+            cooldown_expiry = st.session_state.key_cooldowns.get(client_idx, 0)
+            if current_time < cooldown_expiry:
+                continue
+                
             chosen_client = active_clients[client_idx]
             _key_counter += 1
             
@@ -172,11 +182,56 @@ def execute_generation(query_text, system_instruction, build_version):
                     return f"[Failover Shifted to Key Index {client_idx + 1}] {result_text}"
                 return result_text
             except Exception as e:
-                # Logs the exact failure reason in your terminal/logs instead of hiding it silently
-                print(f"⚠️ Key Index {client_idx + 1} exception details: {str(e)}")
+                err_str = str(e)
+                print(f"⚠️ Key Index {client_idx + 1} exception details: {err_str}")
+                
+                if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
+                    st.session_state.key_cooldowns[client_idx] = time.time() + 60
+                
                 continue
                 
-        raise Exception("Neural query failed across all key banks. Check server logs for exact error, Boss.")
+        raise Exception("All active key banks are currently exhausted or cooling down. Please wait 60s, Boss.")
+
+# ROBUST FAILOVER IMAGE GENERATION ENGINE
+def execute_image_generation(image_prompt):
+    global active_clients, _key_counter
+    if not active_clients:
+        raise Exception("Neural core offline. Configure your API keys in secrets, Boss.")
+    
+    current_time = time.time()
+    start_index = _key_counter % len(active_clients)
+    
+    for i in range(len(active_clients)):
+        client_idx = (start_index + i) % len(active_clients)
+        
+        cooldown_expiry = st.session_state.key_cooldowns.get(client_idx, 0)
+        if current_time < cooldown_expiry:
+            continue
+            
+        chosen_client = active_clients[client_idx]
+        _key_counter += 1
+        
+        try:
+            result = chosen_client.models.generate_images(
+                model='imagen-3.0-generate-002',
+                prompt=image_prompt,
+                config=types.GenerateImagesConfig(
+                    number_of_images=1,
+                    output_mime_type="image/jpeg",
+                    aspect_ratio="1:1",
+                )
+            )
+            for generated_image in result.generated_images:
+                image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+                return image
+        except Exception as e:
+            err_str = str(e)
+            print(f"⚠️ Image Key Index {client_idx + 1} exception: {err_str}")
+            if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
+                st.session_state.key_cooldowns[client_idx] = time.time() + 60
+            continue
+            
+    raise Exception("Image generation failed across all keys. (Note: Imagen models require a paid tier billing setup on Google AI Studio).")
 
 def process_ai_logic(query_text, persona, build_version):
     query = query_text.lower().strip()
@@ -202,25 +257,12 @@ def process_ai_logic(query_text, persona, build_version):
         return {"type": "text", "content": f"Current local time stream reads: {current_time}, Boss."}
         
     elif any(keyword in query for keyword in ["generate", "draw", "create", "image", "picture", "photo", "apple", "dalle"]):
-        if active_clients:
-            image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting."
-            try:
-                result = active_clients[0].models.generate_images(
-                    model='imagen-3.0-generate-002',
-                    prompt=image_prompt,
-                    config=types.GenerateImagesConfig(
-                        number_of_images=1,
-                        output_mime_type="image/jpeg",
-                        aspect_ratio="1:1",
-                    )
-                )
-                for generated_image in result.generated_images:
-                    image = Image.open(io.BytesIO(generated_image.image.image_bytes))
-                    return {"type": "image", "content": image, "prompt": image_prompt}
-            except Exception as e:
-                return {"type": "text", "content": f"Visual synthesis failed, Boss. ({str(e)})"}
-        else:
-            return {"type": "text", "content": "Neural core offline. Configure your API keys in secrets, Boss."}
+        image_prompt = query_text if "apple" not in query else "A crisp, vibrant, perfectly polished red apple sitting on a clean wooden surface with soft cinematic studio lighting."
+        try:
+            image_obj = execute_image_generation(image_prompt)
+            return {"type": "image", "content": image_obj, "prompt": image_prompt}
+        except Exception as e:
+            return {"type": "text", "content": f"Visual synthesis failed, Boss. ({str(e)})"}
             
     else:
         if active_clients:
@@ -395,6 +437,18 @@ with right_col:
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
         st.metric(label="STARK LINK HUB (3.6-FLASH)", value="SECURE", delta=active_keys_status)
         
+        # KEY BANK COOLDOWN STATUS WIDGET
+        st.markdown("##### 🔑 Key Bank Cooldown Matrix")
+        now_ts = time.time()
+        for idx in range(total_active_keys):
+            expiry = st.session_state.key_cooldowns.get(idx, 0)
+            if now_ts < expiry:
+                rem_sec = int(expiry - now_ts)
+                st.markdown(f"<span style='color: #ff5252;'>🔴 Key {idx + 1}: Rate Limited (Cooldown: {rem_sec}s)</span>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<span style='color: #69f0ae;'>🟢 Key {idx + 1}: Ready</span>", unsafe_allow_html=True)
+                
+        st.write("")
         protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "BOTH"]
         current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
         selected_persona = st.radio("AI Protocol Selector", protocols, index=current_index)
