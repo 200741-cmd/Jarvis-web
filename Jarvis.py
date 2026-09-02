@@ -6,12 +6,13 @@ import psutil
 import io
 import time
 import random
+import concurrent.futures
 from google import genai
 from google.genai import types
 from PIL import Image
 import json
 
-# 2. STATE PERSISTENCE & MEMORY ENGINE (Initialized early for theme configuration)
+# 2. STATE PERSISTENCE & MEMORY ENGINE
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "ui_mode" not in st.session_state:
@@ -23,7 +24,7 @@ if "ai_persona" not in st.session_state:
 if "key_rotation_toggle" not in st.session_state:
     st.session_state.key_rotation_toggle = 0
 
-# DYNAMIC THEME PALETTE CONFIGURATION (F.R.I.D.A.Y., J.A.R.V.I.S., OR BOTH)
+# DYNAMIC THEME PALETTE CONFIGURATION
 if st.session_state.ai_persona == "F.R.I.D.A.Y.":
     bg_color = "#0c0805"
     text_color = "#ffb74d"
@@ -55,10 +56,10 @@ else: # BOTH (DUAL PROTOCOL HYBRID MATRIX)
     glow_dot = "#ab47bc"
     glow_shadow = "#8e24aa"
 
-# 1. IRON MAN STARK TECH STYLING & HEADERS (DYNAMIC THEME DECK)
+# 1. IRON MAN STARK TECH STYLING & HEADERS
 st.set_page_config(
     page_title=f"{st.session_state.ai_persona} // Tactical OS",
-    page_icon="⚡",
+    page_icon=page_icon,
     layout="wide"
 )
 
@@ -94,24 +95,27 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# UNIFIED GLOBAL MASTER KEY POOL (ALL KEYS ACTIVATE SIMULTANEOUSLY)
-raw_keys = [
-    st.secrets.get("API_KEY_1", ""),
-    st.secrets.get("API_KEY_2", ""),
-    st.secrets.get("API_KEY_3", st.secrets.get("API_KEY", "")),
-    st.secrets.get("API_KEY_4", "")
-]
+# OPTIMIZED FAST CLIENT INITIALIZATION (CACHED TO AVOID LATENCY)
+@st.cache_resource
+def init_active_clients():
+    raw_keys = [
+        st.secrets.get("API_KEY_1", ""),
+        st.secrets.get("API_KEY_2", ""),
+        st.secrets.get("API_KEY_3", st.secrets.get("API_KEY", "")),
+        st.secrets.get("API_KEY_4", "")
+    ]
+    clients = []
+    for k in raw_keys:
+        if k.strip():
+            try:
+                clients.append(genai.Client(api_key=k.strip()))
+            except Exception:
+                pass
+    return clients
 
-active_clients = []
-for idx, k in enumerate(raw_keys):
-    if k.strip():
-        try:
-            active_clients.append(genai.Client(api_key=k.strip()))
-        except Exception:
-            pass
-
+active_clients = init_active_clients()
 total_active_keys = len(active_clients)
-active_keys_status = f"{total_active_keys} Key Bank(s) Active in Global Pool" if total_active_keys > 0 else "Offline"
+active_keys_status = f"{total_active_keys} Key Bank(s) Active" if total_active_keys > 0 else "Offline"
 
 # 3. CORE AUDIO SPEECH-TO-TEXT TRANSCRIPTION
 def transcribe_audio(audio_buffer):
@@ -141,7 +145,7 @@ def execute_generation(query_text, system_instruction):
         
         try:
             response = chosen_client.models.generate_content(
-                model='gemini-3.6-flash', 
+                model='gemini-2.5-flash', 
                 contents=query_text,
                 config={'system_instruction': system_instruction}
             )
@@ -206,12 +210,16 @@ def process_ai_logic(query_text, persona):
                 reply_text = execute_generation(query_text, system_instruction)
                 return {"type": "text", "content": reply_text}
                 
-            else: # BOTH PROTOCOLS SIMULTANEOUSLY
+            else: # BOTH PROTOCOLS SIMULTANEOUSLY (ULTRA-FAST MULTITHREADING)
                 f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address the user as Boss. Give a short take."
                 j_sys = "You are J.A.R.V.I.S., polite, British, and formal. Address the user as Boss. Give a short take."
                 try:
-                    res1 = execute_generation(query_text, f_sys)
-                    res2 = execute_generation(query_text, j_sys)
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future_f = executor.submit(execute_generation, query_text, f_sys)
+                        future_j = executor.submit(execute_generation, query_text, j_sys)
+                        res1 = future_f.result()
+                        res2 = future_j.result()
+                    
                     dual_output = f"**[F.R.I.D.A.Y.]:** {res1}\n\n**[J.A.R.V.I.S.]:** {res2}"
                     return {"type": "text", "content": dual_output}
                 except Exception as e:
@@ -219,12 +227,16 @@ def process_ai_logic(query_text, persona):
         else:
             return {"type": "text", "content": "Neural core offline. Configure your API keys in Streamlit secrets, Boss."}
 
-# 5. DYNAMIC GRAPHIC CANVAS COMPONENT (THEME-AWARE HUD)
-cpu = psutil.cpu_percent()
-ram = psutil.virtual_memory().percent
+# 5. LIGHTWEIGHT NON-BLOCKING TELEMETRY
+try:
+    cpu = psutil.cpu_percent(interval=None)
+    ram = psutil.virtual_memory().percent
+except Exception:
+    cpu = 15.0
+    ram = 40.0
 core_temp = 34
 
-recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (VERSION 3.6)", f"> GLOBAL POOL: {active_keys_status}"]
+recent_logs = [f"> {st.session_state.ai_persona} OS ONLINE (FAST-LOAD)", f"> GLOBAL POOL: {active_keys_status}"]
 for item in st.session_state.chat_history[-3:]:
     user_line = f"> INCOMING: {item['user'].upper()[:22]}"
     recent_logs.append(user_line)
@@ -374,10 +386,13 @@ with right_col:
                 with st.spinner("Connecting F.R.I.D.A.Y. and J.A.R.V.I.S. global neural link..."):
                     try:
                         f_sys = "You are F.R.I.D.A.Y., witty and sharp. Address J.A.R.V.I.S. as your colleague and start a quick technical banter about upgrading Tony's suits."
-                        res1 = execute_generation("Initiate banter with J.A.R.V.I.S.", f_sys)
-                        
                         j_sys = "You are J.A.R.V.I.S., British-accented, polite and formal. Reply to F.R.I.D.A.Y.'s remark about Tony's suits."
-                        res2 = execute_generation(f"F.R.I.D.A.Y. says: {res1}", j_sys)
+                        
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future_f = executor.submit(execute_generation, "Initiate banter with J.A.R.V.I.S.", f_sys)
+                            future_j = executor.submit(execute_generation, "Reply to F.R.I.D.A.Y.", j_sys)
+                            res1 = future_f.result()
+                            res2 = future_j.result()
                         
                         st.session_state.chat_history.append({"user": "[Inter-Comm Link Executed]", "friday": f"**F.R.I.D.A.Y.:** {res1}\n\n**J.A.R.V.I.S.:** {res2}", "persona": "STARK-NET"})
                         st.toast("Inter-comm sequence complete, Boss.")
@@ -402,9 +417,21 @@ with right_col:
     </div>
     """, unsafe_allow_html=True)
     
+    col_a, col_b = st.columns(2)
+    with col_a:
+        if st.button("🔍 Diagnostics", use_container_width=True):
+            st.toast("Diagnostic scan complete: All subsystems operating at 99.8% efficiency, Boss.")
+    with col_b:
+        if st.button("🚀 Lockdown", use_container_width=True):
+            st.toast("Emergency Protocol: Perimeter secure. Armor bay sealed.")
+            
+    if st.button("⚡ Boost Mainframe Power", use_container_width=True):
+        st.toast("Arc Reactor output surged by 400%, Boss! Latency optimized.")
+
+    st.write("")
     if st.button("Flush Cache Matrices", use_container_width=True):
         st.session_state.chat_history = []
         st.session_state.ui_mode = "IDLE"
         st.session_state.voice_feed = "AWAITING INPUT"
         st.toast("Active variable stack cleared, Boss.")
-        st.rerun()
+        st.rerurn()
