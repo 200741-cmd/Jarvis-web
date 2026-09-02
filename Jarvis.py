@@ -31,37 +31,37 @@ if "key_cooldowns" not in st.session_state:
 
 # DYNAMIC THEME PALETTE CONFIGURATION
 if st.session_state.ai_persona == "F.R.I.D.A.Y.":
-    bg_color = "#0c0805"
-    text_color = "#ffb74d"
-    accent_color = "#ff9900"
-    border_color = "#ff6600"
-    shadow_color = "rgba(255, 153, 0, 0.7)"
-    card_bg = "rgba(255, 153, 0, 0.04)"
+    bg_color = "#070402"
+    text_color = "#ffc107"
+    accent_color = "#ff9800"
+    border_color = "#e65100"
+    shadow_color = "rgba(255, 152, 0, 0.5)"
+    card_bg = "linear-gradient(135deg, rgba(255, 152, 0, 0.05) 0%, rgba(10, 5, 2, 0.8) 100%)"
     page_icon = "🟠"
-    glow_dot = "#ff9900"
-    glow_shadow = "#ff6600"
+    glow_dot = "#ff9800"
+    glow_shadow = "#ff5722"
 elif st.session_state.ai_persona == "J.A.R.V.I.S.":
-    bg_color = "#05080c"
-    text_color = "#80d8ff"
-    accent_color = "#00e5ff"
-    border_color = "#00b8d4"
-    shadow_color = "rgba(0, 229, 255, 0.7)"
-    card_bg = "rgba(0, 229, 255, 0.04)"
+    bg_color = "#02060b"
+    text_color = "#81d4fa"
+    accent_color = "#00bcd4"
+    border_color = "#0097a7"
+    shadow_color = "rgba(0, 188, 212, 0.5)"
+    card_bg = "linear-gradient(135deg, rgba(0, 188, 212, 0.05) 0%, rgba(2, 8, 15, 0.8) 100%)"
     page_icon = "🔵"
-    glow_dot = "#00e5ff"
-    glow_shadow = "#00b8d4"
+    glow_dot = "#00bcd4"
+    glow_shadow = "#00acc1"
 else: # BOTH (DUAL PROTOCOL HYBRID MATRIX)
-    bg_color = "#07050c"
+    bg_color = "#050308"
     text_color = "#e1bee7"
     accent_color = "#ab47bc"
-    border_color = "#8e24aa"
-    shadow_color = "rgba(171, 71, 188, 0.7)"
-    card_bg = "rgba(171, 71, 188, 0.04)"
+    border_color = "#7b1fa2"
+    shadow_color = "rgba(171, 71, 188, 0.5)"
+    card_bg = "linear-gradient(135deg, rgba(171, 71, 188, 0.05) 0%, rgba(8, 3, 12, 0.8) 100%)"
     page_icon = "⚡"
     glow_dot = "#ab47bc"
     glow_shadow = "#8e24aa"
 
-# 1. IRON MAN STARK TECH STYLING & HEADERS
+# 1. ADVANCED STARK TECH STYLING & HUD UI
 st.set_page_config(
     page_title=f"{st.session_state.ai_persona} // Tactical OS ({st.session_state.build_version})",
     page_icon=page_icon,
@@ -70,32 +70,56 @@ st.set_page_config(
 
 st.markdown(f"""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap');
+
     .stApp {{
         background-color: {bg_color};
         color: {text_color};
-        font-family: 'Consolas', 'Courier New', monospace;
+        font-family: 'Share Tech Mono', monospace;
     }}
     .cyber-title {{
         color: {accent_color};
         font-family: 'Orbitron', sans-serif;
-        text-shadow: 0 0 10px {shadow_color}, 0 0 20px {shadow_color};
-        font-weight: 800;
-        letter-spacing: 2px;
+        text-shadow: 0 0 15px {shadow_color}, 0 0 30px {shadow_color};
+        font-weight: 900;
+        letter-spacing: 3px;
+        text-transform: uppercase;
     }}
     .terminal-card {{
         background: {card_bg};
         border: 1px solid {border_color};
-        padding: 22px;
-        border-radius: 6px;
-        box-shadow: 0 0 12px {border_color};
+        padding: 24px;
+        border-radius: 10px;
+        box-shadow: inset 0 0 15px {border_color}22, 0 0 20px {shadow_color};
+        backdrop-filter: blur(8px);
+        margin-bottom: 20px;
     }}
-    h3 {{
+    h3, h5 {{
         color: {accent_color} !important;
-        border-bottom: 1px dashed {border_color};
-        padding-bottom: 5px;
+        font-family: 'Orbitron', sans-serif !important;
+        letter-spacing: 1px;
+        border-bottom: 1px solid {border_color}66;
+        padding-bottom: 8px;
     }}
     .stProgress > div > div > div > div {{
         background-color: {accent_color} !important;
+        box-shadow: 0 0 10px {accent_color};
+    }}
+    /* Custom button aesthetics */
+    .stButton > button {{
+        background: transparent !important;
+        border: 1px solid {accent_color} !important;
+        color: {text_color} !important;
+        font-family: 'Orbitron', sans-serif !important;
+        font-size: 12px !important;
+        border-radius: 4px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 0 8px {shadow_color} !important;
+    }}
+    .stButton > button:hover {{
+        background: {accent_color}22 !important;
+        box-shadow: 0 0 15px {accent_color} !important;
+        border-color: {text_color} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -126,7 +150,7 @@ active_clients = init_active_clients(st.session_state.build_version)
 total_active_keys = len(active_clients)
 active_keys_status = f"{total_active_keys} Key Bank(s) Active [{st.session_state.build_version}]" if total_active_keys > 0 else f"Offline [{st.session_state.build_version}]"
 
-# 3. CORE AUDIO SPEECH-TO-TEXT TRANSCRIPTION
+# 3. AUDIO SPEECH-TO-TEXT TRANSCRIPTION
 def transcribe_audio(audio_buffer):
     recognizer = sr.Recognizer()
     try:
@@ -138,7 +162,7 @@ def transcribe_audio(audio_buffer):
     except Exception as e:
         return f"ERROR: Audio transcription layer failed. ({str(e)})"
 
-# 4. VERSION-AWARE GENERATION ENGINE WITH COOLDOWN SKIPPING
+# 4. GENERATION ENGINES WITH COOLDOWN SKIPPING
 def _single_generation_call(chosen_client, query_text, system_instruction):
     response = chosen_client.models.generate_content(
         model='gemini-3.6-flash',
@@ -161,7 +185,6 @@ def execute_generation(query_text, system_instruction, build_version):
         _key_counter += 1
         return _single_generation_call(chosen_client, query_text, system_instruction)
     else:
-        # Intelligent Failover with Cooldown Filter
         start_index = _key_counter % len(active_clients)
         for i in range(len(active_clients)):
             client_idx = (start_index + i) % len(active_clients)
@@ -192,7 +215,6 @@ def execute_generation(query_text, system_instruction, build_version):
                 
         raise Exception("All active key banks are currently exhausted or cooling down. Please wait 60s, Boss.")
 
-# ROBUST FAILOVER IMAGE GENERATION ENGINE
 def execute_image_generation(image_prompt):
     global active_clients, _key_counter
     if not active_clients:
@@ -293,7 +315,7 @@ def process_ai_logic(query_text, persona, build_version):
         else:
             return {"type": "text", "content": "Neural core offline. Configure your API keys in Streamlit secrets, Boss."}
 
-# 5. LIGHTWEIGHT NON-BLOCKING TELEMETRY
+# 5. TELEMETRY HUD COMPONENT
 try:
     cpu = psutil.cpu_percent(interval=None)
     ram = psutil.virtual_memory().percent
@@ -321,13 +343,9 @@ hud_html = f"""
 <html>
 <head>
     <style>
-        * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }}
+        * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Share Tech Mono', monospace; }}
         body {{
-            background-color: {bg_color};
-            background-image: 
-                linear-gradient({border_color}0a 1px, transparent 1px),
-                linear-gradient(90deg, {border_color}0a 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-color: transparent;
             color: #ffffff;
             height: 380px;
             display: flex;
@@ -337,35 +355,35 @@ hud_html = f"""
             overflow: hidden;
         }}
         .grid-canvas {{ display: flex; justify-content: space-between; align-items: center; height: 100%; position: relative; }}
-        .terminal-overlay {{ background: rgba(10, 15, 20, 0.7); border: 1px solid {border_color}; padding: 12px; width: 230px; font-family: monospace; font-size: 11px; color: {text_color}; opacity: 0.9; line-height: 1.6; border-radius: 4px; }}
+        .terminal-overlay {{ background: rgba(5, 10, 15, 0.85); border: 1px solid {border_color}; padding: 12px; width: 230px; font-size: 11px; color: {text_color}; opacity: 0.95; line-height: 1.6; border-radius: 6px; box-shadow: 0 0 10px {shadow_color}; }}
         .core-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; }}
-        .mode-pill {{ background: {bg_color}; border: 2px solid {accent_color}; border-radius: 20px; padding: 3px 15px; font-size: 11px; font-weight: bold; margin-bottom: -15px; box-shadow: 0 0 12px {shadow_color}; z-index: 10; font-family: monospace; color: {accent_color}; }}
-        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed {border_color}; display: flex; align-items: center; justify-content: center; position: relative; }}
-        .arc-rings::before {{ content: ''; position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed {accent_color}; animation: rotateCCW 12s linear infinite; }}
-        .core-glow-dot {{ width: 14px; height: 14px; background-color: {glow_dot}; border-radius: 50%; box-shadow: 0 0 25px 8px {glow_shadow}; }}
-        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 9px; font-weight: bold; font-family: monospace; color: {text_color}; }}
+        .mode-pill {{ background: {bg_color}; border: 2px solid {accent_color}; border-radius: 20px; padding: 4px 16px; font-size: 11px; font-weight: bold; margin-bottom: -15px; box-shadow: 0 0 15px {shadow_color}; z-index: 10; color: {accent_color}; letter-spacing: 2px; }}
+        .arc-rings {{ width: 150px; height: 150px; border-radius: 50%; border: 3px dashed {border_color}; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 20px {shadow_color}; }}
+        .arc-rings::before {{ content: ''; position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed {accent_color}; animation: rotateCCW 10s linear infinite; }}
+        .core-glow-dot {{ width: 16px; height: 16px; background-color: {glow_dot}; border-radius: 50%; box-shadow: 0 0 30px 10px {glow_shadow}; }}
+        .mini-bars-panel {{ width: 180px; display: flex; flex-direction: column; gap: 12px; font-size: 10px; font-weight: bold; color: {text_color}; background: rgba(5, 10, 15, 0.85); padding: 12px; border: 1px solid {border_color}; border-radius: 6px; box-shadow: 0 0 10px {shadow_color}; }}
         .bar-row {{ display: flex; flex-direction: column; gap: 4px; }}
-        .bar-bg {{ background: {border_color}1a; height: 5px; border-radius: 2px; overflow: hidden; }}
-        .bar-fill {{ height: 100%; background: {accent_color}; transition: width 0.4s ease; }}
-        .voice-feed-status {{ position: absolute; right: 0; bottom: 10px; text-align: right; font-family: monospace; }}
-        .voice-title {{ font-size: 11px; font-weight: bold; color: rgba(255,255,255,0.6); }}
-        .voice-value {{ font-size: 12px; font-weight: bold; color: {accent_color}; margin-top: 2px; }}
+        .bar-bg {{ background: {border_color}33; height: 6px; border-radius: 3px; overflow: hidden; }}
+        .bar-fill {{ height: 100%; background: {accent_color}; box-shadow: 0 0 8px {accent_color}; transition: width 0.4s ease; }}
+        .voice-feed-status {{ position: absolute; right: 0; bottom: 5px; text-align: right; }}
+        .voice-title {{ font-size: 10px; font-weight: bold; color: rgba(255,255,255,0.6); }}
+        .voice-value {{ font-size: 11px; font-weight: bold; color: {accent_color}; margin-top: 2px; text-shadow: 0 0 8px {shadow_color}; }}
         @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
     </style>
 </head>
-<body class="ui-{hud_data['mode']}">
+<body>
     <div class="grid-canvas">
         <div class="terminal-overlay">
             {"".join([f"{log}<br>" for log in hud_data['logs']])}
         </div>
         <div class="core-wrapper">
-            <div class="mode-pill">MODE: {hud_data['mode']}</div>
+            <div class="mode-pill">STATUS: {hud_data['mode']}</div>
             <div class="arc-rings"><div class="core-glow-dot"></div></div>
         </div>
         <div class="mini-bars-panel">
-            <div class="bar-row"><div>CPU LOAD</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['cpu']}%"></div></div></div>
-            <div class="bar-row"><div>MEM ALLOC</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['ram']}%"></div></div></div>
-            <div class="bar-row"><div>CORE TEMP</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['temp']}%"></div></div></div>
+            <div class="bar-row"><div>CPU LOAD: {hud_data['cpu']}%</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['cpu']}%"></div></div></div>
+            <div class="bar-row"><div>VRAM ALLOC: {hud_data['ram']}%</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['ram']}%"></div></div></div>
+            <div class="bar-row"><div>CORE TEMP: {hud_data['temp']}°C</div><div class="bar-bg"><div class="bar-fill" style="width: {hud_data['temp']}%"></div></div></div>
         </div>
         <div class="voice-feed-status">
             <div class="voice-title">VOICE FEED:</div>
@@ -379,8 +397,8 @@ hud_html = f"""
 st.components.v1.html(hud_html, height=390)
 
 # 6. USER FRONTEND INTERFACE MATRIX
-st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // OS BUILD {st.session_state.build_version} [gemini-3.6-flash]</h1>", unsafe_allow_html=True)
-st.caption(f"COMMUNICATION SPECTRUM: {st.session_state.ai_persona.upper()} THEME // ENGINE PROFILE: 60s Timeout Guard Enabled")
+st.markdown(f"<h1 class='cyber-title'>{page_icon} {st.session_state.ai_persona} // OS BUILD {st.session_state.build_version}</h1>", unsafe_allow_html=True)
+st.caption(f"TACTICAL PROTOCOL: {st.session_state.ai_persona.upper()} INTERFACE MATRIX // 60S TIMEOUT FAIL-SAFE ACTIVE")
 st.write("---")
 
 left_col, right_col = st.columns([2, 1], gap="large")
@@ -437,16 +455,22 @@ with right_col:
         st.markdown("<div class='terminal-card'>", unsafe_allow_html=True)
         st.metric(label="STARK LINK HUB (3.6-FLASH)", value="SECURE", delta=active_keys_status)
         
-        # KEY BANK COOLDOWN STATUS WIDGET
-        st.markdown("##### 🔑 Key Bank Cooldown Matrix")
-        now_ts = time.time()
-        for idx in range(total_active_keys):
-            expiry = st.session_state.key_cooldowns.get(idx, 0)
-            if now_ts < expiry:
-                rem_sec = int(expiry - now_ts)
-                st.markdown(f"<span style='color: #ff5252;'>🔴 Key {idx + 1}: Rate Limited (Cooldown: {rem_sec}s)</span>", unsafe_allow_html=True)
-            else:
-                st.markdown(f"<span style='color: #69f0ae;'>🟢 Key {idx + 1}: Ready</span>", unsafe_allow_html=True)
+        # LIVE AUTO-REFRESHING COOLDOWN MATRIX FRAGMENT (Fixes the static 'Ready' bug)
+        @st.fragment(run_every=1)
+        def render_cooldown_matrix():
+            st.markdown("##### 🔑 Key Bank Cooldown Matrix")
+            now_ts = time.time()
+            if total_active_keys == 0:
+                st.markdown("<span style='color: #ff5252;'>⚠️ No API Keys Discovered</span>", unsafe_allow_html=True)
+            for idx in range(total_active_keys):
+                expiry = st.session_state.key_cooldowns.get(idx, 0)
+                if now_ts < expiry:
+                    rem_sec = int(expiry - now_ts)
+                    st.markdown(f"<span style='color: #ff5252; font-weight: bold;'>🔴 Key {idx + 1}: Rate Limited ({rem_sec}s remaining)</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<span style='color: #69f0ae; font-weight: bold;'>🟢 Key {idx + 1}: Ready</span>", unsafe_allow_html=True)
+        
+        render_cooldown_matrix()
                 
         st.write("")
         protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "BOTH"]
@@ -516,12 +540,12 @@ with right_col:
             st.success("Active Engine: v3.6 (Gemini 3.6 Flash engine optimized with 60s fail-safe thread pools).")
 
     st.write("")
-    st.subheader("🛠 Honor Command Controls")
+    st.subheader("🛠️ Command Controls")
     
     st.markdown(f"""
-    <div style='background: {card_bg}; border: 1px solid {border_color}; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;'>
-        <span style='color: rgba(255,255,255,0.4); font-size: 12px; display: block;'>SYSTEM MODE STATUS</span>
-        <strong style='color: {accent_color}; font-size: 18px; font-family: monospace;'>{st.session_state.ui_mode}</strong>
+    <div style='background: {card_bg}; border: 1px solid {border_color}; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px; box-shadow: 0 0 10px {shadow_color};'>
+        <span style='color: rgba(255,255,255,0.5); font-size: 11px; display: block; letter-spacing: 1px;'>SYSTEM MODE STATUS</span>
+        <strong style='color: {accent_color}; font-size: 16px; font-family: 'Orbitron', sans-serif;'>{st.session_state.ui_mode}</strong>
     </div>
     """, unsafe_allow_html=True)
     
