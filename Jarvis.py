@@ -34,7 +34,7 @@ theme_palettes = {
     "F.R.I.D.A.Y.": {"primary": "#FF9900", "bg": "#120B04", "rgb": "255, 153, 0"},
     "E.D.I.T.H.": {"primary": "#FF3333", "bg": "#120404", "rgb": "255, 51, 51"},
     "BOTH": {"primary": "#BF00FF", "bg": "#0D0412", "rgb": "191, 0, 255"}
-}}
+}
 
 active_theme = theme_palettes.get(st.session_state.ai_persona, theme_palettes["J.A.R.V.I.S."])
 
