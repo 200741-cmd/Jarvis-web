@@ -8,7 +8,6 @@ import time
 from gtts import gTTS
 from google import genai
 from google.genai import types
-from PIL import Image
 
 # 1. PAGE CONFIG
 st.set_page_config(
@@ -27,61 +26,69 @@ if "tts_enabled" not in st.session_state:
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
-    st.session_state.system_logs = ["Mainframe online.", "Holographic backdrop grid projected."]
-if "generated_images" not in st.session_state:
-    st.session_state.generated_images = []
+    st.session_state.system_logs = ["Mainframe online.", "Grid projection locked."]
 
-# CUSTOM STARK GRID STYLING & FROSTED COLUMNS
-st.markdown("""
+# 3. DYNAMIC THEME ENGINE MAPPING
+theme_palettes = {
+    "J.A.R.V.I.S.": {"primary": "#00E5FF", "bg": "#060913", "rgb": "0, 229, 255"},
+    "F.R.I.D.A.Y.": {"primary": "#FF9900", "bg": "#120B04", "rgb": "255, 153, 0"},
+    "E.D.I.T.H.": {"primary": "#FF3333", "bg": "#120404", "rgb": "255, 51, 51"},
+    "BOTH": {"primary": "#BF00FF", "bg": "#0D0412", "rgb": "191, 0, 255"}
+}
+
+active_theme = theme_palettes.get(st.session_state.ai_persona, theme_palettes["J.A.R.V.I.S."])
+
+# EXACT REFERENCE STARK GRID & CONTAINER STYLING
+st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
     
-    .stApp {
-        background-color: #060913;
+    .stApp {{
+        background-color: {active_theme['bg']};
         background-image: 
-            linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+            linear-gradient(rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px);
         background-size: 30px 30px;
-        color: #00E5FF;
+        color: {active_theme['primary']};
         font-family: 'Courier New', Courier, monospace;
     }
     
-    div[data-testid="column"] {
+    div[data-testid="column"] {{
         background: rgba(6, 9, 19, 0.75) !important;
-        border: 1px solid rgba(0, 229, 255, 0.3) !important;
+        border: 1px solid rgba({active_theme['rgb']}, 0.3) !important;
         border-radius: 6px;
         padding: 15px;
         margin-bottom: 10px;
         backdrop-filter: blur(4px);
-        box-shadow: 0 0 15px rgba(0, 229, 255, 0.05);
-    }
+        box-shadow: 0 0 15px rgba({active_theme['rgb']}, 0.05);
+    }}
     
-    .stChatMessage {
+    .stChatMessage {{
         background-color: rgba(6, 9, 19, 0.85) !important;
-        border: 1px solid rgba(0, 229, 255, 0.25) !important;
+        border: 1px solid rgba({active_theme['rgb']}, 0.25) !important;
         backdrop-filter: blur(4px);
-        color: #00E5FF !important;
+        color: {active_theme['primary']} !important;
         border-radius: 6px !important;
-    }
+    }}
 
-    h1, h2, h3, h4 {
-        color: #00E5FF !important;
+    h1, h2, h3, h4 {{
+        color: {active_theme['primary']} !important;
         font-family: 'Courier New', Courier, monospace !important;
         letter-spacing: 1px;
-    }
+    }}
 
-    .stButton > button {
+    .stButton > button {{
         background: rgba(6, 9, 19, 0.9) !important;
-        border: 1px solid #00E5FF !important;
-        color: #00E5FF !important;
+        border: 1px solid {active_theme['primary']} !important;
+        color: {active_theme['primary']} !important;
         font-family: 'Courier New', Courier, monospace !important;
         font-weight: bold !important;
         border-radius: 4px !important;
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
-# 3. SECURE CLIENT INITIALIZATION
+# 4. SECURE CLIENT INITIALIZATION
 @st.cache_resource
 def get_genai_client():
     api_key = None
@@ -102,22 +109,22 @@ def log_event(message):
     if len(st.session_state.system_logs) > 6:
         st.session_state.system_logs.pop()
 
-# 4. HEADER
+# 5. HEADER EXACTLY LIKE THE REFERENCE IMAGE
 st.markdown(f"<h1>⚙️ {st.session_state.ai_persona.upper()} // DIAGNOSTICS MAINFRAME</h1>", unsafe_allow_html=True)
-st.markdown("<hr style='border: 0.5px solid rgba(0, 229, 255, 0.3);'>", unsafe_allow_html=True)
+st.markdown(f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); margin-bottom: 25px;'>", unsafe_allow_html=True)
 
-# 5. MASTER SPLIT LAYOUT (Telemetry Left, Comm-Link Right)
-master_left, master_right = st.columns([1, 1.5], gap="large")
+# 6. MASTER TWO-COLUMN LAYOUT
+col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: CORE TELEMETRY & IMAGE MAKER ---
-with master_left:
+# --- LEFT COLUMN: CORE TELEMETRY ---
+with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
     
     cpu = psutil.cpu_percent(interval=None)
     ram = psutil.virtual_memory().percent
     
-    st.markdown("🛡️ **ARMOR INTEGRITY**")
-    st.markdown("### 100%")
+    st.markdown("<span style='font-size: 12px; color: #888;'>ARMOR INTEGRITY</span>", unsafe_allow_html=True)
+    st.markdown("<h2>100%</h2>", unsafe_allow_html=True)
     
     st.markdown(f"⚡ **CPU LOAD:** {cpu}%")
     st.progress(min(1.0, cpu / 100.0))
@@ -126,46 +133,6 @@ with master_left:
     st.progress(min(1.0, ram / 100.0))
     
     st.markdown("---")
-    st.markdown("#### 🌐 LINK STATUS")
-    if client:
-        st.success("🟢 SECURE LINK ACTIVE")
-        st.caption("Mainframe encrypted via Gemini core engine.")
-    else:
-        st.error("🔴 DISCONNECTED")
-        st.caption("API key missing in dashboard secrets.")
-
-    st.markdown("#### 🎨 STARK IMAGE MAKER")
-    image_prompt = st.text_input("Enter blueprint / visual prompt...")
-    if st.button("Generate Hologram Blueprint", use_container_width=True):
-        if not client:
-            st.error("API key missing for image generation, Sir.")
-        else:
-            with st.spinner("Synthesizing visual matrix..."):
-                try:
-                    # Using Imagen model for generation
-                    result = client.models.generate_images(
-                        model='imagen-3.0-generate-002',
-                        prompt=image_prompt,
-                        config=types.GenerateImagesConfig(
-                            number_of_images=1,
-                            output_mime_type="image/jpeg",
-                            aspect_ratio="1:1"
-                        )
-                    )
-                    for generated_image in result.generated_images:
-                        image_bytes = generated_image.image.image_bytes
-                        image = Image.open(io.BytesIO(image_bytes))
-                        st.session_state.generated_images.insert(0, {"prompt": image_prompt, "img": image})
-                        log_event(f"IMAGERY: Rendered blueprint for '{image_prompt}'")
-                except Exception as img_err:
-                    st.error(f"Image generation failed: {str(img_err)}")
-                    log_event("ERROR: Image generation failed.")
-
-    if st.session_state.generated_images:
-        st.markdown("**Latest Generated Hologram:**")
-        latest = st.session_state.generated_images[0]
-        st.image(latest["img"], caption=latest["prompt"], use_container_width=True)
-
     st.markdown("#### 🔧 SYSTEM CONTROLS")
     
     protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
@@ -173,7 +140,7 @@ with master_left:
     selected_persona = st.selectbox("Active Protocol", protocols, index=current_index)
     if selected_persona != st.session_state.ai_persona:
         st.session_state.ai_persona = selected_persona
-        log_event(f"Protocol shifted to {selected_persona}.")
+        log_event(f"Protocol shifted to {selected_persona}. Theme re-calibrated.")
         st.rerun()
 
     tts_toggle = st.checkbox("Audio Voice Feedback (TTS)", value=st.session_state.tts_enabled)
@@ -181,27 +148,22 @@ with master_left:
         st.session_state.tts_enabled = tts_toggle
         st.rerun()
 
-    col_btn1, col_btn2 = st.columns(2)
-    with col_btn1:
-        if st.button("♻️ Optimize Cache", use_container_width=True):
-            st.session_state.chat_history = []
-            log_event("CLEAN: Memory buffers flushed.")
-            st.rerun()
-    with col_btn2:
-        if st.button("🛠️ Run Diagnostics", use_container_width=True):
-            log_event("DIAGNOSTICS: All core matrix pathways verified.")
-            st.rerun()
-
-    st.markdown("#### 📋 SYSTEM LOGS")
-    for log_entry in st.session_state.system_logs:
-        st.caption(log_entry)
+    if st.button("♻️ Optimize Cache", use_container_width=True):
+        st.session_state.chat_history = []
+        log_event("CLEAN: Memory buffers flushed.")
+        st.rerun()
 
 # --- RIGHT COLUMN: SECURE COMM-LINK ---
-with master_right:
+with col_right:
     st.markdown("#### 📡 SECURE COMM-LINK")
 
+    # Top Status Message Box matching reference card style
+    if not st.session_state.chat_history:
+        st.info(f"Good day, sir. {st.session_state.ai_persona} operational. Direct Google core link active via gemini-3.5-flash-lite.")
+    
+    # Input Command Line matching reference position
+    user_prompt = st.chat_input("Enter strategic command...")
     recorded_audio = st.audio_input("Open Audio Frequency Receiver")
-    user_prompt = st.chat_input("Enter mainframe command...")
 
     active_query = None
     if recorded_audio:
@@ -216,18 +178,16 @@ with master_right:
     if user_prompt:
         active_query = user_prompt
 
-    if not st.session_state.chat_history:
+    # Render previous chat interactions below the input section
+    for chat in reversed(st.session_state.chat_history):
+        with st.chat_message("user", avatar="👤"):
+            st.write(chat["user"])
         with st.chat_message("assistant", avatar="💠"):
-            st.write(f"Grid telemetry projection complete, sir. {st.session_state.ai_persona} online via gemini-3.5-flash-lite.")
-    else:
-        for chat in reversed(st.session_state.chat_history):
-            with st.chat_message("user", avatar="👤"):
-                st.write(chat["user"])
-            with st.chat_message("assistant", avatar="💠"):
-                st.write(chat["bot"])
-                if chat.get("audio") and st.session_state.tts_enabled:
-                    st.audio(chat["audio"], format="audio/mp3")
+            st.write(chat["bot"])
+            if chat.get("audio") and st.session_state.tts_enabled:
+                st.audio(chat["audio"], format="audio/mp3")
 
+    # Query Processing Loop
     if active_query and active_query != st.session_state.processing_query:
         st.session_state.processing_query = active_query
         
