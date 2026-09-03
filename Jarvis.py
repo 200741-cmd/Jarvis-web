@@ -27,6 +27,8 @@ if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
     st.session_state.system_logs = ["Mainframe online.", "Grid projection locked."]
+if "generated_blueprint" not in st.session_state:
+    st.session_state.generated_blueprint = None
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -109,14 +111,14 @@ def log_event(message):
     if len(st.session_state.system_logs) > 6:
         st.session_state.system_logs.pop()
 
-# 5. HEADER EXACTLY LIKE THE REFERENCE IMAGE
+# 5. HEADER
 st.markdown(f"<h1>⚙️ {st.session_state.ai_persona.upper()} // DIAGNOSTICS MAINFRAME</h1>", unsafe_allow_html=True)
 st.markdown(f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); margin-bottom: 25px;'>", unsafe_allow_html=True)
 
 # 6. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: CORE TELEMETRY ---
+# --- LEFT COLUMN: CORE TELEMETRY & IMAGE MAKER ---
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
     
@@ -132,6 +134,23 @@ with col_left:
     st.markdown(f"🔋 **VRAM ALLOCATED:** {ram}%")
     st.progress(min(1.0, ram / 100.0))
     
+    st.markdown("---")
+    st.markdown("#### 🎨 STARK IMAGE MAKER")
+    img_query = st.text_input("Blueprint description...")
+    if st.button("Synthesize Image Blueprint", use_container_width=True):
+        if img_query:
+            # Safe public URL generation that bypasses enterprise restrictions completely
+            formatted_prompt = img_query.replace(" ", "%20")
+            st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{formatted_prompt} (cyberpunk sci-fi hud blueprint style)"
+            log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
+        else:
+            st.warning("Please enter a blueprint prompt first, Sir.")
+
+    if st.session_state.generated_blueprint:
+        # Extract clean image URL string
+        pure_url = st.session_state.generated_blueprint.split(" ")[0]
+        st.image(pure_url, caption=img_query, use_container_width=True)
+
     st.markdown("---")
     st.markdown("#### 🔧 SYSTEM CONTROLS")
     
@@ -157,11 +176,9 @@ with col_left:
 with col_right:
     st.markdown("#### 📡 SECURE COMM-LINK")
 
-    # Top Status Message Box matching reference card style
     if not st.session_state.chat_history:
         st.info(f"Good day, sir. {st.session_state.ai_persona} operational. Direct Google core link active via gemini-3.5-flash-lite.")
     
-    # Input Command Line matching reference position
     user_prompt = st.chat_input("Enter strategic command...")
     recorded_audio = st.audio_input("Open Audio Frequency Receiver")
 
@@ -178,7 +195,6 @@ with col_right:
     if user_prompt:
         active_query = user_prompt
 
-    # Render previous chat interactions below the input section
     for chat in reversed(st.session_state.chat_history):
         with st.chat_message("user", avatar="👤"):
             st.write(chat["user"])
@@ -187,7 +203,6 @@ with col_right:
             if chat.get("audio") and st.session_state.tts_enabled:
                 st.audio(chat["audio"], format="audio/mp3")
 
-    # Query Processing Loop
     if active_query and active_query != st.session_state.processing_query:
         st.session_state.processing_query = active_query
         
