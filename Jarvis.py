@@ -12,8 +12,8 @@ from PIL import Image
 
 # 1. PAGE CONFIG
 st.set_page_config(
-    page_title="F.R.I.D.A.Y. // Tactical OS (v3.5 Lite)",
-    page_icon="🟠",
+    page_title="J.A.R.V.I.S. // Diagnostics Mainframe",
+    page_icon="💠",
     layout="wide"
 )
 
@@ -21,32 +21,63 @@ st.set_page_config(
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "ai_persona" not in st.session_state:
-    st.session_state.ai_persona = "F.R.I.D.A.Y."
-if "build_version" not in st.session_state:
-    st.session_state.build_version = "v3.5-lite"
+    st.session_state.ai_persona = "J.A.R.V.I.S."
 if "tts_enabled" not in st.session_state:
     st.session_state.tts_enabled = True
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
+if "system_logs" not in st.session_state:
+    st.session_state.system_logs = ["Mainframe online.", "Holographic backdrop grid projected."]
+if "generated_images" not in st.session_state:
+    st.session_state.generated_images = []
 
-# DYNAMIC THEME ENGINE (Changes based on active protocol)
-persona_colors = {
-    "F.R.I.D.A.Y.": {"primary": "#ff9800", "border": "#e65100", "glow": "rgba(255, 152, 0, 0.6)", "bg": "#070402"},
-    "J.A.R.V.I.S.": {"primary": "#00e5ff", "border": "#0091ea", "glow": "rgba(0, 229, 255, 0.6)", "bg": "#02060a"},
-    "E.D.I.T.H.":   {"primary": "#ff1744", "border": "#d50000", "glow": "rgba(255, 23, 68, 0.6)", "bg": "#0a0203"},
-    "BOTH":         {"primary": "#d500f9", "border": "#aa00ff", "glow": "rgba(213, 0, 249, 0.6)", "bg": "#06020a"}
-}
-
-active_theme = persona_colors.get(st.session_state.ai_persona, persona_colors["F.R.I.D.A.Y."])
-
-# DYNAMIC STARK INDUSTRIAL THEME STYLING
-st.markdown(f"""
+# CUSTOM STARK GRID STYLING & FROSTED COLUMNS
+st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap');
-    .stApp {{ background-color: {active_theme['bg']}; color: {active_theme['primary']}; font-family: 'Share Tech Mono', monospace; transition: background-color 0.5s ease; }}
-    .cyber-title {{ color: {active_theme['primary']}; font-family: 'Orbitron', sans-serif; text-shadow: 0 0 15px {active_theme['glow']}; font-weight: 900; letter-spacing: 3px; }}
-    .stark-card {{ background: linear-gradient(135deg, {active_theme['glow']} 0%, {active_theme['bg']} 90%); border: 1px solid {active_theme['border']}; padding: 20px; border-radius: 12px; box-shadow: 0 0 20px {active_theme['glow']}; margin-bottom: 15px; }}
-    .stButton > button {{ background: transparent !important; border: 1.5px solid {active_theme['primary']} !important; color: {active_theme['primary']} !important; font-family: 'Orbitron' !important; font-weight: 700 !important; border-radius: 8px !important; }}
+    @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
+    
+    .stApp {
+        background-color: #060913;
+        background-image: 
+            linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+        background-size: 30px 30px;
+        color: #00E5FF;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    
+    div[data-testid="column"] {
+        background: rgba(6, 9, 19, 0.75) !important;
+        border: 1px solid rgba(0, 229, 255, 0.3) !important;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        backdrop-filter: blur(4px);
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.05);
+    }
+    
+    .stChatMessage {
+        background-color: rgba(6, 9, 19, 0.85) !important;
+        border: 1px solid rgba(0, 229, 255, 0.25) !important;
+        backdrop-filter: blur(4px);
+        color: #00E5FF !important;
+        border-radius: 6px !important;
+    }
+
+    h1, h2, h3, h4 {
+        color: #00E5FF !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        letter-spacing: 1px;
+    }
+
+    .stButton > button {
+        background: rgba(6, 9, 19, 0.9) !important;
+        border: 1px solid #00E5FF !important;
+        color: #00E5FF !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        font-weight: bold !important;
+        border-radius: 4px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -55,7 +86,7 @@ st.markdown(f"""
 def get_genai_client():
     api_key = None
     try:
-        api_key = st.secrets.get("API_KEY", "") or st.secrets.get("API_KEY_1", "")
+        api_key = st.secrets.get("API_KEY", "") or st.secrets.get("API_KEY_1", "") or st.secrets.get("GROQ_API_KEY", "")
     except Exception:
         pass
     
@@ -65,269 +96,201 @@ def get_genai_client():
 
 client = get_genai_client()
 
-# 4. INTEGRATED MOVING ARC REACTOR & TELEMETRY DASHBOARD HEADER
-cpu = psutil.cpu_percent(interval=None)
-ram = psutil.virtual_memory().percent
-link_status = "ONLINE" if client else "OFFLINE"
-engine_title = f"EDITH SATELLITE DEFENSE (gemini-3.5-flash-lite)" if st.session_state.build_version == "EDITH-v1" else f"{st.session_state.ai_persona} // TACTICAL COMMAND (gemini-3.5-flash-lite)"
+def log_event(message):
+    timestamp = time.strftime("%H:%M:%S")
+    st.session_state.system_logs.insert(0, f"[{timestamp}] {message}")
+    if len(st.session_state.system_logs) > 6:
+        st.session_state.system_logs.pop()
 
-hud_html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Share Tech Mono', monospace; }}
-        body {{ background-color: transparent; color: {active_theme['primary']}; }}
-        .hud-container {{
-            background: linear-gradient(135deg, {active_theme['glow']} 0%, {active_theme['bg']} 95%);
-            border: 2px solid {active_theme['border']};
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: inset 0 0 25px {active_theme['border']}, 0 0 30px {active_theme['glow']};
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 220px;
-            position: relative;
-            overflow: hidden;
-        }}
-        .hud-left, .hud-right {{
-            width: 28%;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 12px;
-            background: rgba(5, 10, 15, 0.7);
-            padding: 12px;
-            border: 1px solid {active_theme['border']};
-            border-radius: 10px;
-            box-shadow: 0 0 10px {active_theme['glow']};
-        }}
-        .hud-center {{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-        }}
-        .title-glow {{
-            font-family: 'Orbitron', sans-serif;
-            color: {active_theme['primary']};
-            font-size: 15px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            text-shadow: 0 0 12px {active_theme['glow']};
-            margin-bottom: 4px;
-            text-align: center;
-        }}
-        .subtitle {{
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.7);
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            text-align: center;
-        }}
-        .arc-rings {{
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            border: 2px dashed {active_theme['border']};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 0 20px {active_theme['glow']};
-            animation: rotateCW 12s linear infinite;
-        }}
-        .arc-rings::before {{
-            content: '';
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 2px dotted {active_theme['primary']};
-            animation: rotateCCW 8s linear infinite;
-        }}
-        .core-glow-dot {{
-            width: 12px;
-            height: 12px;
-            background-color: {active_theme['primary']};
-            border-radius: 50%;
-            box-shadow: 0 0 25px 8px {active_theme['border']};
-            animation: pulseGlow 2s ease-in-out infinite alternate;
-        }}
-        .bar-bg {{ background: {active_theme['border']}; opacity: 0.4; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 2px; }}
-        .bar-fill {{ height: 100%; background: {active_theme['primary']}; box-shadow: 0 0 8px {active_theme['primary']}; }}
-        @keyframes rotateCW {{ 100% {{ transform: rotate(360deg); }} }}
-        @keyframes rotateCCW {{ 100% {{ transform: rotate(-360deg); }} }}
-        @keyframes pulseGlow {{ 0% {{ opacity: 0.7; transform: scale(0.95); }} 100% {{ opacity: 1; transform: scale(1.05); }} }}
-    </style>
-</head>
-<body>
-    <div class="hud-container">
-        <div class="hud-left">
-            <div><b>SYSTEM STATUS:</b> OPERATIONAL</div>
-            <div><b>PROTOCOL:</b> {st.session_state.ai_persona}</div>
-            <div><b>MAINFRAME LINK:</b> {link_status}</div>
-            <div><b>LOG ENTRIES:</b> {len(st.session_state.chat_history)}</div>
-        </div>
-        
-        <div class="hud-center">
-            <div class="title-glow">{engine_title}</div>
-            <div class="subtitle">STARK INDUSTRIES SECURE MAINFRAME (gemini-3.5-flash-lite)</div>
-            <div class="arc-rings">
-                <div class="core-glow-dot"></div>
-            </div>
-        </div>
+# 4. HEADER
+st.markdown(f"<h1>⚙️ {st.session_state.ai_persona.upper()} // DIAGNOSTICS MAINFRAME</h1>", unsafe_allow_html=True)
+st.markdown("<hr style='border: 0.5px solid rgba(0, 229, 255, 0.3);'>", unsafe_allow_html=True)
 
-        <div class="hud-right">
-            <div><b>CPU LOAD:</b> {cpu}%</div>
-            <div class="bar-bg"><div class="bar-fill" style="width: {cpu}%;"></div></div>
-            <div><b>VRAM ALLOCATED:</b> {ram}%</div>
-            <div class="bar-bg"><div class="bar-fill" style="width: {ram}%;"></div></div>
-        </div>
-    </div>
-</body>
-</html>
-"""
+# 5. MASTER SPLIT LAYOUT (Telemetry Left, Comm-Link Right)
+master_left, master_right = st.columns([1, 1.5], gap="large")
 
-st.components.v1.html(hud_html, height=240)
-st.write("---")
-
-# 5. MAIN CONTENT LAYOUT (Command Deck & Live Stream)
-col1, col2 = st.columns([1, 1.5], gap="large")
-
-with col1:
-    st.markdown("<div class='stark-card'>", unsafe_allow_html=True)
-    st.subheader("🖥️ Command Deck")
+# --- LEFT COLUMN: CORE TELEMETRY & IMAGE MAKER ---
+with master_left:
+    st.markdown("#### 🎛️ CORE TELEMETRY")
     
-    recorded_audio = st.audio_input("Open Microscopic Frequency Receiver")
-    st.write("")
+    cpu = psutil.cpu_percent(interval=None)
+    ram = psutil.virtual_memory().percent
     
-    text_override = st.chat_input("Feed manual string command line interface...", key="chat_input_field")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-active_query = None
-if recorded_audio:
-    recognizer = sr.Recognizer()
-    try:
-        with sr.AudioFile(io.BytesIO(recorded_audio.read())) as source:
-            audio_data = recognizer.record(source)
-        active_query = recognizer.recognize_google(audio_data, language='en-US')
-    except Exception:
-        active_query = "Error decoding audio waveform stream."
-
-if text_override:
-    active_query = text_override
-
-with col2:
-    st.subheader(f"📡 Live Neural Stream ({st.session_state.ai_persona} Core)")
+    st.markdown("🛡️ **ARMOR INTEGRITY**")
+    st.markdown("### 100%")
     
-    if active_query and active_query != st.session_state.processing_query:
-        st.session_state.processing_query = active_query
-        
-        if not client:
-            ai_response = "Error: Neural core offline. Please configure your 'API_KEY' in Streamlit secrets, Sir."
-            audio_bytes = None
-        else:
-            try:
-                query_lower = active_query.lower()
-                if "wikipedia" in query_lower:
-                    search_target = query_lower.replace("wikipedia", "").strip()
-                    ai_response = wikipedia.summary(search_target, sentences=2)
-                else:
-                    if st.session_state.ai_persona == "E.D.I.T.H." or st.session_state.build_version == "EDITH-v1":
-                        sys_inst = "You are E.D.I.T.H., orbital defense satellite system. Address the user as Sir. Focus on surveillance and tactical metrics."
-                    elif st.session_state.ai_persona == "J.A.R.V.I.S.":
-                        sys_inst = "You are J.A.R.V.I.S., polite, formal, British-accented assistant. Address the user as Sir."
-                    elif st.session_state.ai_persona == "BOTH":
-                        sys_inst = "Provide a joint perspective combining F.R.I.D.A.Y. and J.A.R.V.I.S. traits. Address the user as Sir."
-                    else:
-                        sys_inst = "You are F.R.I.D.A.Y., witty and sharp AI. Address the user as Sir."
-
-                    # Using gemini-3.5-flash-lite for fast response generation
-                    response = client.models.generate_content(
-                        model='gemini-3.5-flash-lite',
-                        contents=active_query,
-                        config={'system_instruction': sys_inst}
-                    )
-                    ai_response = response.text
-
-                audio_bytes = None
-                if st.session_state.tts_enabled:
-                    # Character Voice Accent Mapping
-                    tld_mapping = {
-                        "F.R.I.D.A.Y.": "ie",    # Irish accent mapping
-                        "J.A.R.V.I.S.": "co.uk", # British accent mapping
-                        "E.D.I.T.H.": "com",     # American accent mapping
-                        "BOTH": "co.uk"
-                    }
-                    tld_val = tld_mapping.get(st.session_state.ai_persona, "com")
-                    
-                    tts = gTTS(text=ai_response, lang='en', tld=tld_val)
-                    fp = io.BytesIO()
-                    tts.write_to_fp(fp)
-                    fp.seek(0)
-                    audio_bytes = fp.read()
-
-            except Exception as e:
-                ai_response = f"Neural transmission error encountered, Sir: `{str(e)}`"
-                audio_bytes = None
-                
-        st.session_state.chat_history.append({"user": active_query, "bot": ai_response, "audio": audio_bytes})
-        st.session_state.processing_query = None
-        st.rerun()
-
-    if not st.session_state.chat_history:
-        st.markdown(f"<div class='stark-card'><em>Awaiting query inputs, Sir. gemini-3.5-flash-lite core online.</em></div>", unsafe_allow_html=True)
+    st.markdown(f"⚡ **CPU LOAD:** {cpu}%")
+    st.progress(min(1.0, cpu / 100.0))
+    
+    st.markdown(f"🔋 **VRAM ALLOCATED:** {ram}%")
+    st.progress(min(1.0, ram / 100.0))
+    
+    st.markdown("---")
+    st.markdown("#### 🌐 LINK STATUS")
+    if client:
+        st.success("🟢 SECURE LINK ACTIVE")
+        st.caption("Mainframe encrypted via Gemini core engine.")
     else:
-        for chat in reversed(st.session_state.chat_history):
-            with st.chat_message("user", avatar="👤"):
-                st.write(chat["user"])
-            with st.chat_message("assistant", avatar="🟠"):
-                st.write(chat["bot"])
-                if chat.get("audio") and st.session_state.tts_enabled:
-                    st.audio(chat["audio"], format="audio/mp3")
+        st.error("🔴 DISCONNECTED")
+        st.caption("API key missing in dashboard secrets.")
 
-# 6. BOTTOM CONTROL PANEL
-st.write("---")
-st.markdown("<h3 class='cyber-title' style='font-size: 16px;'>⚙️ BOTTOM PROTOCOL DECK & ARCHIVE VAULT</h3>", unsafe_allow_html=True)
+    st.markdown("#### 🎨 STARK IMAGE MAKER")
+    image_prompt = st.text_input("Enter blueprint / visual prompt...")
+    if st.button("Generate Hologram Blueprint", use_container_width=True):
+        if not client:
+            st.error("API key missing for image generation, Sir.")
+        else:
+            with st.spinner("Synthesizing visual matrix..."):
+                try:
+                    # Using Imagen model for generation
+                    result = client.models.generate_images(
+                        model='imagen-3.0-generate-002',
+                        prompt=image_prompt,
+                        config=types.GenerateImagesConfig(
+                            number_of_images=1,
+                            output_mime_type="image/jpeg",
+                            aspect_ratio="1:1"
+                        )
+                    )
+                    for generated_image in result.generated_images:
+                        image_bytes = generated_image.image.image_bytes
+                        image = Image.open(io.BytesIO(image_bytes))
+                        st.session_state.generated_images.insert(0, {"prompt": image_prompt, "img": image})
+                        log_event(f"IMAGERY: Rendered blueprint for '{image_prompt}'")
+                except Exception as img_err:
+                    st.error(f"Image generation failed: {str(img_err)}")
+                    log_event("ERROR: Image generation failed.")
 
-bottom_col1, bottom_col2, bottom_col3, bottom_col4, bottom_col5 = st.columns(5, gap="medium")
+    if st.session_state.generated_images:
+        st.markdown("**Latest Generated Hologram:**")
+        latest = st.session_state.generated_images[0]
+        st.image(latest["img"], caption=latest["prompt"], use_container_width=True)
 
-with bottom_col1:
+    st.markdown("#### 🔧 SYSTEM CONTROLS")
+    
     protocols = ["F.R.I.D.A.Y.", "J.A.R.V.I.S.", "E.D.I.T.H.", "BOTH"]
     current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
-    selected_persona = st.selectbox("Active AI Protocol Selector", protocols, index=current_index)
+    selected_persona = st.selectbox("Active Protocol", protocols, index=current_index)
     if selected_persona != st.session_state.ai_persona:
         st.session_state.ai_persona = selected_persona
-        if selected_persona == "E.D.I.T.H.":
-            st.session_state.build_version = "EDITH-v1"
-        st.toast(f"Protocol shifted to {selected_persona}, Sir. Theme and voice profiles updated.")
+        log_event(f"Protocol shifted to {selected_persona}.")
         st.rerun()
 
-with bottom_col2:
-    build_options = ["v3.5-lite", "EDITH-v1"]
-    current_b_idx = build_options.index(st.session_state.build_version) if st.session_state.build_version in build_options else 0
-    selected_build = st.selectbox("Operational Engine", build_options, index=current_b_idx)
-    if selected_build != st.session_state.build_version:
-        st.session_state.build_version = selected_build
-        st.rerun()
-
-with bottom_col3:
     tts_toggle = st.checkbox("Audio Voice Feedback (TTS)", value=st.session_state.tts_enabled)
     if tts_toggle != st.session_state.tts_enabled:
         st.session_state.tts_enabled = tts_toggle
         st.rerun()
 
-with bottom_col4:
-    st.write("")
-    if st.button("⚡ Boost Mainframe Power", use_container_width=True):
-        st.toast("Arc Reactor output surged by 400%, Sir! gemini-3.5-flash-lite throughput optimized.")
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("♻️ Optimize Cache", use_container_width=True):
+            st.session_state.chat_history = []
+            log_event("CLEAN: Memory buffers flushed.")
+            st.rerun()
+    with col_btn2:
+        if st.button("🛠️ Run Diagnostics", use_container_width=True):
+            log_event("DIAGNOSTICS: All core matrix pathways verified.")
+            st.rerun()
 
-with bottom_col5:
-    st.write("")
-    if st.button("Flush Cache Matrices", use_container_width=True):
-        st.session_state.chat_history = []
+    st.markdown("#### 📋 SYSTEM LOGS")
+    for log_entry in st.session_state.system_logs:
+        st.caption(log_entry)
+
+# --- RIGHT COLUMN: SECURE COMM-LINK ---
+with master_right:
+    st.markdown("#### 📡 SECURE COMM-LINK")
+
+    recorded_audio = st.audio_input("Open Audio Frequency Receiver")
+    user_prompt = st.chat_input("Enter mainframe command...")
+
+    active_query = None
+    if recorded_audio:
+        recognizer = sr.Recognizer()
+        try:
+            with sr.AudioFile(io.BytesIO(recorded_audio.read())) as source:
+                audio_data = recognizer.record(source)
+            active_query = recognizer.recognize_google(audio_data, language='en-US')
+        except Exception:
+            active_query = "Error decoding audio waveform stream."
+
+    if user_prompt:
+        active_query = user_prompt
+
+    if not st.session_state.chat_history:
+        with st.chat_message("assistant", avatar="💠"):
+            st.write(f"Grid telemetry projection complete, sir. {st.session_state.ai_persona} online via gemini-3.5-flash-lite.")
+    else:
+        for chat in reversed(st.session_state.chat_history):
+            with st.chat_message("user", avatar="👤"):
+                st.write(chat["user"])
+            with st.chat_message("assistant", avatar="💠"):
+                st.write(chat["bot"])
+                if chat.get("audio") and st.session_state.tts_enabled:
+                    st.audio(chat["audio"], format="audio/mp3")
+
+    if active_query and active_query != st.session_state.processing_query:
+        st.session_state.processing_query = active_query
+        
+        with st.chat_message("user", avatar="👤"):
+            st.write(active_query)
+
+        if not client:
+            with st.chat_message("assistant", avatar="💠"):
+                st.error("🚨 Transmission error: No active key found in the Streamlit secrets panel.")
+            ai_reply = "Link drop. Missing key."
+            log_event("REJECT: Key missing.")
+        else:
+            try:
+                query_lower = active_query.lower()
+                if "wikipedia" in query_lower:
+                    search_target = query_lower.replace("wikipedia", "").strip()
+                    ai_reply = wikipedia.summary(search_target, sentences=2)
+                else:
+                    if st.session_state.ai_persona == "E.D.I.T.H.":
+                        sys_inst = "You are E.D.I.T.H., orbital defense satellite system. Address the user as sir. Focus on tactical security metrics."
+                    elif st.session_state.ai_persona == "J.A.R.V.I.S.":
+                        sys_inst = "You are J.A.R.V.I.S., the ultra-intelligent AI assistant built by Tony Stark. Address the user as sir."
+                    elif st.session_state.ai_persona == "BOTH":
+                        sys_inst = "Provide a joint perspective combining F.R.I.D.A.Y. and J.A.R.V.I.S. traits. Address the user as sir."
+                    else:
+                        sys_inst = "You are F.R.I.D.A.Y., witty and sharp AI built by Tony Stark. Address the user as sir."
+
+                    response = client.models.generate_content(
+                        model='gemini-3.5-flash-lite',
+                        contents=active_query,
+                        config={'system_instruction': sys_inst}
+                    )
+                    ai_reply = response.text
+
+                audio_bytes = None
+                if st.session_state.tts_enabled:
+                    tld_mapping = {
+                        "F.R.I.D.A.Y.": "ie",
+                        "J.A.R.V.I.S.": "co.uk",
+                        "E.D.I.T.H.": "com",
+                        "BOTH": "co.uk"
+                    }
+                    tld_val = tld_mapping.get(st.session_state.ai_persona, "com")
+                    
+                    tts = gTTS(text=ai_reply, lang='en', tld=tld_val)
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    fp.seek(0)
+                    audio_bytes = fp.read()
+
+                with st.chat_message("assistant", avatar="💠"):
+                    st.write(ai_reply)
+                    if audio_bytes:
+                        st.audio(audio_bytes, format="audio/mp3")
+
+                log_event("COMM: Inbound transmission processed.")
+            except Exception as api_err:
+                error_msg = f"🚨 Mainframe Connection Refused: {str(api_err)}"
+                with st.chat_message("assistant", avatar="💠"):
+                    st.error(error_msg)
+                ai_reply = error_msg
+                log_event("ERROR: Data stream broken.")
+
+        st.session_state.chat_history.append({"user": active_query, "bot": ai_reply, "audio": audio_bytes if 'audio_bytes' in locals() else None})
         st.session_state.processing_query = None
-        st.toast("Active variable stack cleared, Sir.")
         st.rerun()
