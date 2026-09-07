@@ -27,11 +27,11 @@ if "tts_enabled" not in st.session_state:
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
-    st.session_state.system_logs = ["Mainframe online.", "Holographic grid calibrated."]
+    st.session_state.system_logs = ["Mainframe online.", "Holographic matrix initialized."]
 if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
-if "hologram_video_url" not in st.session_state:
-    st.session_state.hologram_video_url = None
+if "active_hologram" not in st.session_state:
+    st.session_state.active_hologram = None
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -43,7 +43,7 @@ theme_palettes = {
 
 active_theme = theme_palettes.get(st.session_state.ai_persona, theme_palettes["J.A.R.V.I.S."])
 
-# EXACT REFERENCE STARK GRID & CONTAINER STYLING
+# EXACT REFERENCE STARK GRID & CONTAINER STYLING + HOLOGRAM GLOW EFFECT
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
@@ -90,6 +90,14 @@ st.markdown(f"""
         font-weight: bold !important;
         border-radius: 4px !important;
     }}
+
+    .hologram-box {{
+        border: 1px dashed {active_theme['primary']};
+        padding: 10px;
+        background: rgba({active_theme['rgb']}, 0.03);
+        box-shadow: inset 0 0 20px rgba({active_theme['rgb']}, 0.2);
+        border-radius: 4px;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -121,7 +129,7 @@ st.markdown(f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); m
 # 6. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: CORE TELEMETRY, IMAGE MAKER & HOLOGRAM VIDEO FEED ---
+# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & DEDICATED HOLOGRAM SUITE ---
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
     
@@ -138,35 +146,44 @@ with col_left:
     st.progress(min(1.0, ram / 100.0))
     
     st.markdown("---")
-    st.markdown("#### 🎨 STARK IMAGE MAKER")
-    img_query = st.text_input("Blueprint description...")
-    if st.button("Synthesize Image Blueprint", use_container_width=True):
-        if img_query:
-            formatted_prompt = img_query.replace(" ", "%20")
-            st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{formatted_prompt} (cyberpunk sci-fi hud blueprint style)"
-            log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
-        else:
-            st.warning("Please enter a blueprint prompt first, Sir.")
+    
+    # FEATURE TABS: Blueprints vs Holograms
+    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🔮 HOLOGRAM SUITE"])
+    
+    with feature_tab_1:
+        st.markdown("#### 🎨 STARK IMAGE MAKER")
+        img_query = st.text_input("Blueprint description...", key="blueprint_input")
+        if st.button("Synthesize Blueprint", use_container_width=True):
+            if img_query:
+                formatted_prompt = img_query.replace(" ", "%20")
+                st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{formatted_prompt} (cyberpunk sci-fi hud blueprint style)"
+                log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
+            else:
+                st.warning("Please enter a blueprint prompt first, Sir.")
 
-    if st.session_state.generated_blueprint:
-        pure_url = st.session_state.generated_blueprint.split(" ")[0]
-        st.image(pure_url, caption=img_query, use_container_width=True)
+        if st.session_state.generated_blueprint:
+            pure_url = st.session_state.generated_blueprint.split(" ")[0]
+            st.image(pure_url, caption=img_query, use_container_width=True)
 
-    st.markdown("---")
-    st.markdown("#### 📽️ STARK HOLOGRAPHIC VIDEO FEED")
-    vid_query = st.text_input("Hologram simulation target...")
-    if st.button("Project Hologram Video", use_container_width=True):
-        if vid_query:
-            # Encoded dynamic animation simulation feed URL format
-            encoded_vid_prompt = urllib.parse.quote(f"{vid_query} futuristic rotating 3D holographic wireframe animation HUD")
-            st.session_state.hologram_video_url = f"https://image.pollinations.ai/prompt/{encoded_vid_prompt}?width=640&height=360&nologo=true"
-            log_event(f"HOLOGRAPHIC FEED: Projected simulation loop for '{vid_query}'")
-        else:
-            st.warning("Please specify a simulation target first, Sir.")
+    with feature_tab_2:
+        st.markdown("#### 🔮 HOLOGRAM PROJECTION DECK")
+        holo_query = st.text_input("Hologram matrix subject...", key="hologram_input")
+        
+        holo_mode = st.radio("Projection Mode", ["Dynamic Wireframe Simulation", "Orbital Strategic Scan"], horizontal=True)
+        
+        if st.button("Engage Hologram Projection", use_container_width=True):
+            if holo_query:
+                encoded_holo = urllib.parse.quote(f"{holo_query} holographic projection glowing cyan 3D wireframe sci-fi interface vector art")
+                st.session_state.active_hologram = f"https://image.pollinations.ai/prompt/{encoded_holo}?width=512&height=512&nologo=true"
+                log_event(f"HOLOGRAM: Projected scan for '{holo_query}' under mode [{holo_mode}]")
+            else:
+                st.warning("Define a target for the holographic emitter, Sir.")
 
-    if st.session_state.hologram_video_url:
-        st.markdown("<span style='font-size: 11px; color: #00E5FF;'>STATUS: ACTIVE HOLOGRAPHIC PROJECTION FEED</span>", unsafe_allow_html=True)
-        st.image(st.session_state.hologram_video_url, caption=f"Hologram Matrix: {vid_query}", use_container_width=True)
+        if st.session_state.active_hologram:
+            st.markdown('<div class="hologram-box">', unsafe_allow_html=True)
+            st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ EMITTER STATUS: ACTIVE // MODE: {holo_mode.upper()}</span>", unsafe_allow_html=True)
+            st.image(st.session_state.active_hologram, caption=f"Holo-Stream: {holo_query}", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("#### 🔧 SYSTEM CONTROLS")
