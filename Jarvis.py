@@ -5,6 +5,7 @@ import wikipedia
 import psutil
 import io
 import time
+import urllib.parse
 from gtts import gTTS
 from google import genai
 from google.genai import types
@@ -26,9 +27,11 @@ if "tts_enabled" not in st.session_state:
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
-    st.session_state.system_logs = ["Mainframe online.", "Grid projection locked."]
+    st.session_state.system_logs = ["Mainframe online.", "Holographic grid calibrated."]
 if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
+if "hologram_video_url" not in st.session_state:
+    st.session_state.hologram_video_url = None
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -118,7 +121,7 @@ st.markdown(f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); m
 # 6. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: CORE TELEMETRY & IMAGE MAKER ---
+# --- LEFT COLUMN: CORE TELEMETRY, IMAGE MAKER & HOLOGRAM VIDEO FEED ---
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
     
@@ -139,7 +142,6 @@ with col_left:
     img_query = st.text_input("Blueprint description...")
     if st.button("Synthesize Image Blueprint", use_container_width=True):
         if img_query:
-            # Safe public URL generation that bypasses enterprise restrictions completely
             formatted_prompt = img_query.replace(" ", "%20")
             st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{formatted_prompt} (cyberpunk sci-fi hud blueprint style)"
             log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
@@ -147,9 +149,24 @@ with col_left:
             st.warning("Please enter a blueprint prompt first, Sir.")
 
     if st.session_state.generated_blueprint:
-        # Extract clean image URL string
         pure_url = st.session_state.generated_blueprint.split(" ")[0]
         st.image(pure_url, caption=img_query, use_container_width=True)
+
+    st.markdown("---")
+    st.markdown("#### 📽️ STARK HOLOGRAPHIC VIDEO FEED")
+    vid_query = st.text_input("Hologram simulation target...")
+    if st.button("Project Hologram Video", use_container_width=True):
+        if vid_query:
+            # Encoded dynamic animation simulation feed URL format
+            encoded_vid_prompt = urllib.parse.quote(f"{vid_query} futuristic rotating 3D holographic wireframe animation HUD")
+            st.session_state.hologram_video_url = f"https://image.pollinations.ai/prompt/{encoded_vid_prompt}?width=640&height=360&nologo=true"
+            log_event(f"HOLOGRAPHIC FEED: Projected simulation loop for '{vid_query}'")
+        else:
+            st.warning("Please specify a simulation target first, Sir.")
+
+    if st.session_state.hologram_video_url:
+        st.markdown("<span style='font-size: 11px; color: #00E5FF;'>STATUS: ACTIVE HOLOGRAPHIC PROJECTION FEED</span>", unsafe_allow_html=True)
+        st.image(st.session_state.hologram_video_url, caption=f"Hologram Matrix: {vid_query}", use_container_width=True)
 
     st.markdown("---")
     st.markdown("#### 🔧 SYSTEM CONTROLS")
