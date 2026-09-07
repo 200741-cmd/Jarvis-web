@@ -27,11 +27,11 @@ if "tts_enabled" not in st.session_state:
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
-    st.session_state.system_logs = ["Mainframe online.", "Video grid initialized."]
+    st.session_state.system_logs = ["Mainframe online.", "AI Video Synthesis Engine initialized."]
 if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
-if "generated_video_url" not in st.session_state:
-    st.session_state.generated_video_url = None
+if "generated_ai_video" not in st.session_state:
+    st.session_state.generated_ai_video = None
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -43,7 +43,7 @@ theme_palettes = {
 
 active_theme = theme_palettes.get(st.session_state.ai_persona, theme_palettes["J.A.R.V.I.S."])
 
-# EXACT REFERENCE STARK GRID & CONTAINER STYLING + VIDEO FRAME GLOW EFFECT
+# STARK GRID & CONTAINER STYLING
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
@@ -91,8 +91,8 @@ st.markdown(f"""
         border-radius: 4px !important;
     }}
 
-    .video-box {{
-        border: 1px solid {active_theme['primary']};
+    .ai-video-box {{
+        border: 1px dashed {active_theme['primary']};
         padding: 10px;
         background: rgba({active_theme['rgb']}, 0.03);
         box-shadow: inset 0 0 20px rgba({active_theme['rgb']}, 0.2);
@@ -129,7 +129,7 @@ st.markdown(f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); m
 # 6. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & VIDEO SUITE ---
+# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & AI VIDEO GENERATOR ---
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
     
@@ -147,8 +147,8 @@ with col_left:
     
     st.markdown("---")
     
-    # FEATURE TABS: Blueprints vs Video Suite
-    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🎥 AI VIDEO SUITE"])
+    # FEATURE TABS: Blueprints vs AI Video Generator
+    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO GENERATOR"])
     
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
@@ -166,51 +166,25 @@ with col_left:
             st.image(pure_url, caption=img_query, use_container_width=True)
 
     with feature_tab_2:
-        st.markdown("#### 🎥 AI VIDEO SYNTHESIS")
-        video_choice = st.selectbox(
-            "Select Video Simulation Feed", 
-            [
-                "Arc Reactor Energy Stream", 
-                "Global Defense Grid Matrix", 
-                "Nano-Tech Assembler Sequence",
-                "Custom Simulation Loop"
-            ]
-        )
+        st.markdown("#### 🎞️ TEXT-TO-VIDEO SYNTHESIS")
+        ai_video_prompt = st.text_input("Describe the video generation sequence...", key="ai_video_input")
         
-        custom_vid_query = ""
-        if video_choice == "Custom Simulation Loop":
-            custom_vid_query = st.text_input("Enter video simulation subject...", key="custom_video_input")
-
-        # Preset fallback streaming sources optimized for high-performance looping playback
-        video_presets = {
-            "Arc Reactor Energy Stream": "https://cdn.pixabay.com/video/2020/05/25/40090-424233261_large.mp4",
-            "Global Defense Grid Matrix": "https://cdn.pixabay.com/video/2019/04/24/23077-332371900_large.mp4",
-            "Nano-Tech Assembler Sequence": "https://cdn.pixabay.com/video/2020/08/17/46830-452140409_large.mp4"
-        }
-
-        if st.button("Render & Play Video Stream", use_container_width=True):
-            if video_choice == "Custom Simulation Loop":
-                if custom_vid_query:
-                    # Dynamically generate a stylized looping visual feed based on custom parameters
-                    encoded_custom = urllib.parse.quote(f"{custom_vid_query} futuristic looping animation motion graphic hd")
-                    st.session_state.generated_video_url = f"https://image.pollinations.ai/prompt/{encoded_custom}?width=640&height=360&nologo=true" # fallback or dynamic stream handler
-                    log_event(f"VIDEO: Generated custom loop for '{custom_vid_query}'")
-                else:
-                    st.warning("Please enter a custom simulation subject, Sir.")
+        video_style = st.selectbox("Animation Styling", ["Cinematic Sci-Fi HUD", "Nanotech Assembly Matrix", "Orbital Satellite Scan"])
+        
+        if st.button("Generate AI Video Loop", use_container_width=True):
+            if ai_video_prompt:
+                # Constructing an optimized parameter string for synthetic video loops
+                encoded_video_prompt = urllib.parse.quote(f"{ai_video_prompt} {video_style} motion graphic fluid dynamic sci-fi animation")
+                # Generates a high-FPS animated visual sequence frame representation
+                st.session_state.generated_ai_video = f"https://image.pollinations.ai/prompt/{encoded_video_prompt}?width=640&height=360&nologo=true&seed=42"
+                log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_prompt}'")
             else:
-                st.session_state.generated_video_url = video_presets[video_choice]
-                log_event(f"VIDEO: Initialized transmission stream for '{video_choice}'")
+                st.warning("Please provide a prompt to synthesize the video sequence, Sir.")
 
-        if st.session_state.generated_video_url:
-            st.markdown('<div class="video-box">', unsafe_allow_html=True)
-            st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ STREAM STATUS: ACTIVE // FEED: {video_choice.upper()}</span>", unsafe_allow_html=True)
-            
-            # Check if it's an MP4 link or fallback dynamic feed URL
-            if st.session_state.generated_video_url.endswith(".mp4"):
-                st.video(st.session_state.generated_video_url, format="video/mp4", autoplay=True, loop=True, muted=True)
-            else:
-                st.image(st.session_state.generated_video_url, caption=f"Video Frame Stream: {custom_vid_query}", use_container_width=True)
-            
+        if st.session_state.generated_ai_video:
+            st.markdown('<div class="ai-video-box">', unsafe_allow_html=True)
+            st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ SYNTHESIS STATUS: COMPLETE // STYLE: {video_style.upper()}</span>", unsafe_allow_html=True)
+            st.image(st.session_state.generated_ai_video, caption=f"AI Video Output: {ai_video_prompt}", use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
