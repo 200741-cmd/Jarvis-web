@@ -27,11 +27,11 @@ if "tts_enabled" not in st.session_state:
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
-    st.session_state.system_logs = ["Mainframe online.", "Holographic matrix initialized."]
+    st.session_state.system_logs = ["Mainframe online.", "Video grid initialized."]
 if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
-if "active_hologram" not in st.session_state:
-    st.session_state.active_hologram = None
+if "generated_video_url" not in st.session_state:
+    st.session_state.generated_video_url = None
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -43,7 +43,7 @@ theme_palettes = {
 
 active_theme = theme_palettes.get(st.session_state.ai_persona, theme_palettes["J.A.R.V.I.S."])
 
-# EXACT REFERENCE STARK GRID & CONTAINER STYLING + HOLOGRAM GLOW EFFECT
+# EXACT REFERENCE STARK GRID & CONTAINER STYLING + VIDEO FRAME GLOW EFFECT
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
@@ -91,8 +91,8 @@ st.markdown(f"""
         border-radius: 4px !important;
     }}
 
-    .hologram-box {{
-        border: 1px dashed {active_theme['primary']};
+    .video-box {{
+        border: 1px solid {active_theme['primary']};
         padding: 10px;
         background: rgba({active_theme['rgb']}, 0.03);
         box-shadow: inset 0 0 20px rgba({active_theme['rgb']}, 0.2);
@@ -129,7 +129,7 @@ st.markdown(f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); m
 # 6. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & DEDICATED HOLOGRAM SUITE ---
+# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & VIDEO SUITE ---
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
     
@@ -147,8 +147,8 @@ with col_left:
     
     st.markdown("---")
     
-    # FEATURE TABS: Blueprints vs Holograms
-    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🔮 HOLOGRAM SUITE"])
+    # FEATURE TABS: Blueprints vs Video Suite
+    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🎥 AI VIDEO SUITE"])
     
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
@@ -166,23 +166,51 @@ with col_left:
             st.image(pure_url, caption=img_query, use_container_width=True)
 
     with feature_tab_2:
-        st.markdown("#### 🔮 HOLOGRAM PROJECTION DECK")
-        holo_query = st.text_input("Hologram matrix subject...", key="hologram_input")
+        st.markdown("#### 🎥 AI VIDEO SYNTHESIS")
+        video_choice = st.selectbox(
+            "Select Video Simulation Feed", 
+            [
+                "Arc Reactor Energy Stream", 
+                "Global Defense Grid Matrix", 
+                "Nano-Tech Assembler Sequence",
+                "Custom Simulation Loop"
+            ]
+        )
         
-        holo_mode = st.radio("Projection Mode", ["Dynamic Wireframe Simulation", "Orbital Strategic Scan"], horizontal=True)
-        
-        if st.button("Engage Hologram Projection", use_container_width=True):
-            if holo_query:
-                encoded_holo = urllib.parse.quote(f"{holo_query} holographic projection glowing cyan 3D wireframe sci-fi interface vector art")
-                st.session_state.active_hologram = f"https://image.pollinations.ai/prompt/{encoded_holo}?width=512&height=512&nologo=true"
-                log_event(f"HOLOGRAM: Projected scan for '{holo_query}' under mode [{holo_mode}]")
-            else:
-                st.warning("Define a target for the holographic emitter, Sir.")
+        custom_vid_query = ""
+        if video_choice == "Custom Simulation Loop":
+            custom_vid_query = st.text_input("Enter video simulation subject...", key="custom_video_input")
 
-        if st.session_state.active_hologram:
-            st.markdown('<div class="hologram-box">', unsafe_allow_html=True)
-            st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ EMITTER STATUS: ACTIVE // MODE: {holo_mode.upper()}</span>", unsafe_allow_html=True)
-            st.image(st.session_state.active_hologram, caption=f"Holo-Stream: {holo_query}", use_container_width=True)
+        # Preset fallback streaming sources optimized for high-performance looping playback
+        video_presets = {
+            "Arc Reactor Energy Stream": "https://cdn.pixabay.com/video/2020/05/25/40090-424233261_large.mp4",
+            "Global Defense Grid Matrix": "https://cdn.pixabay.com/video/2019/04/24/23077-332371900_large.mp4",
+            "Nano-Tech Assembler Sequence": "https://cdn.pixabay.com/video/2020/08/17/46830-452140409_large.mp4"
+        }
+
+        if st.button("Render & Play Video Stream", use_container_width=True):
+            if video_choice == "Custom Simulation Loop":
+                if custom_vid_query:
+                    # Dynamically generate a stylized looping visual feed based on custom parameters
+                    encoded_custom = urllib.parse.quote(f"{custom_vid_query} futuristic looping animation motion graphic hd")
+                    st.session_state.generated_video_url = f"https://image.pollinations.ai/prompt/{encoded_custom}?width=640&height=360&nologo=true" # fallback or dynamic stream handler
+                    log_event(f"VIDEO: Generated custom loop for '{custom_vid_query}'")
+                else:
+                    st.warning("Please enter a custom simulation subject, Sir.")
+            else:
+                st.session_state.generated_video_url = video_presets[video_choice]
+                log_event(f"VIDEO: Initialized transmission stream for '{video_choice}'")
+
+        if st.session_state.generated_video_url:
+            st.markdown('<div class="video-box">', unsafe_allow_html=True)
+            st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ STREAM STATUS: ACTIVE // FEED: {video_choice.upper()}</span>", unsafe_allow_html=True)
+            
+            # Check if it's an MP4 link or fallback dynamic feed URL
+            if st.session_state.generated_video_url.endswith(".mp4"):
+                st.video(st.session_state.generated_video_url, format="video/mp4", autoplay=True, loop=True, muted=True)
+            else:
+                st.image(st.session_state.generated_video_url, caption=f"Video Frame Stream: {custom_vid_query}", use_container_width=True)
+            
             st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
