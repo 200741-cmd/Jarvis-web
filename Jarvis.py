@@ -27,11 +27,11 @@ if "tts_enabled" not in st.session_state:
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
-    st.session_state.system_logs = ["Mainframe online.", "AI Video Synthesis Engine initialized."]
+    st.session_state.system_logs = ["Mainframe online.", "Video stream matrix active."]
 if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
-if "generated_ai_video" not in st.session_state:
-    st.session_state.generated_ai_video = None
+if "active_video_url" not in st.session_state:
+    st.session_state.active_video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -91,8 +91,8 @@ st.markdown(f"""
         border-radius: 4px !important;
     }}
 
-    .ai-video-box {{
-        border: 1px dashed {active_theme['primary']};
+    .video-player-box {{
+        border: 1px solid {active_theme['primary']};
         padding: 10px;
         background: rgba({active_theme['rgb']}, 0.03);
         box-shadow: inset 0 0 20px rgba({active_theme['rgb']}, 0.2);
@@ -129,7 +129,7 @@ st.markdown(f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); m
 # 6. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & AI VIDEO GENERATOR ---
+# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & VIDEO PLAYER SUITE ---
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
     
@@ -147,8 +147,8 @@ with col_left:
     
     st.markdown("---")
     
-    # FEATURE TABS: Blueprints vs AI Video Generator
-    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO GENERATOR"])
+    # FEATURE TABS: Blueprints vs Live Video Player
+    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🎥 LIVE VIDEO FEED"])
     
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
@@ -166,26 +166,32 @@ with col_left:
             st.image(pure_url, caption=img_query, use_container_width=True)
 
     with feature_tab_2:
-        st.markdown("#### 🎞️ TEXT-TO-VIDEO SYNTHESIS")
-        ai_video_prompt = st.text_input("Describe the video generation sequence...", key="ai_video_input")
+        st.markdown("#### 🎥 TACTICAL MOTION FEED")
         
-        video_style = st.selectbox("Animation Styling", ["Cinematic Sci-Fi HUD", "Nanotech Assembly Matrix", "Orbital Satellite Scan"])
+        feed_options = {
+            "Arc Reactor Quantum Stream": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+            "Defense Matrix Simulation": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            "Satellite Telemetry Motion": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+        }
         
-        if st.button("Generate AI Video Loop", use_container_width=True):
-            if ai_video_prompt:
-                # Constructing an optimized parameter string for synthetic video loops
-                encoded_video_prompt = urllib.parse.quote(f"{ai_video_prompt} {video_style} motion graphic fluid dynamic sci-fi animation")
-                # Generates a high-FPS animated visual sequence frame representation
-                st.session_state.generated_ai_video = f"https://image.pollinations.ai/prompt/{encoded_video_prompt}?width=640&height=360&nologo=true&seed=42"
-                log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_prompt}'")
-            else:
-                st.warning("Please provide a prompt to synthesize the video sequence, Sir.")
+        selected_feed = st.selectbox("Select Tactical Video Feed", list(feed_options.keys()))
+        st.session_state.active_video_url = feed_options[selected_feed]
+        
+        if st.button("Engage Video Stream", use_container_width=True):
+            log_event(f"VIDEO: Active stream locked to [{selected_feed}]")
 
-        if st.session_state.generated_ai_video:
-            st.markdown('<div class="ai-video-box">', unsafe_allow_html=True)
-            st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ SYNTHESIS STATUS: COMPLETE // STYLE: {video_style.upper()}</span>", unsafe_allow_html=True)
-            st.image(st.session_state.generated_ai_video, caption=f"AI Video Output: {ai_video_prompt}", use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="video-player-box">', unsafe_allow_html=True)
+        st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ FEED STATUS: STREAMING // SOURCE: {selected_feed.upper()}</span>", unsafe_allow_html=True)
+        
+        # True HTML5 video element guaranteeing motion playback
+        st.markdown(f"""
+            <video width="100%" autoplay loop muted playsinline style="border-radius: 4px; border: 1px solid {active_theme['primary']};">
+                <source src="{st.session_state.active_video_url}" type="video/mp4">
+                Your browser does not support the video element.
+            </video>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("#### 🔧 SYSTEM CONTROLS")
