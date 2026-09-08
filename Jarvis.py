@@ -170,10 +170,8 @@ with col_left:
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
         
-        # ACTIVE TEXT INPUT FIELD FOR AI VIDEO GENERATION
         ai_video_query = st.text_input("Describe the animation sequence...", key="ai_video_text_input")
         
-        # Pre-configured animation styles matching Stark aesthetics
         animation_presets = {
             "Arc Reactor Flow": "glowing blue energy core pulsation",
             "Global Defense Grid": "rotating digital data network matrix",
@@ -184,10 +182,8 @@ with col_left:
         
         if st.button("Synthesize AI Video Loop", use_container_width=True):
             if ai_video_query:
-                # Combine custom query with preset style for a robust generation
                 generation_prompt = f"{ai_video_query} {animation_presets[selected_preset]} motion graphic fluid sci-fi animation hd looping"
                 encoded_prompt = urllib.parse.quote(generation_prompt)
-                # Route request to a high-speed public endpoint that returns a synthetic video loop
                 st.session_state.active_ai_video_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=640&height=360&nologo=true&seed=42"
                 st.session_state.active_ai_video_label = f"AI Generated: {ai_video_query}"
                 log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_query}'")
@@ -197,10 +193,7 @@ with col_left:
         if st.session_state.active_ai_video_url:
             st.markdown('<div class="ai-video-box">', unsafe_allow_html=True)
             st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ SYNTHESIS STATUS: COMPLETE // SOURCE: AI ENGINE</span>", unsafe_allow_html=True)
-            
-            # Native Streamlit video renderer configured for auto-looping playback
             st.video(st.session_state.active_ai_video_url, format="video/mp4", autoplay=True, loop=True, muted=True)
-            
             st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
@@ -289,4 +282,37 @@ with col_right:
                         contents=active_query,
                         config={'system_instruction': sys_inst}
                     )
+                    ai_reply = response.text
+
+                audio_bytes = None
+                if st.session_state.tts_enabled:
+                    tld_mapping = {
+                        "F.R.I.D.A.Y.": "ie",
+                        "J.A.R.V.I.S.": "co.uk",
+                        "E.D.I.T.H.": "com",
+                        "BOTH": "co.uk"
+                    }
+                    tld_val = tld_mapping.get(st.session_state.ai_persona, "com")
                     
+                    tts = gTTS(text=ai_reply, lang='en', tld=tld_val)
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    fp.seek(0)
+                    audio_bytes = fp.read()
+
+                with st.chat_message("assistant", avatar="💠"):
+                    st.write(ai_reply)
+                    if audio_bytes:
+                        st.audio(audio_bytes, format="audio/mp3")
+
+                log_event("COMM: Inbound transmission processed.")
+            except Exception as api_err:
+                error_msg = f"🚨 Mainframe Connection Refused: {str(api_err)}"
+                with st.chat_message("assistant", avatar="💠"):
+                    st.error(error_msg)
+                ai_reply = error_msg
+                log_event("ERROR: Data stream broken.")
+
+        st.session_state.chat_history.append({"user": active_query, "bot": ai_reply, "audio": audio_bytes if 'audio_bytes' in locals() else None})
+        st.session_state.processing_query = None
+        st.rerun()
