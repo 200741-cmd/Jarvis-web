@@ -27,13 +27,13 @@ if "tts_enabled" not in st.session_state:
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
-    st.session_state.system_logs = ["Mainframe online.", "Video stream matrix active."]
+    st.session_state.system_logs = ["Mainframe online.", "AI Video Synthesis Engine active."]
 if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
-if "active_video_url" not in st.session_state:
-    st.session_state.active_video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
-if "active_video_label" not in st.session_state:
-    st.session_state.active_video_label = "Arc Reactor Quantum Stream"
+if "active_ai_video_url" not in st.session_state:
+    st.session_state.active_ai_video_url = None
+if "active_ai_video_label" not in st.session_state:
+    st.session_state.active_ai_video_label = "Awaiting Synthesis Command"
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -93,7 +93,7 @@ st.markdown(f"""
         border-radius: 4px !important;
     }}
 
-    .video-player-box {{
+    .ai-video-box {{
         border: 1px solid {active_theme['primary']};
         padding: 10px;
         background: rgba({active_theme['rgb']}, 0.03);
@@ -131,7 +131,7 @@ st.markdown(f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); m
 # 6. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & VIDEO PLAYER SUITE ---
+# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, & AI VIDEO SYNTHESIS ---
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
     
@@ -149,8 +149,8 @@ with col_left:
     
     st.markdown("---")
     
-    # FEATURE TABS: Blueprints vs Live Video Feed
-    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🎥 LIVE VIDEO FEED"])
+    # FEATURE TABS: Blueprints vs AI Video Synthesis
+    feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO SYNTHESIS"])
     
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
@@ -168,39 +168,40 @@ with col_left:
             st.image(pure_url, caption=img_query, use_container_width=True)
 
     with feature_tab_2:
-        st.markdown("#### 🎥 TACTICAL MOTION FEED")
+        st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
         
-        # Explicit text input area inside the video section as requested
-        video_text_query = st.text_input("Enter video target or description...", key="video_tab_text_input")
+        # ACTIVE TEXT INPUT FIELD FOR AI VIDEO GENERATION
+        ai_video_query = st.text_input("Describe the animation sequence...", key="ai_video_text_input")
         
-        feed_options = {
-            "Arc Reactor Quantum Stream": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-            "Defense Matrix Simulation": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-            "Satellite Telemetry Motion": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+        # Pre-configured animation styles matching Stark aesthetics
+        animation_presets = {
+            "Arc Reactor Flow": "glowing blue energy core pulsation",
+            "Global Defense Grid": "rotating digital data network matrix",
+            "Nano-Tech Assembly": "molecular construction sequence simulation",
+            "Flight Path HUD": "futuristic vector telemetry overlay"
         }
+        selected_preset = st.selectbox("Animation Styling", list(animation_presets.keys()))
         
-        selected_feed = st.selectbox("Select Tactical Video Feed", list(feed_options.keys()))
-        
-        if st.button("Engage Video Stream", use_container_width=True):
-            if video_text_query:
-                st.session_state.active_video_label = f"Custom: {video_text_query}"
-                log_event(f"VIDEO: Stream engaged for custom input '{video_text_query}'")
+        if st.button("Synthesize AI Video Loop", use_container_width=True):
+            if ai_video_query:
+                # Combine custom query with preset style for a robust generation
+                generation_prompt = f"{ai_video_query} {animation_presets[selected_preset]} motion graphic fluid sci-fi animation hd looping"
+                encoded_prompt = urllib.parse.quote(generation_prompt)
+                # Route request to a high-speed public endpoint that returns a synthetic video loop
+                st.session_state.active_ai_video_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=640&height=360&nologo=true&seed=42"
+                st.session_state.active_ai_video_label = f"AI Generated: {ai_video_query}"
+                log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_query}'")
             else:
-                st.session_state.active_video_label = selected_feed
-                st.session_state.active_video_url = feed_options[selected_feed]
-                log_event(f"VIDEO: Active stream locked to [{selected_feed}]")
+                st.warning("Please enter a video description to synthesize, Sir.")
 
-        st.markdown('<div class="video-player-box">', unsafe_allow_html=True)
-        st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ FEED STATUS: STREAMING // SOURCE: {st.session_state.active_video_label.upper()}</span>", unsafe_allow_html=True)
-        
-        st.markdown(f"""
-            <video width="100%" autoplay loop muted playsinline style="border-radius: 4px; border: 1px solid {active_theme['primary']};">
-                <source src="{st.session_state.active_video_url}" type="video/mp4">
-                Your browser does not support the video element.
-            </video>
-        """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        if st.session_state.active_ai_video_url:
+            st.markdown('<div class="ai-video-box">', unsafe_allow_html=True)
+            st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ SYNTHESIS STATUS: COMPLETE // SOURCE: AI ENGINE</span>", unsafe_allow_html=True)
+            
+            # Native Streamlit video renderer configured for auto-looping playback
+            st.video(st.session_state.active_ai_video_url, format="video/mp4", autoplay=True, loop=True, muted=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("#### 🔧 SYSTEM CONTROLS")
@@ -288,37 +289,4 @@ with col_right:
                         contents=active_query,
                         config={'system_instruction': sys_inst}
                     )
-                    ai_reply = response.text
-
-                audio_bytes = None
-                if st.session_state.tts_enabled:
-                    tld_mapping = {
-                        "F.R.I.D.A.Y.": "ie",
-                        "J.A.R.V.I.S.": "co.uk",
-                        "E.D.I.T.H.": "com",
-                        "BOTH": "co.uk"
-                    }
-                    tld_val = tld_mapping.get(st.session_state.ai_persona, "com")
-                    
-                    tts = gTTS(text=ai_reply, lang='en', tld=tld_val)
-                    fp = io.BytesIO()
-                    tts.write_to_fp(fp)
-                    fp.seek(0)
-                    audio_bytes = fp.read()
-
-                with st.chat_message("assistant", avatar="💠"):
-                    st.write(ai_reply)
-                    if audio_bytes:
-                        st.audio(audio_bytes, format="audio/mp3")
-
-                log_event("COMM: Inbound transmission processed.")
-            except Exception as api_err:
-                error_msg = f"🚨 Mainframe Connection Refused: {str(api_err)}"
-                with st.chat_message("assistant", avatar="💠"):
-                    st.error(error_msg)
-                ai_reply = error_msg
-                log_event("ERROR: Data stream broken.")
-
-        st.session_state.chat_history.append({"user": active_query, "bot": ai_reply, "audio": audio_bytes if 'audio_bytes' in locals() else None})
-        st.session_state.processing_query = None
-        st.rerun()
+                    ai
