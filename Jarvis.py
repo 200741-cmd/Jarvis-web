@@ -289,4 +289,4 @@ with col_right:
                         contents=active_query,
                         config={'system_instruction': sys_inst}
                     )
-                    ai
+                    
