@@ -32,6 +32,8 @@ if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
 if "active_video_url" not in st.session_state:
     st.session_state.active_video_url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+if "active_video_label" not in st.session_state:
+    st.session_state.active_video_label = "Arc Reactor Quantum Stream"
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -147,7 +149,7 @@ with col_left:
     
     st.markdown("---")
     
-    # FEATURE TABS: Blueprints vs Live Video Player
+    # FEATURE TABS: Blueprints vs Live Video Feed
     feature_tab_1, feature_tab_2 = st.tabs(["🎨 STARK BLUEPRINTS", "🎥 LIVE VIDEO FEED"])
     
     with feature_tab_1:
@@ -168,6 +170,9 @@ with col_left:
     with feature_tab_2:
         st.markdown("#### 🎥 TACTICAL MOTION FEED")
         
+        # Explicit text input area inside the video section as requested
+        video_text_query = st.text_input("Enter video target or description...", key="video_tab_text_input")
+        
         feed_options = {
             "Arc Reactor Quantum Stream": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
             "Defense Matrix Simulation": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
@@ -175,15 +180,19 @@ with col_left:
         }
         
         selected_feed = st.selectbox("Select Tactical Video Feed", list(feed_options.keys()))
-        st.session_state.active_video_url = feed_options[selected_feed]
         
         if st.button("Engage Video Stream", use_container_width=True):
-            log_event(f"VIDEO: Active stream locked to [{selected_feed}]")
+            if video_text_query:
+                st.session_state.active_video_label = f"Custom: {video_text_query}"
+                log_event(f"VIDEO: Stream engaged for custom input '{video_text_query}'")
+            else:
+                st.session_state.active_video_label = selected_feed
+                st.session_state.active_video_url = feed_options[selected_feed]
+                log_event(f"VIDEO: Active stream locked to [{selected_feed}]")
 
         st.markdown('<div class="video-player-box">', unsafe_allow_html=True)
-        st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ FEED STATUS: STREAMING // SOURCE: {selected_feed.upper()}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='font-size: 11px; color: {active_theme['primary']};'>⚡ FEED STATUS: STREAMING // SOURCE: {st.session_state.active_video_label.upper()}</span>", unsafe_allow_html=True)
         
-        # True HTML5 video element guaranteeing motion playback
         st.markdown(f"""
             <video width="100%" autoplay loop muted playsinline style="border-radius: 4px; border: 1px solid {active_theme['primary']};">
                 <source src="{st.session_state.active_video_url}" type="video/mp4">
@@ -221,7 +230,9 @@ with col_right:
     if not st.session_state.chat_history:
         st.info(f"Good day, sir. {st.session_state.ai_persona} operational. Direct Google core link active via gemini-3.5-flash-lite.")
     
-    user_prompt = st.chat_input("Enter strategic command...")
+    manual_query = st.text_input("Enter command manually...", key="manual_text_input")
+    send_text_btn = st.button("Transmit Text Command", use_container_width=True)
+    
     recorded_audio = st.audio_input("Open Audio Frequency Receiver")
 
     active_query = None
@@ -234,8 +245,8 @@ with col_right:
         except Exception:
             active_query = "Error decoding audio waveform stream."
 
-    if user_prompt:
-        active_query = user_prompt
+    if send_text_btn and manual_query:
+        active_query = manual_query
 
     for chat in reversed(st.session_state.chat_history):
         with st.chat_message("user", avatar="👤"):
