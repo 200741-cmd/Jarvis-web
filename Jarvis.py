@@ -112,38 +112,43 @@ st.markdown(
         border-radius: 4px;
     }}
 
-    .infinity-stone-box {{
+    .infinity-stones-vault {{
         border: 1px solid #FFD700;
         padding: 10px;
         border-radius: 6px;
         background: rgba(255, 215, 0, 0.05);
         margin-bottom: 15px;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
     }}
 </style>
 """,
     unsafe_allow_html=True,
 )
 
+# 4. MULTI-KEY CLIENT ROTATION ENGINE
+PERSONA_KEY_MAP = {
+    "VISION": ["API_KEY_VISION_1", "API_KEY_VISION_2"],
+    "ULTRON": ["API_KEY_ULTRON_1", "API_KEY_ULTRON_2"],
+    "F.R.I.D.A.Y.": ["API_KEY_FRIDAY_1", "API_KEY_FRIDAY_2"],
+    "E.D.I.T.H.": ["API_KEY_EDITH_1", "API_KEY_EDITH_2"],
+    "BOTH": ["API_KEY_BOTH_1", "API_KEY_BOTH_2"],
+}
 
-# 4. SECURE CLIENT INITIALIZATION
-@st.cache_resource
-def get_genai_client():
-    api_key = None
-    try:
-        api_key = (
-            st.secrets.get("API_KEY", "")
-            or st.secrets.get("API_KEY_1", "")
-            or st.secrets.get("GROQ_API_KEY", "")
-        )
-    except Exception:
-        pass
-
-    if not api_key:
-        return None
-    return genai.Client(api_key=api_key)
+GLOBAL_BACKUP_KEYS = ["API_KEY_1", "API_KEY_2", "API_KEY", "GROQ_API_KEY"]
 
 
-client = get_genai_client()
+def get_client_for_persona(persona):
+    candidate_keys = PERSONA_KEY_MAP.get(persona, []) + GLOBAL_BACKUP_KEYS
+
+    for key_name in candidate_keys:
+        try:
+            api_val = st.secrets.get(key_name, "").strip()
+            if api_val:
+                return genai.Client(api_key=api_val), key_name
+        except Exception:
+            continue
+
+    return None, None
 
 
 def log_event(message):
@@ -210,13 +215,19 @@ with col_left:
             )
             if st.session_state.chat_history:
                 max_idx = len(st.session_state.chat_history) - 1
-                selected_time = st.slider(
-                    "Chronological Depth Index",
-                    0,
-                    max_idx,
-                    max_idx,
-                    key="time_stone_slider",
-                )
+                if max_idx == 0:
+                    selected_time = 0
+                    st.caption(
+                        "📍 *Currently showing the only recorded dialogue entry.*"
+                    )
+                else:
+                    selected_time = st.slider(
+                        "Chronological Depth Index",
+                        0,
+                        max_idx,
+                        max_idx,
+                        key="time_stone_slider",
+                    )
                 historical_entry = st.session_state.chat_history[selected_time]
                 st.info(
                     f"**Historical User Prompt [{selected_time}]:** {historical_entry['user']}"
@@ -361,8 +372,22 @@ with col_left:
         log_event("CLEAN: Memory buffers flushed.")
         st.rerun()
 
-# --- RIGHT COLUMN: SECURE COMM-LINK ---
+# --- RIGHT COLUMN: SECURE COMM-LINK & TOP-RIGHT INFINITY STONES VAULT ---
 with col_right:
+    # TOP-RIGHT INFINITY STONES IMAGE VAULT (Renders when Dev Mode is Active)
+    if st.session_state.dev_mode:
+        st.markdown('<div class="infinity-stones-vault">', unsafe_allow_html=True)
+        st.markdown(
+            "<span style='font-size: 12px; color: #FFD700;'>💎 TOP RIGHT HUD // INFINITY STONES MATRIX ACTIVE</span>",
+            unsafe_allow_html=True,
+        )
+        st.image(
+            "https://image.pollinations.ai/prompt/six%20glowing%20infinity%20stones%20marvel%20space%20mind%20reality%20power%20time%20soul%20futuristic%20hud%20cyberpunk%20interface?width=600&height=220&nologo=true&seed=99",
+            caption="INFINITY STONES VAULT // DEV MODE SYNC",
+            use_container_width=True,
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
     st.markdown("#### 📡 SECURE COMM-LINK")
 
     if not st.session_state.chat_history:
@@ -422,10 +447,12 @@ with col_right:
         with st.chat_message("user", avatar="👤"):
             st.write(active_query)
 
+        client, key_used = get_client_for_persona(st.session_state.ai_persona)
+
         if not client:
             with st.chat_message("assistant", avatar="🟡"):
                 st.error(
-                    "🚨 Transmission error: No active key found in the Streamlit secrets panel."
+                    "🚨 Transmission error: No active keys found in Streamlit secrets panel."
                 )
             ai_reply = "Link drop. Missing key."
             log_event("REJECT: Key missing.")
@@ -491,7 +518,9 @@ with col_right:
                     if audio_bytes:
                         st.audio(audio_bytes, format="audio/mp3")
 
-                log_event("COMM: Inbound transmission processed.")
+                log_event(
+                    f"COMM: Inbound transmission processed. [KEY: {key_used}]"
+                )
             except Exception as api_err:
                 error_msg = f"🚨 Mainframe Connection Refused: {str(api_err)}"
                 with st.chat_message("assistant", avatar="🟡"):
