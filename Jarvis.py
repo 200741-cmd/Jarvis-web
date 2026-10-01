@@ -125,30 +125,26 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 4. MULTI-KEY CLIENT ROTATION ENGINE
-PERSONA_KEY_MAP = {
-    "VISION": ["API_KEY_VISION_1", "API_KEY_VISION_2"],
-    "ULTRON": ["API_KEY_ULTRON_1", "API_KEY_ULTRON_2"],
-    "F.R.I.D.A.Y.": ["API_KEY_FRIDAY_1", "API_KEY_FRIDAY_2"],
-    "E.D.I.T.H.": ["API_KEY_EDITH_1", "API_KEY_EDITH_2"],
-    "BOTH": ["API_KEY_BOTH_1", "API_KEY_BOTH_2"],
-}
 
-GLOBAL_BACKUP_KEYS = ["API_KEY_1", "API_KEY_2", "API_KEY", "GROQ_API_KEY"]
+# 4. SECURE CLIENT INITIALIZATION
+@st.cache_resource
+def get_genai_client():
+    api_key = None
+    try:
+        api_key = (
+            st.secrets.get("API_KEY", "")
+            or st.secrets.get("API_KEY_1", "")
+            or st.secrets.get("GROQ_API_KEY", "")
+        )
+    except Exception:
+        pass
+
+    if not api_key:
+        return None
+    return genai.Client(api_key=api_key)
 
 
-def get_client_for_persona(persona):
-    candidate_keys = PERSONA_KEY_MAP.get(persona, []) + GLOBAL_BACKUP_KEYS
-
-    for key_name in candidate_keys:
-        try:
-            api_val = st.secrets.get(key_name, "").strip()
-            if api_val:
-                return genai.Client(api_key=api_val), key_name
-        except Exception:
-            continue
-
-    return None, None
+client = get_genai_client()
 
 
 def log_event(message):
@@ -447,12 +443,10 @@ with col_right:
         with st.chat_message("user", avatar="👤"):
             st.write(active_query)
 
-        client, key_used = get_client_for_persona(st.session_state.ai_persona)
-
         if not client:
             with st.chat_message("assistant", avatar="🟡"):
                 st.error(
-                    "🚨 Transmission error: No active keys found in Streamlit secrets panel."
+                    "🚨 Transmission error: No active key found in the Streamlit secrets panel."
                 )
             ai_reply = "Link drop. Missing key."
             log_event("REJECT: Key missing.")
@@ -518,9 +512,7 @@ with col_right:
                     if audio_bytes:
                         st.audio(audio_bytes, format="audio/mp3")
 
-                log_event(
-                    f"COMM: Inbound transmission processed. [KEY: {key_used}]"
-                )
+                log_event("COMM: Inbound transmission processed.")
             except Exception as api_err:
                 error_msg = f"🚨 Mainframe Connection Refused: {str(api_err)}"
                 with st.chat_message("assistant", avatar="🟡"):
