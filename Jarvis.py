@@ -201,25 +201,53 @@ st.markdown(
 )
 
 
-# 4. SECURE CLIENT INITIALIZATION
-@st.cache_resource
-def get_genai_client():
-    api_key = None
-    try:
-        api_key = (
-            st.secrets.get("API_KEY", "")
-            or st.secrets.get("API_KEY_1", "")
-            or st.secrets.get("GROQ_API_KEY", "")
-        )
-    except Exception:
-        pass
+# 4. MULTI-KEY POOL & FAILOVER ROTATION ENGINE (`API_KEY_1` to `API_KEY_4`)
+def get_ordered_api_keys():
+    keys = []
+    # Explicitly check keys 1 through 4 first in strict sequence
+    for i in range(1, 5):
+        k_name = f"API_KEY_{i}"
+        val = st.secrets.get(k_name)
+        if val and val not in keys:
+            keys.append(val)
+            
+    # Fallback checks if specific numbered keys aren't fully populated
+    for key_name in ["API_KEY", "GROQ_API_KEY"]:
+        val = st.secrets.get(key_name)
+        if val and val not in keys:
+            keys.append(val)
+            
+    return keys
 
-    if not api_key:
-        return None
-    return genai.Client(api_key=api_key)
+if "api_key_index" not in st.session_state:
+    st.session_state.api_key_index = 0
 
+def call_gemini_with_failover(contents):
+    keys = get_ordered_api_keys()
+    if not keys:
+        return None, "🚨 Transmission error: No API keys configured in st.secrets."
 
-client = get_genai_client()
+    attempts = len(keys)
+    for _ in range(attempts):
+        current_key = keys[st.session_state.api_key_index % len(keys)]
+        try:
+            client = genai.Client(api_key=current_key)
+            response = client.models.generate_content(
+                model="gemini-3.5-flash-lite",
+                contents=contents,
+            )
+            return response.text, None
+        except Exception as e:
+            err_msg = str(e).lower()
+            if any(term in err_msg for term in ["quota", "rate limit", "429", "exhausted", "limit", "permission"]):
+                # Rotate to the next API key in sequence (e.g. Key 1 -> Key 2 -> Key 3 -> Key 4)
+                st.session_state.api_key_index = (st.session_state.api_key_index + 1) % len(keys)
+                log_event(f"QUOTA REACHED: Rotating seamlessly to API Key Slot #{st.session_state.api_key_index + 1}")
+                continue
+            else:
+                return None, f"🚨 Mainframe Refused: {str(e)}"
+                
+    return None, "🚨 Mainframe Critical: All configured API keys (1 through 4) have exhausted their quotas."
 
 
 def log_event(message):
@@ -304,7 +332,6 @@ with col_left:
         ["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO SYNTHESIS"]
     )
 
-    # UNLIMITED MULTI-CLICK IMAGE FORM
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
         with st.form("blueprint_form"):
@@ -320,7 +347,6 @@ with col_left:
         if st.session_state.generated_blueprint:
             st.image(st.session_state.generated_blueprint, use_container_width=True)
 
-    # UNLIMITED MULTI-CLICK VIDEO FORM
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
         with st.form("video_form"):
@@ -411,38 +437,32 @@ with col_right:
             if len(st.session_state.chat_history) == 0:
                 st.session_state.all_chats[st.session_state.session_id]["title"] = active_query[:25] + "..."
 
-            if not client:
-                ai_reply = "🚨 Transmission error: No active key found."
-            else:
+            # Execute model generation using automatic failover across API_KEY_1 through API_KEY_4
+            ai_reply, err = call_gemini_with_failover(active_query)
+
+            audio_bytes = None
+            if not err and ai_reply and st.session_state.tts_enabled:
                 try:
-                    response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
-                        contents=active_query,
-                    )
-                    ai_reply = response.text
-
+                    tts = gTTS(text=ai_reply[:250], lang="en")
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    fp.seek(0)
+                    audio_bytes = fp.read()
+                except Exception:
                     audio_bytes = None
-                    if st.session_state.tts_enabled:
-                        try:
-                            tts = gTTS(text=ai_reply[:250], lang="en")
-                            fp = io.BytesIO()
-                            tts.write_to_fp(fp)
-                            fp.seek(0)
-                            audio_bytes = fp.read()
-                        except Exception:
-                            audio_bytes = None
 
-                    with st.chat_message("assistant", avatar="🟡"):
-                        st.write(ai_reply)
-                        if audio_bytes:
-                            st.audio(audio_bytes, format="audio/mp3")
-                except Exception as api_err:
-                    ai_reply = f"🚨 Mainframe Refused: {str(api_err)}"
+            if err:
+                ai_reply = err
+
+            with st.chat_message("assistant", avatar="🟡"):
+                st.write(ai_reply)
+                if audio_bytes:
+                    st.audio(audio_bytes, format="audio/mp3")
 
             st.session_state.chat_history.append({
                 "user": active_query,
                 "bot": ai_reply,
-                "audio": audio_bytes if "audio_bytes" in locals() else None,
+                "audio": audio_bytes,
             })
             st.session_state.processing_query = None
             st.rerun()
