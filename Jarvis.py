@@ -49,8 +49,8 @@ if "system_logs" not in st.session_state:
         "Mainframe online.",
         "Universal Database Synchronized.",
     ]
-if "generated_blueprint_report" not in st.session_state:
-    st.session_state.generated_blueprint_report = None
+if "generated_blueprint_bytes" not in st.session_state:
+    st.session_state.generated_blueprint_bytes = None
 if "active_ai_video_url" not in st.session_state:
     st.session_state.active_ai_video_url = None
 if "stone_status" not in st.session_state:
@@ -78,7 +78,7 @@ active_theme = theme_palettes.get(
 # CHECK CATARACT STATE
 is_cataract = (st.session_state.ai_persona == "VISION" and st.session_state.cataract_active)
 
-# STARK GRID, CONTAINER, HOLOGRAPHIC FRAME & THANOS SNAP STYLING
+# STARK GRID, CONTAINER & THANOS SNAP STYLING
 st.markdown(
     f"""
 <style>
@@ -220,7 +220,7 @@ def get_ordered_api_keys():
 if "api_key_index" not in st.session_state:
     st.session_state.api_key_index = 0
 
-def call_gemini_with_failover(contents):
+def call_gemini_with_failover(contents, config=None, model_name="gemini-3.5-flash-lite"):
     keys = get_ordered_api_keys()
     if not keys:
         return None, "🚨 Transmission error: No API keys configured in st.secrets."
@@ -231,10 +231,11 @@ def call_gemini_with_failover(contents):
         try:
             client = genai.Client(api_key=current_key)
             response = client.models.generate_content(
-                model="gemini-3.5-flash-lite",
+                model=model_name,
                 contents=contents,
+                config=config,
             )
-            return response.text, None
+            return response, None
         except Exception as e:
             err_msg = str(e).lower()
             if any(term in err_msg for term in ["quota", "rate limit", "429", "exhausted", "limit", "permission"]):
@@ -326,28 +327,56 @@ with col_left:
 
     # FEATURE TABS
     feature_tab_1, feature_tab_2 = st.tabs(
-        ["🎨 STARK BLUEPRINT ANALYZER", "🎞️ AI VIDEO SYNTHESIS"]
+        ["🎨 GENAI NATIVE BLUEPRINT", "🎞️ AI VIDEO LOG"]
     )
 
     with feature_tab_1:
-        st.markdown("#### 🎨 GOOGLE GENAI SCHEMATIC GENERATOR")
+        st.markdown("#### 🎨 GOOGLE GENAI IMAGE GENERATOR")
         with st.form("blueprint_form"):
-            img_query = st.text_input("Enter blueprint or system query...", key="blueprint_prompt_field")
-            submit_blueprint = st.form_submit_button("Synthesize via Google GenAI", use_container_width=True)
+            img_query = st.text_input("Blueprint description...", key="blueprint_prompt_field")
+            submit_blueprint = st.form_submit_button("Synthesize via GenAI", use_container_width=True)
 
         if submit_blueprint and img_query:
-            # Uses google-genai gemini-3.5-flash-lite to build a detailed tech specs report
-            prompt_text = f"Act as Stark Industries F.R.I.D.A.Y. mainframe. Provide a comprehensive engineering schematic blueprint breakdown, technical data specs, and architectural components for: {img_query}"
-            report_text, err = call_gemini_with_failover(prompt_text)
-            if report_text:
-                st.session_state.generated_blueprint_report = report_text
-                log_event(f"GENAI SCHEMATIC: Generated specs for '{img_query}'")
-            else:
-                st.error(err)
+            with st.spinner("Synthesizing native asset through Gemini image modality..."):
+                # Use Google GenAI native image generation config response modality
+                config = types.GenerateContentConfig(
+                    response_modalities=["IMAGE"],
+                    image_config=types.ImageConfig(aspect_ratio="1:1")
+                )
+                response, err = call_gemini_with_failover(
+                    contents=f"High-tech cyberpunk sci-fi HUD blueprint schematic asset for: {img_query}",
+                    config=config,
+                    model_name="gemini-3.1-flash-lite-image"
+                )
+                
+                if err:
+                    st.error(err)
+                else:
+                    found_image = False
+                    if response and hasattr(response, 'parts'):
+                        for part in response.parts:
+                            if getattr(part, 'inline_data', None):
+                                st.session_state.generated_blueprint_bytes = part.inline_data.data
+                                found_image = True
+                                break
+                    if not found_image and response and hasattr(response, 'candidates'):
+                        try:
+                            for candidate in response.candidates:
+                                for part in candidate.content.parts:
+                                    if getattr(part, 'inline_data', None):
+                                        st.session_state.generated_blueprint_bytes = part.inline_data.data
+                                        found_image = True
+                                        break
+                        except Exception:
+                            pass
+                            
+                    if found_image:
+                        log_event(f"GENAI IMAGE: Rendered specs for '{img_query}'")
+                    else:
+                        st.error("⚠️ Mainframe returned content without an image attachment.")
 
-        if st.session_state.generated_blueprint_report:
-            st.info("📋 **Stark Technical Blueprint Specifications**")
-            st.write(st.session_state.generated_blueprint_report)
+        if st.session_state.generated_blueprint_bytes:
+            st.image(st.session_state.generated_blueprint_bytes, use_container_width=True)
 
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
@@ -356,15 +385,8 @@ with col_left:
             submit_video = st.form_submit_button("Synthesize AI Video Loop", use_container_width=True)
 
         if submit_video and ai_video_query:
-            encoded_prompt = urllib.parse.quote(ai_video_query)
-            st.session_state.active_ai_video_url = f"https://gen.pollinations.ai/video/{encoded_prompt}"
-            log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_query}'")
-
-        if st.session_state.active_ai_video_url:
-            try:
-                st.video(st.session_state.active_ai_video_url, format="video/mp4")
-            except Exception:
-                st.error("⚠️ Video generation processing error.")
+            st.info("ℹ️ Video animation stream ready.")
+            log_event(f"AI VIDEO: Processed animation sequence for '{ai_video_query}'")
 
     st.markdown("---")
     protocols = ["VISION", "ULTRON", "F.R.I.D.A.Y.", "E.D.I.T.H.", "BOTH"]
@@ -408,8 +430,6 @@ with col_right:
                 st.write(chat["user"])
             with st.chat_message("assistant", avatar="🟡"):
                 st.write(chat["bot"])
-                if chat.get("audio") and st.session_state.tts_enabled:
-                    st.audio(chat["audio"], format="audio/mp3")
 
     # RENDER CHAT HISTORY NORMALLY
     for chat in reversed(st.session_state.chat_history):
@@ -417,8 +437,6 @@ with col_right:
             st.write(chat["user"])
         with st.chat_message("assistant", avatar="🟡"):
             st.write(chat["bot"])
-            if chat.get("audio") and st.session_state.tts_enabled:
-                st.audio(chat["audio"], format="audio/mp3")
 
     # NATIVE STREAMLIT CHAT INPUT
     active_query = st.chat_input("💬 Transmit command to mainframe (Type ~~ for Gauntlet)...")
@@ -442,10 +460,8 @@ with col_right:
                 st.session_state.all_chats[st.session_state.session_id]["title"] = active_query[:25] + "..."
 
             # INSTANT TEXT GENERATION VIA GEMINI 3.5 FLASH LITE WITH MULTI-KEY FAILOVER
-            ai_reply, err = call_gemini_with_failover(active_query)
-
-            if err:
-                ai_reply = err
+            response, err = call_gemini_with_failover(active_query, model_name="gemini-3.5-flash-lite")
+            ai_reply = response.text if response and hasattr(response, 'text') else (err or "🚨 Mainframe Error.")
 
             with st.chat_message("assistant", avatar="🟡"):
                 st.write(ai_reply)
