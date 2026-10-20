@@ -201,15 +201,17 @@ st.markdown(
 )
 
 
-# 4. MULTI-KEY POOL & FAILOVER ROTATION ENGINE (`API_KEY_1` to `API_KEY_4`)
+# 4. MULTI-KEY FAILOVER ROTATION ENGINE (`API_KEY_1` to `API_KEY_4`)
 def get_ordered_api_keys():
     keys = []
+    # Strictly check keys 1 through 4 in sequence
     for i in range(1, 5):
         k_name = f"API_KEY_{i}"
         val = st.secrets.get(k_name)
         if val and val not in keys:
             keys.append(val)
             
+    # Fallback keys
     for key_name in ["API_KEY", "GROQ_API_KEY"]:
         val = st.secrets.get(key_name)
         if val and val not in keys:
@@ -329,7 +331,6 @@ with col_left:
         ["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO SYNTHESIS"]
     )
 
-    # UNLIMITED MULTI-CLICK IMAGE FORM WITH RATE-LIMIT BYPASS
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
         with st.form("blueprint_form"):
@@ -348,7 +349,6 @@ with col_left:
             except Exception:
                 st.error("⚠️ Image generation server busy. Try again.")
 
-    # REPAIRED MULTI-CLICK VIDEO FORM USING OFFICIAL ENDPOINT
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
         with st.form("video_form"):
@@ -357,7 +357,6 @@ with col_left:
 
         if submit_video and ai_video_query:
             encoded_prompt = urllib.parse.quote(ai_video_query)
-            # Updated to official Pollinations video generation endpoint route
             st.session_state.active_ai_video_url = f"https://gen.pollinations.ai/video/{encoded_prompt}"
             log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_query}'")
 
