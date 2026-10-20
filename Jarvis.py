@@ -18,7 +18,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# 2. SESSION STATE & UNIVERSAL STORAGE SETUP
+# 2. SESSION STATE & UNIVERSAL PERSISTENCE SETUP
 if "session_id" not in st.session_state:
     query_params = st.query_params
     if "chat_id" in query_params:
@@ -129,16 +129,6 @@ st.markdown(
         text-align: center;
         box-shadow: 0 0 25px rgba(255, 215, 0, 0.25);
         margin-bottom: 20px;
-    }}
-
-    .stone-btn {{
-        border-radius: 50% !important;
-        width: 45px !important;
-        height: 45px !important;
-        padding: 0 !important;
-        font-size: 18px !important;
-        margin: 2px !important;
-        box-shadow: 0 0 12px currentColor;
     }}
 </style>
 
@@ -265,4 +255,172 @@ with col_left:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
         img_query = st.text_input("Blueprint description...", key="blueprint_input")
         if st.button("Synthesize Blueprint", use_container_width=True):
-            
+            if img_query:
+                formatted_prompt = img_query.replace(" ", "%20")
+                st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{formatted_prompt} (cyberpunk sci-fi hud blueprint style)"
+                log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
+            else:
+                st.warning("Please enter a blueprint prompt first, Sir.")
+
+        if st.session_state.generated_blueprint:
+            pure_url = st.session_state.generated_blueprint.split(" ")[0]
+            st.image(pure_url, caption=img_query, use_container_width=True)
+
+    with feature_tab_2:
+        st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
+        ai_video_query = st.text_input("Describe animation sequence...", key="ai_video_text_input")
+        if st.button("Synthesize AI Video Loop", use_container_width=True):
+            if ai_video_query:
+                encoded_prompt = urllib.parse.quote(ai_video_query)
+                st.session_state.active_ai_video_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=640&height=360&nologo=true&seed=42"
+                st.session_state.active_ai_video_label = f"AI Generated: {ai_video_query}"
+                log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_query}'")
+            else:
+                st.warning("Please enter a video description, Sir.")
+
+        if st.session_state.active_ai_video_url:
+            st.markdown('<div class="ai-video-box">', unsafe_allow_html=True)
+            st.video(st.session_state.active_ai_video_url, format="video/mp4", autoplay=True, loop=True, muted=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+    protocols = ["VISION", "ULTRON", "F.R.I.D.A.Y.", "E.D.I.T.H.", "BOTH"]
+    current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
+    selected_persona = st.selectbox("Active Protocol", protocols, index=current_index)
+    if selected_persona != st.session_state.ai_persona:
+        st.session_state.ai_persona = selected_persona
+        log_event(f"Protocol shifted to {selected_persona}.")
+        st.rerun()
+
+    tts_toggle = st.checkbox("Audio Voice Feedback (TTS)", value=st.session_state.tts_enabled)
+    if tts_toggle != st.session_state.tts_enabled:
+        st.session_state.tts_enabled = tts_toggle
+        st.rerun()
+
+# --- RIGHT COLUMN: GOOGLE-STYLE GAUNTLET KNOWLEDGE PANEL & COMM-LINK ---
+with col_right:
+    # GOOGLE-STYLE INTERACTIVE INFINITY GAUNTLET CARD
+    st.markdown(
+        """
+        <div class="gauntlet-card">
+            <h3 style="color: #FFD700; margin: 0;">🥊 THE INFINITY GAUNTLET</h3>
+            <p style="font-size: 11px; color: #ccc; margin-bottom: 10px;">Interactive Knowledge Easter Egg Panel</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Gauntlet Image & Clickable Stones Row
+    st.image(
+        "https://image.pollinations.ai/prompt/glowing%20infinity%20gauntlet%20with%20six%20glowing%20stones%20marvel%20google%20easter%20egg%20style%20hd?width=650&height=220&nologo=true&seed=77",
+        caption="Click individual stones below to channel their reality-warping energy or snap the gauntlet.",
+        use_container_width=True
+    )
+
+    # INDIVIDUAL INTERACTIVE STONE CONTROLS
+    stone_cols = st.columns(7)
+
+    with stone_cols[0]:
+        if st.button("🟢", key="time_stone", help="Time Stone"):
+            st.session_state.stone_status = "🟢 TIME STONE: Rewinding local timeline buffers..."
+            if st.session_state.chat_history:
+                st.session_state.chat_history.pop()
+                st.rerun()
+
+    with stone_cols[1]:
+        if st.button("🟡", key="mind_stone", help="Mind Stone"):
+            st.session_state.stone_status = f"🟡 MIND STONE: Active persona is {st.session_state.ai_persona}"
+
+    with stone_cols[2]:
+        if st.button("🟣", key="power_stone", help="Power Stone"):
+            st.session_state.stone_status = f"🟣 POWER STONE: CPU Load at {psutil.cpu_percent()}%"
+
+    with stone_cols[3]:
+        if st.button("🔵", key="space_stone", help="Space Stone"):
+            st.session_state.stone_status = f"🔵 SPACE STONE: Active Session `{st.session_state.session_id}`"
+
+    with stone_cols[4]:
+        if st.button("🔴", key="reality_stone", help="Reality Stone"):
+            st.session_state.stone_status = "🔴 REALITY STONE: Matrix styling warped."
+
+    with stone_cols[5]:
+        if st.button("🟠", key="soul_stone", help="Soul Stone"):
+            st.session_state.stone_status = "🟠 SOUL STONE: Core synchronized."
+
+    with stone_cols[6]:
+        if st.button("🫰 SNAP", key="snap_btn", help="Snap the Gauntlet"):
+            st.markdown(
+                "<script>triggerGoogleThanosSnap();</script>",
+                unsafe_allow_html=True
+            )
+            st.session_state.chat_history = []
+            log_event("REALITY: Thanos snap executed from Knowledge Panel.")
+            st.toast("⚡ Half of all chat data dissolved into cosmic dust.", icon="🌌")
+            time.sleep(1.8)
+            st.rerun()
+
+    st.info(st.session_state.stone_status)
+    st.markdown("---")
+
+    # COMM-LINK INTERFACE
+    st.markdown("#### 📡 SECURE COMM-LINK")
+
+    if not st.session_state.chat_history:
+        st.info(f"Good day. {st.session_state.ai_persona} operational. Universal Session ID: `{st.session_state.session_id}`. Interact with the Infinity Gauntlet above.")
+
+    manual_query = st.text_input("Enter command manually...", key="manual_text_input")
+    send_text_btn = st.button("Transmit Text Command", use_container_width=True)
+
+    active_query = None
+    if send_text_btn and manual_query:
+        active_query = manual_query
+
+    for chat in reversed(st.session_state.chat_history):
+        with st.chat_message("user", avatar="👤"):
+            st.write(chat["user"])
+        with st.chat_message("assistant", avatar="🟡"):
+            st.write(chat["bot"])
+            if chat.get("audio") and st.session_state.tts_enabled:
+                st.audio(chat["audio"], format="audio/mp3")
+
+    if active_query and active_query != st.session_state.processing_query:
+        st.session_state.processing_query = active_query
+
+        with st.chat_message("user", avatar="👤"):
+            st.write(active_query)
+
+        if len(st.session_state.chat_history) == 0:
+            st.session_state.all_chats[st.session_state.session_id]["title"] = active_query[:25] + "..."
+
+        if not client:
+            ai_reply = "🚨 Transmission error: No active key found."
+        else:
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.5-flash-lite",
+                    contents=active_query,
+                )
+                ai_reply = response.text
+
+                audio_bytes = None
+                if st.session_state.tts_enabled:
+                    tts = gTTS(text=ai_reply, lang="en")
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    fp.seek(0)
+                    audio_bytes = fp.read()
+
+                with st.chat_message("assistant", avatar="🟡"):
+                    st.write(ai_reply)
+                    if audio_bytes:
+                        st.audio(audio_bytes, format="audio/mp3")
+            except Exception as api_err:
+                ai_reply = f"🚨 Mainframe Refused: {str(api_err)}"
+
+        st.session_state.chat_history.append({
+            "user": active_query,
+            "bot": ai_reply,
+            "audio": audio_bytes if "audio_bytes" in locals() else None,
+        })
+        st.session_state.processing_query = None
+        st.rerun()
