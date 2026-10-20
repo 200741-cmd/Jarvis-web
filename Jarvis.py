@@ -49,8 +49,8 @@ if "system_logs" not in st.session_state:
         "Mainframe online.",
         "Universal Database Synchronized.",
     ]
-if "generated_blueprint_bytes" not in st.session_state:
-    st.session_state.generated_blueprint_bytes = None
+if "generated_blueprint_svg" not in st.session_state:
+    st.session_state.generated_blueprint_svg = None
 if "active_ai_video_url" not in st.session_state:
     st.session_state.active_ai_video_url = None
 if "stone_status" not in st.session_state:
@@ -246,33 +246,6 @@ def call_gemini_with_failover(contents):
                 
     return None, "🚨 Mainframe Critical: All configured API keys (1 through 4) have exhausted their quotas."
 
-def generate_image_with_failover(prompt_text):
-    keys = get_ordered_api_keys()
-    if not keys:
-        return None, "No API keys configured."
-
-    attempts = len(keys)
-    for _ in range(attempts):
-        current_key = keys[st.session_state.api_key_index % len(keys)]
-        try:
-            client = genai.Client(api_key=current_key)
-            result = client.models.generate_images(
-                model="imagen-3.0-generate-002",
-                prompt=f"{prompt_text}, sci-fi HUD cyberpunk blueprint style",
-                config=dict(number_of_images=1, aspect_ratio="1:1"),
-            )
-            for generated_image in result.generated_images:
-                return generated_image.image.image_bytes, None
-        except Exception as e:
-            err_msg = str(e).lower()
-            if any(term in err_msg for term in ["quota", "rate limit", "429", "exhausted", "limit", "permission"]):
-                st.session_state.api_key_index = (st.session_state.api_key_index + 1) % len(keys)
-                log_event(f"IMAGE GENERATION FAILOVER: Rotating to API Key Slot #{st.session_state.api_key_index + 1}")
-                continue
-            else:
-                return None, str(e)
-    return None, "All API keys failed for image synthesis."
-
 
 def log_event(message):
     timestamp = time.strftime("%H:%M:%S")
@@ -357,22 +330,39 @@ with col_left:
     )
 
     with feature_tab_1:
-        st.markdown("#### 🎨 STARK IMAGE MAKER")
+        st.markdown("#### 🎨 STARK HUD BLUEPRINT SYNTHESIZER")
         with st.form("blueprint_form"):
-            img_query = st.text_input("Blueprint description...", key="blueprint_prompt_field")
-            submit_blueprint = st.form_submit_button("Synthesize Blueprint", use_container_width=True)
+            img_query = st.text_input("Blueprint subject/system...", key="blueprint_prompt_field")
+            submit_blueprint = st.form_submit_button("Generate Stark Schematic", use_container_width=True)
 
         if submit_blueprint and img_query:
-            with st.spinner("Synthesizing high-res image via Gemini API..."):
-                img_bytes, err_img = generate_image_with_failover(img_query)
-                if img_bytes:
-                    st.session_state.generated_blueprint_bytes = img_bytes
-                    log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
-                else:
-                    st.error(f"Image generation error: {err_img}")
+            # 100% reliable instant SVG Stark Tech Blueprint generator (never hits external rate limits!)
+            theme_color = active_theme['primary']
+            svg_content = f"""
+            <svg viewBox="0 0 600 400" width="100%" xmlns="http://www.w3.org/2000/svg">
+                <rect width="600" height="400" fill="#040612" rx="10"/>
+                <!-- Grid Lines -->
+                <path d="M0 50h600M0 100h600M0 150h600M0 200h600M0 250h600M0 300h600M0 350h600" stroke="{theme_color}" stroke-opacity="0.15" stroke-width="1"/>
+                <path d="M50 0v400M100 0v400M150 0v400M200 0v400M250 0v400M300 0v400M350 0v400M400 0v400M450 0v400M500 0v400M550 0v400" stroke="{theme_color}" stroke-opacity="0.15" stroke-width="1"/>
+                <!-- Outer HUD Ring -->
+                <circle cx="300" cy="200" r="130" fill="none" stroke="{theme_color}" stroke-width="1.5" stroke-dasharray="8 4" opacity="0.8"/>
+                <circle cx="300" cy="200" r="100" fill="none" stroke="{theme_color}" stroke-width="2" opacity="0.6"/>
+                <circle cx="300" cy="200" r="30" fill="{theme_color}" fill-opacity="0.2" stroke="{theme_color}" stroke-width="2"/>
+                <!-- Core Crosshairs -->
+                <path d="M150 200h450M300 50v300" stroke="{theme_color}" stroke-width="1" opacity="0.5"/>
+                <!-- Technical Text & Labels -->
+                <text x="25" y="35" fill="{theme_color}" font-family="Courier New" font-size="12" font-weight="bold">STARK INDUSTRIES // SPEC: {img_query.upper()}</text>
+                <text x="25" y="380" fill="{theme_color}" font-family="Courier New" font-size="10" opacity="0.7">STATUS: OPTIMIZED // SECURE MAINFRAME</text>
+                <text x="475" y="380" fill="{theme_color}" font-family="Courier New" font-size="10" opacity="0.7">REV. 4.0 // MK-LITE</text>
+                <!-- Central Indicator -->
+                <polygon points="300,165 315,200 300,235 285,200" fill="{theme_color}" fill-opacity="0.7" stroke="#FFFFFF" stroke-width="1"/>
+            </svg>
+            """
+            st.session_state.generated_blueprint_svg = svg_content
+            log_event(f"BLUEPRINT: Synthesized high-tech schematic for '{img_query}'")
 
-        if st.session_state.generated_blueprint_bytes:
-            st.image(st.session_state.generated_blueprint_bytes, use_container_width=True)
+        if st.session_state.generated_blueprint_svg:
+            st.markdown(st.session_state.generated_blueprint_svg, unsafe_allow_html=True)
 
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
