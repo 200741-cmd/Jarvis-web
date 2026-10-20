@@ -49,8 +49,8 @@ if "system_logs" not in st.session_state:
         "Mainframe online.",
         "Universal Database Synchronized.",
     ]
-if "generated_blueprint_svg" not in st.session_state:
-    st.session_state.generated_blueprint_svg = None
+if "generated_blueprint_url" not in st.session_state:
+    st.session_state.generated_blueprint_url = None
 if "active_ai_video_url" not in st.session_state:
     st.session_state.active_ai_video_url = None
 if "stone_status" not in st.session_state:
@@ -78,7 +78,7 @@ active_theme = theme_palettes.get(
 # CHECK CATARACT STATE
 is_cataract = (st.session_state.ai_persona == "VISION" and st.session_state.cataract_active)
 
-# STARK GRID, CONTAINER, THANOS SNAP & DYNAMIC STYLING
+# STARK GRID, CONTAINER, HOLOGRAPHIC FRAME & THANOS SNAP STYLING
 st.markdown(
     f"""
 <style>
@@ -131,6 +131,29 @@ st.markdown(
         font-family: 'Courier New', Courier, monospace !important;
         font-weight: bold !important;
         border-radius: 6px !important;
+    }}
+
+    /* CINEMATIC HOLOGRAPHIC FRAME */
+    .hologram-container {{
+        position: relative;
+        border: 2px solid { active_theme['primary'] };
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 6px;
+        box-shadow: 0 0 25px rgba({active_theme['rgb']}, 0.4), inset 0 0 15px rgba({active_theme['rgb']}, 0.2);
+        overflow: hidden;
+    }}
+    
+    .hologram-container::after {{
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        z-index: 10;
+        background-size: 100% 3px, 3px 100%;
+        pointer-events: none;
+        opacity: 0.6;
     }}
 
     /* STARK CHATBAR OVERLAY */
@@ -326,43 +349,26 @@ with col_left:
 
     # FEATURE TABS
     feature_tab_1, feature_tab_2 = st.tabs(
-        ["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO SYNTHESIS"]
+        ["🎨 STARK HOLOGRAPHIC DISPLAY", "🎞️ AI VIDEO SYNTHESIS"]
     )
 
     with feature_tab_1:
-        st.markdown("#### 🎨 STARK HUD BLUEPRINT SYNTHESIZER")
+        st.markdown("#### 🎨 HOLOGRAPHIC IMAGE MATRIX")
         with st.form("blueprint_form"):
-            img_query = st.text_input("Blueprint subject/system...", key="blueprint_prompt_field")
-            submit_blueprint = st.form_submit_button("Generate Stark Schematic", use_container_width=True)
+            img_query = st.text_input("Enter holographic visual prompt...", key="blueprint_prompt_field")
+            submit_blueprint = st.form_submit_button("Synthesize Hologram", use_container_width=True)
 
         if submit_blueprint and img_query:
-            # 100% reliable instant SVG Stark Tech Blueprint generator (never hits external rate limits!)
-            theme_color = active_theme['primary']
-            svg_content = f"""
-            <svg viewBox="0 0 600 400" width="100%" xmlns="http://www.w3.org/2000/svg">
-                <rect width="600" height="400" fill="#040612" rx="10"/>
-                <!-- Grid Lines -->
-                <path d="M0 50h600M0 100h600M0 150h600M0 200h600M0 250h600M0 300h600M0 350h600" stroke="{theme_color}" stroke-opacity="0.15" stroke-width="1"/>
-                <path d="M50 0v400M100 0v400M150 0v400M200 0v400M250 0v400M300 0v400M350 0v400M400 0v400M450 0v400M500 0v400M550 0v400" stroke="{theme_color}" stroke-opacity="0.15" stroke-width="1"/>
-                <!-- Outer HUD Ring -->
-                <circle cx="300" cy="200" r="130" fill="none" stroke="{theme_color}" stroke-width="1.5" stroke-dasharray="8 4" opacity="0.8"/>
-                <circle cx="300" cy="200" r="100" fill="none" stroke="{theme_color}" stroke-width="2" opacity="0.6"/>
-                <circle cx="300" cy="200" r="30" fill="{theme_color}" fill-opacity="0.2" stroke="{theme_color}" stroke-width="2"/>
-                <!-- Core Crosshairs -->
-                <path d="M150 200h450M300 50v300" stroke="{theme_color}" stroke-width="1" opacity="0.5"/>
-                <!-- Technical Text & Labels -->
-                <text x="25" y="35" fill="{theme_color}" font-family="Courier New" font-size="12" font-weight="bold">STARK INDUSTRIES // SPEC: {img_query.upper()}</text>
-                <text x="25" y="380" fill="{theme_color}" font-family="Courier New" font-size="10" opacity="0.7">STATUS: OPTIMIZED // SECURE MAINFRAME</text>
-                <text x="475" y="380" fill="{theme_color}" font-family="Courier New" font-size="10" opacity="0.7">REV. 4.0 // MK-LITE</text>
-                <!-- Central Indicator -->
-                <polygon points="300,165 315,200 300,235 285,200" fill="{theme_color}" fill-opacity="0.7" stroke="#FFFFFF" stroke-width="1"/>
-            </svg>
-            """
-            st.session_state.generated_blueprint_svg = svg_content
-            log_event(f"BLUEPRINT: Synthesized high-tech schematic for '{img_query}'")
+            seed = int(time.time())
+            # Use reliable Pollinations turbo render with enhanced cyberpunk holographic styling parameters
+            encoded_prompt = urllib.parse.quote(f"{img_query}, futuristic iron man hud display, glowing cyan and purple neon vector sci-fi schematic, 4k resolution")
+            st.session_state.generated_blueprint_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=turbo&width=800&height=600&nologo=true&seed={seed}"
+            log_event(f"HOLOGRAPHIC MATRIX: Rendered visual feed for '{img_query}'")
 
-        if st.session_state.generated_blueprint_svg:
-            st.markdown(st.session_state.generated_blueprint_svg, unsafe_allow_html=True)
+        if st.session_state.generated_blueprint_url:
+            st.markdown('<div class="hologram-container">', unsafe_allow_html=True)
+            st.image(st.session_state.generated_blueprint_url, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
