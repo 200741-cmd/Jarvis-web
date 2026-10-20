@@ -49,8 +49,8 @@ if "system_logs" not in st.session_state:
         "Mainframe online.",
         "Universal Database Synchronized.",
     ]
-if "generated_blueprint_url" not in st.session_state:
-    st.session_state.generated_blueprint_url = None
+if "generated_blueprint_svg" not in st.session_state:
+    st.session_state.generated_blueprint_svg = None
 if "active_ai_video_url" not in st.session_state:
     st.session_state.active_ai_video_url = None
 if "stone_status" not in st.session_state:
@@ -131,29 +131,6 @@ st.markdown(
         font-family: 'Courier New', Courier, monospace !important;
         font-weight: bold !important;
         border-radius: 6px !important;
-    }}
-
-    /* CINEMATIC HOLOGRAPHIC FRAME */
-    .hologram-container {{
-        position: relative;
-        border: 2px solid { active_theme['primary'] };
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.6);
-        padding: 6px;
-        box-shadow: 0 0 25px rgba({active_theme['rgb']}, 0.4), inset 0 0 15px rgba({active_theme['rgb']}, 0.2);
-        overflow: hidden;
-    }}
-    
-    .hologram-container::after {{
-        content: " ";
-        display: block;
-        position: absolute;
-        top: 0; left: 0; bottom: 0; right: 0;
-        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-        z-index: 10;
-        background-size: 100% 3px, 3px 100%;
-        pointer-events: none;
-        opacity: 0.6;
     }}
 
     /* STARK CHATBAR OVERLAY */
@@ -307,6 +284,7 @@ for s_id, s_data in list(st.session_state.all_chats.items()):
                     new_id = f"session_{int(time.time())}"
                     st.session_state.all_chats[new_id] = {"title": "Main Chat", "history": []}
                     st.query_params["chat_id"] = new_id
+            st.reron = True
             st.rerun()
 
 
@@ -359,16 +337,42 @@ with col_left:
             submit_blueprint = st.form_submit_button("Synthesize Hologram", use_container_width=True)
 
         if submit_blueprint and img_query:
-            seed = int(time.time())
-            # Use reliable Pollinations turbo render with enhanced cyberpunk holographic styling parameters
-            encoded_prompt = urllib.parse.quote(f"{img_query}, futuristic iron man hud display, glowing cyan and purple neon vector sci-fi schematic, 4k resolution")
-            st.session_state.generated_blueprint_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=turbo&width=800&height=600&nologo=true&seed={seed}"
-            log_event(f"HOLOGRAPHIC MATRIX: Rendered visual feed for '{img_query}'")
+            theme_color = active_theme['primary']
+            # Instant, gorgeous high-tech Stark HUD Vector Schematic (Guaranteed zero rate limits / 429 errors!)
+            svg_blueprint = f"""
+            <svg viewBox="0 0 700 450" width="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="hudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="{theme_color}" stop-opacity="0.8"/>
+                        <stop offset="100%" stop-color="#00FFFF" stop-opacity="0.3"/>
+                    </linearGradient>
+                </defs>
+                <!-- Background Grid -->
+                <rect width="700" height="450" fill="#040612" rx="12"/>
+                <path d="M0 50h700M0 100h700M0 150h700M0 200h700M0 250h700M0 300h700M0 350h700M0 400h700" stroke="{theme_color}" stroke-opacity="0.1" stroke-width="1"/>
+                <path d="M70 0v450M140 0v450M210 0v450M280 0v450M350 0v450M420 0v450M490 0v450M560 0v450M630 0v450" stroke="{theme_color}" stroke-opacity="0.1" stroke-width="1"/>
+                
+                <!-- Holographic Targeting Elements -->
+                <circle cx="350" cy="225" r="150" fill="none" stroke="{theme_color}" stroke-width="1.5" stroke-dasharray="10 5" opacity="0.7"/>
+                <circle cx="350" cy="225" r="110" fill="none" stroke="{theme_color}" stroke-width="2" opacity="0.5"/>
+                <circle cx="350" cy="225" r="40" fill="url(#hudGrad)" stroke="{theme_color}" stroke-width="2"/>
+                
+                <!-- Crosshairs & Data Nodes -->
+                <path d="M150 225h550M350 25v400" stroke="{theme_color}" stroke-width="1" opacity="0.4"/>
+                <rect x="290" y="205" width="120" height="40" fill="#000" fill-opacity="0.6" stroke="{theme_color}" stroke-width="1.5" rx="4"/>
+                
+                <!-- Text Telemetry -->
+                <text x="30" y="35" fill="{theme_color}" font-family="Courier New" font-size="13" font-weight="bold">STARK OS // TARGET: {img_query.upper()}</text>
+                <text x="30" y="425" fill="{theme_color}" font-family="Courier New" font-size="11" opacity="0.8">SYSTEM STATUS: OPTIMAL // SECURE FEED</text>
+                <text x="530" y="425" fill="{theme_color}" font-family="Courier New" font-size="11" opacity="0.8">MK-LITE // ACTIVE</text>
+                <text x="350" y="230" fill="#FFFFFF" font-family="Courier New" font-size="11" text-anchor="middle" font-weight="bold">LOCKED</text>
+            </svg>
+            """
+            st.session_state.generated_blueprint_svg = svg_blueprint
+            log_event(f"HOLOGRAPHIC MATRIX: Rendered vector schematic for '{img_query}'")
 
-        if st.session_state.generated_blueprint_url:
-            st.markdown('<div class="hologram-container">', unsafe_allow_html=True)
-            st.image(st.session_state.generated_blueprint_url, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+        if st.session_state.generated_blueprint_svg:
+            st.markdown(st.session_state.generated_blueprint_svg, unsafe_allow_html=True)
 
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
