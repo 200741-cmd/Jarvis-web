@@ -317,20 +317,6 @@ with col_right:
     if not st.session_state.chat_history and not st.session_state.show_time_log:
         st.info(f"Good day. {st.session_state.ai_persona} operational. Universal Session ID: `{st.session_state.session_id}`. Type `~~` to summon the Infinity Gauntlet.")
 
-    # REPEATABLE FORM INPUT BUGFIX & GAUNTLET TRIGGER CHECK (`~~`)
-    with st.form("comm_form", clear_on_submit=True):
-        manual_query = st.text_input("Enter command manually (Type ~~ for Infinity Gauntlet)...", key="manual_text_input")
-        send_text_btn = st.form_submit_button("Transmit Text Command", use_container_width=True)
-
-    active_query = None
-    if send_text_btn and manual_query:
-        if manual_query.strip() == "~~":
-            st.session_state.show_gauntlet = not st.session_state.show_gauntlet
-            log_event("REALITY: Infinity Stones portal toggled via '~~'.")
-            st.rerun()
-        else:
-            active_query = manual_query
-
     # TIME STONE CHAT LOG PANEL (Appears ONLY when Time Stone is clicked)
     if st.session_state.show_time_log:
         st.markdown(
@@ -354,48 +340,65 @@ with col_right:
                 if chat.get("audio") and st.session_state.tts_enabled:
                     st.audio(chat["audio"], format="audio/mp3")
 
-    # PROCESS ACTIVE INBOUND QUERY
-    if active_query and active_query != st.session_state.processing_query:
-        st.session_state.processing_query = active_query
-
+    # RENDER EXISTING CHAT HISTORY NORMALLY
+    for chat in reversed(st.session_state.chat_history):
         with st.chat_message("user", avatar="👤"):
-            st.write(active_query)
+            st.write(chat["user"])
+        with st.chat_message("assistant", avatar="🟡"):
+            st.write(chat["bot"])
+            if chat.get("audio") and st.session_state.tts_enabled:
+                st.audio(chat["audio"], format="audio/mp3")
 
-        if len(st.session_state.chat_history) == 0:
-            st.session_state.all_chats[st.session_state.session_id]["title"] = active_query[:25] + "..."
+    # NATIVE STREAMLIT CHAT INPUT (Fast, pinned to bottom, clears automatically)
+    active_query = st.chat_input("Enter command manually (Type ~~ for Infinity Gauntlet)...")
 
-        if not client:
-            ai_reply = "🚨 Transmission error: No active key found."
+    if active_query:
+        if active_query.strip() == "~~":
+            st.session_state.show_gauntlet = not st.session_state.show_gauntlet
+            log_event("REALITY: Infinity Stones portal toggled via '~~'.")
+            st.rerun()
         else:
-            try:
-                response = client.models.generate_content(
-                    model="gemini-3.5-flash-lite",
-                    contents=active_query,
-                )
-                ai_reply = response.text
+            st.session_state.processing_query = active_query
 
-                audio_bytes = None
-                if st.session_state.tts_enabled:
-                    tts = gTTS(text=ai_reply, lang="en")
-                    fp = io.BytesIO()
-                    tts.write_to_fp(fp)
-                    fp.seek(0)
-                    audio_bytes = fp.read()
+            with st.chat_message("user", avatar="👤"):
+                st.write(active_query)
 
-                with st.chat_message("assistant", avatar="🟡"):
-                    st.write(ai_reply)
-                    if audio_bytes:
-                        st.audio(audio_bytes, format="audio/mp3")
-            except Exception as api_err:
-                ai_reply = f"🚨 Mainframe Refused: {str(api_err)}"
+            if len(st.session_state.chat_history) == 0:
+                st.session_state.all_chats[st.session_state.session_id]["title"] = active_query[:25] + "..."
 
-        st.session_state.chat_history.append({
-            "user": active_query,
-            "bot": ai_reply,
-            "audio": audio_bytes if "audio_bytes" in locals() else None,
-        })
-        st.session_state.processing_query = None
-        st.rerun()
+            if not client:
+                ai_reply = "🚨 Transmission error: No active key found."
+            else:
+                try:
+                    # Using the active gemini-3.8-flash endpoint
+                    response = client.models.generate_content(
+                        model="gemini-3.8-flash",
+                        contents=active_query,
+                    )
+                    ai_reply = response.text
+
+                    audio_bytes = None
+                    if st.session_state.tts_enabled:
+                        tts = gTTS(text=ai_reply, lang="en")
+                        fp = io.BytesIO()
+                        tts.write_to_fp(fp)
+                        fp.seek(0)
+                        audio_bytes = fp.read()
+
+                    with st.chat_message("assistant", avatar="🟡"):
+                        st.write(ai_reply)
+                        if audio_bytes:
+                            st.audio(audio_bytes, format="audio/mp3")
+                except Exception as api_err:
+                    ai_reply = f"🚨 Mainframe Refused: {str(api_err)}"
+
+            st.session_state.chat_history.append({
+                "user": active_query,
+                "bot": ai_reply,
+                "audio": audio_bytes if "audio_bytes" in locals() else None,
+            })
+            st.session_state.processing_query = None
+            st.rerun()
 
     # --- BOTTOM SCREEN: INFINITY GAUNTLET HUD BAR (Appears ONLY when activated by typing `~~`) ---
     if st.session_state.show_gauntlet:
