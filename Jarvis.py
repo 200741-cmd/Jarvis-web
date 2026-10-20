@@ -53,8 +53,6 @@ if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
 if "active_ai_video_url" not in st.session_state:
     st.session_state.active_ai_video_url = None
-if "active_ai_video_label" not in st.session_state:
-    st.session_state.active_ai_video_label = "Awaiting Synthesis Command"
 if "stone_status" not in st.session_state:
     st.session_state.stone_status = "All 6 Infinity Stones active"
 if "show_gauntlet" not in st.session_state:
@@ -126,7 +124,7 @@ st.markdown(
         letter-spacing: 1px;
     }}
 
-    .stButton > button {{
+    .stButton > button, div[data-testid="stForm"] button {{
         background: { "#FFFFFF" if is_cataract else "rgba(6, 9, 19, 0.9)" } !important;
         border: 1.5px solid { "#0F172A" if is_cataract else active_theme['primary'] } !important;
         color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
@@ -142,10 +140,6 @@ st.markdown(
         background: { "#FFFFFF" if is_cataract else "rgba(10, 14, 28, 0.95)" } !important;
         box-shadow: 0 0 25px rgba(255, 255, 255, 1) !important;
         padding: 4px !important;
-    }}
-
-    .stChatInputContainer input {{
-        color: { "#000000" if is_cataract else "#FFFFFF" } !important;
     }}
 
     /* BOTTOM INFINITY GAUNTLET HUD BAR */
@@ -168,7 +162,7 @@ st.markdown(
         margin-bottom: 15px;
     }}
 
-    /* PURE CSS GLOWING INFINITY GEM BADGES */
+    /* GLOWING INFINITY GEM BADGES */
     .gem-badge {{
         width: 42px;
         height: 42px;
@@ -189,7 +183,6 @@ st.markdown(
     .gem-snap {{ background: radial-gradient(circle, #ffd700 0%, #886600 100%); box-shadow: 0 0 18px #ffd700; border: 1px solid #ffd700; font-size: 18px; }}
 </style>
 
-<!-- GOOGLE THANOS SNAP DISINTEGRATION SCRIPT -->
 <script>
     function triggerGoogleThanosSnap() {{
         const elements = document.querySelectorAll('.stChatMessage, div[data-testid="column"]');
@@ -311,36 +304,34 @@ with col_left:
         ["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO SYNTHESIS"]
     )
 
-    # REPAIRED BLUEPRINT GENERATOR
+    # UNLIMITED MULTI-CLICK IMAGE FORM
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
-        img_query = st.text_input("Blueprint description...", key="blueprint_input")
-        if st.button("Synthesize Blueprint", use_container_width=True):
-            if img_query:
-                # Clean URL encoding for Pollinations API
-                encoded_prompt = urllib.parse.quote(f"{img_query}, cyberpunk sci-fi hud blueprint style")
-                st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true"
-                log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
-            else:
-                st.warning("Please enter a blueprint prompt first, Sir.")
+        with st.form("blueprint_form"):
+            img_query = st.text_input("Blueprint description...", key="blueprint_prompt_field")
+            submit_blueprint = st.form_submit_button("Synthesize Blueprint", use_container_width=True)
+
+        if submit_blueprint and img_query:
+            seed = int(time.time())
+            encoded_prompt = urllib.parse.quote(f"{img_query}, cyberpunk sci-fi hud blueprint style")
+            st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}"
+            log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
 
         if st.session_state.generated_blueprint:
-            try:
-                st.image(st.session_state.generated_blueprint, caption=img_query or "Synthesized Blueprint", use_container_width=True)
-            except Exception as img_err:
-                st.error("Failed to render image from blueprint engine.")
+            st.image(st.session_state.generated_blueprint, use_container_width=True)
 
+    # UNLIMITED MULTI-CLICK VIDEO FORM
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
-        ai_video_query = st.text_input("Describe animation sequence...", key="ai_video_text_input")
-        if st.button("Synthesize AI Video Loop", use_container_width=True):
-            if ai_video_query:
-                encoded_prompt = urllib.parse.quote(ai_video_query)
-                st.session_state.active_ai_video_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=640&height=360&nologo=true&seed=42"
-                st.session_state.active_ai_video_label = f"AI Generated: {ai_video_query}"
-                log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_query}'")
-            else:
-                st.warning("Please enter a video description, Sir.")
+        with st.form("video_form"):
+            ai_video_query = st.text_input("Describe animation sequence...", key="video_prompt_field")
+            submit_video = st.form_submit_button("Synthesize AI Video Loop", use_container_width=True)
+
+        if submit_video and ai_video_query:
+            seed = int(time.time())
+            encoded_prompt = urllib.parse.quote(ai_video_query)
+            st.session_state.active_ai_video_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=640&height=360&nologo=true&seed={seed}"
+            log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_query}'")
 
         if st.session_state.active_ai_video_url:
             st.video(st.session_state.active_ai_video_url, format="video/mp4", autoplay=True, loop=True, muted=True)
