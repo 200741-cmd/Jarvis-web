@@ -56,7 +56,11 @@ if "active_ai_video_url" not in st.session_state:
 if "active_ai_video_label" not in st.session_state:
     st.session_state.active_ai_video_label = "Awaiting Synthesis Command"
 if "stone_status" not in st.session_state:
-    st.session_state.stone_status = "All 6 Infinity Stones active in Gauntlet"
+    st.session_state.stone_status = "All 6 Infinity Stones active"
+if "show_gauntlet" not in st.session_state:
+    st.session_state.show_gauntlet = False
+if "show_time_log" not in st.session_state:
+    st.session_state.show_time_log = False
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -120,15 +124,24 @@ st.markdown(
         border-radius: 4px !important;
     }}
 
-    /* GOOGLE KNOWLEDGE PANEL STYLE FOR INFINITY GAUNTLET */
-    .gauntlet-card {{
+    /* BOTTOM INFINITY GAUNTLET HUD BAR */
+    .bottom-gauntlet-hud {{
         border: 1px solid #FFD700;
-        border-radius: 12px;
-        background: radial-gradient(circle, rgba(40, 30, 10, 0.9) 0%, rgba(10, 5, 0, 0.95) 100%);
-        padding: 15px;
+        border-radius: 10px;
+        background: radial-gradient(circle, rgba(30, 20, 5, 0.95) 0%, rgba(10, 5, 2, 0.98) 100%);
+        padding: 10px;
         text-align: center;
-        box-shadow: 0 0 25px rgba(255, 215, 0, 0.25);
-        margin-bottom: 20px;
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+        margin-top: 25px;
+        margin-bottom: 15px;
+    }}
+
+    .time-stone-vault {{
+        border: 1px solid #00FF66;
+        background: rgba(0, 255, 102, 0.05);
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
     }}
 </style>
 
@@ -297,92 +310,51 @@ with col_left:
         st.session_state.tts_enabled = tts_toggle
         st.rerun()
 
-# --- RIGHT COLUMN: GOOGLE-STYLE GAUNTLET KNOWLEDGE PANEL & COMM-LINK ---
+# --- RIGHT COLUMN: COMM-LINK & CHAT INTERFACE ---
 with col_right:
-    # GOOGLE-STYLE INTERACTIVE INFINITY GAUNTLET CARD
-    st.markdown(
-        """
-        <div class="gauntlet-card">
-            <h3 style="color: #FFD700; margin: 0;">🥊 THE INFINITY GAUNTLET</h3>
-            <p style="font-size: 11px; color: #ccc; margin-bottom: 10px;">Interactive Knowledge Easter Egg Panel</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Gauntlet Image & Clickable Stones Row
-    st.image(
-        "https://image.pollinations.ai/prompt/glowing%20infinity%20gauntlet%20with%20six%20glowing%20stones%20marvel%20google%20easter%20egg%20style%20hd?width=650&height=220&nologo=true&seed=77",
-        caption="Click individual stones below to channel their reality-warping energy or snap the gauntlet.",
-        use_container_width=True
-    )
-
-    # INDIVIDUAL INTERACTIVE STONE CONTROLS
-    stone_cols = st.columns(7)
-
-    with stone_cols[0]:
-        if st.button("🟢", key="time_stone", help="Time Stone"):
-            st.session_state.stone_status = "🟢 TIME STONE: Rewinding local timeline buffers..."
-            if st.session_state.chat_history:
-                st.session_state.chat_history.pop()
-                st.rerun()
-
-    with stone_cols[1]:
-        if st.button("🟡", key="mind_stone", help="Mind Stone"):
-            st.session_state.stone_status = f"🟡 MIND STONE: Active persona is {st.session_state.ai_persona}"
-
-    with stone_cols[2]:
-        if st.button("🟣", key="power_stone", help="Power Stone"):
-            st.session_state.stone_status = f"🟣 POWER STONE: CPU Load at {psutil.cpu_percent()}%"
-
-    with stone_cols[3]:
-        if st.button("🔵", key="space_stone", help="Space Stone"):
-            st.session_state.stone_status = f"🔵 SPACE STONE: Active Session `{st.session_state.session_id}`"
-
-    with stone_cols[4]:
-        if st.button("🔴", key="reality_stone", help="Reality Stone"):
-            st.session_state.stone_status = "🔴 REALITY STONE: Matrix styling warped."
-
-    with stone_cols[5]:
-        if st.button("🟠", key="soul_stone", help="Soul Stone"):
-            st.session_state.stone_status = "🟠 SOUL STONE: Core synchronized."
-
-    with stone_cols[6]:
-        if st.button("🫰 SNAP", key="snap_btn", help="Snap the Gauntlet"):
-            st.markdown(
-                "<script>triggerGoogleThanosSnap();</script>",
-                unsafe_allow_html=True
-            )
-            st.session_state.chat_history = []
-            log_event("REALITY: Thanos snap executed from Knowledge Panel.")
-            st.toast("⚡ Half of all chat data dissolved into cosmic dust.", icon="🌌")
-            time.sleep(1.8)
-            st.rerun()
-
-    st.info(st.session_state.stone_status)
-    st.markdown("---")
-
-    # COMM-LINK INTERFACE
     st.markdown("#### 📡 SECURE COMM-LINK")
 
-    if not st.session_state.chat_history:
-        st.info(f"Good day. {st.session_state.ai_persona} operational. Universal Session ID: `{st.session_state.session_id}`. Interact with the Infinity Gauntlet above.")
+    if not st.session_state.chat_history and not st.session_state.show_time_log:
+        st.info(f"Good day. {st.session_state.ai_persona} operational. Universal Session ID: `{st.session_state.session_id}`. Type `~~` to summon the Infinity Gauntlet.")
 
-    manual_query = st.text_input("Enter command manually...", key="manual_text_input")
-    send_text_btn = st.button("Transmit Text Command", use_container_width=True)
+    # REPEATABLE FORM INPUT BUGFIX & GAUNTLET TRIGGER CHECK (`~~`)
+    with st.form("comm_form", clear_on_submit=True):
+        manual_query = st.text_input("Enter command manually (Type ~~ for Infinity Gauntlet)...", key="manual_text_input")
+        send_text_btn = st.form_submit_button("Transmit Text Command", use_container_width=True)
 
     active_query = None
     if send_text_btn and manual_query:
-        active_query = manual_query
+        if manual_query.strip() == "~~":
+            st.session_state.show_gauntlet = not st.session_state.show_gauntlet
+            log_event("REALITY: Infinity Stones portal toggled via '~~'.")
+            st.rerun()
+        else:
+            active_query = manual_query
 
-    for chat in reversed(st.session_state.chat_history):
-        with st.chat_message("user", avatar="👤"):
-            st.write(chat["user"])
-        with st.chat_message("assistant", avatar="🟡"):
-            st.write(chat["bot"])
-            if chat.get("audio") and st.session_state.tts_enabled:
-                st.audio(chat["audio"], format="audio/mp3")
+    # TIME STONE CHAT LOG PANEL (Appears ONLY when Time Stone is clicked)
+    if st.session_state.show_time_log:
+        st.markdown(
+            """
+            <div class="time-stone-vault">
+                <h4 style="color: #00FF66; margin-top: 0;">🟢 TIME STONE CHAT LOG ARCHIVE</h4>
+                <p style="font-size: 11px; color: #aaa;">Temporal review of past communication sequences.</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("❌ Close Time Log", key="close_time_log"):
+            st.session_state.show_time_log = False
+            st.rerun()
 
+        for chat in reversed(st.session_state.chat_history):
+            with st.chat_message("user", avatar="👤"):
+                st.write(chat["user"])
+            with st.chat_message("assistant", avatar="🟡"):
+                st.write(chat["bot"])
+                if chat.get("audio") and st.session_state.tts_enabled:
+                    st.audio(chat["audio"], format="audio/mp3")
+
+    # PROCESS ACTIVE INBOUND QUERY
     if active_query and active_query != st.session_state.processing_query:
         st.session_state.processing_query = active_query
 
@@ -424,3 +396,63 @@ with col_right:
         })
         st.session_state.processing_query = None
         st.rerun()
+
+    # --- BOTTOM SCREEN: INFINITY GAUNTLET HUD BAR (Appears ONLY when activated by typing `~~`) ---
+    if st.session_state.show_gauntlet:
+        st.markdown(
+            """
+            <div class="bottom-gauntlet-hud">
+                <h4 style="color: #FFD700; margin: 0 0 5px 0; font-size: 14px;">🥊 INFINITY GAUNTLET HUD BAR (Summoned via '~~')</h4>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        stone_cols = st.columns(7)
+
+        with stone_cols[0]:
+            st.image("https://image.pollinations.ai/prompt/glowing%20green%20time%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            if st.button("Time", key="time_stone"):
+                st.session_state.show_time_log = not st.session_state.show_time_log
+                st.session_state.stone_status = "🟢 TIME STONE: Toggled chronological chat logs view."
+                st.rerun()
+
+        with stone_cols[1]:
+            st.image("https://image.pollinations.ai/prompt/glowing%20yellow%20mind%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            if st.button("Mind", key="mind_stone"):
+                st.session_state.stone_status = f"🟡 MIND STONE: Active persona is {st.session_state.ai_persona}"
+
+        with stone_cols[2]:
+            st.image("https://image.pollinations.ai/prompt/glowing%20purple%20power%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            if st.button("Power", key="power_stone"):
+                st.session_state.stone_status = f"🟣 POWER STONE: CPU Load at {psutil.cpu_percent()}%"
+
+        with stone_cols[3]:
+            st.image("https://image.pollinations.ai/prompt/glowing%20blue%20space%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            if st.button("Space", key="space_stone"):
+                st.session_state.stone_status = f"🔵 SPACE STONE: Session `{st.session_state.session_id}`"
+
+        with stone_cols[4]:
+            st.image("https://image.pollinations.ai/prompt/glowing%20red%20reality%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            if st.button("Reality", key="reality_stone"):
+                st.session_state.stone_status = "🔴 REALITY STONE: Matrix styling warped."
+
+        with stone_cols[5]:
+            st.image("https://image.pollinations.ai/prompt/glowing%20orange%20soul%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            if st.button("Soul", key="soul_stone"):
+                st.session_state.stone_status = "🟠 SOUL STONE: Core synchronized."
+
+        with stone_cols[6]:
+            st.image("https://image.pollinations.ai/prompt/golden%20infinity%20gauntlet%20icon%20small?width=60&height=60&nologo=true", width=40)
+            if st.button("SNAP", key="snap_btn"):
+                st.markdown(
+                    "<script>triggerGoogleThanosSnap();</script>",
+                    unsafe_allow_html=True
+                )
+                st.session_state.chat_history = []
+                log_event("REALITY: Thanos snap executed from Bottom HUD.")
+                st.toast("⚡ Half of all chat data dissolved into cosmic dust.", icon="🌌")
+                time.sleep(1.8)
+                st.rerun()
+
+        st.caption(st.session_state.stone_status)
