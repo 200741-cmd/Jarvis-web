@@ -75,7 +75,7 @@ active_theme = theme_palettes.get(
     st.session_state.ai_persona, theme_palettes["VISION"]
 )
 
-# STARK GRID, CONTAINER & GOOGLE THANOS SNAP PARTICLE STYLING
+# STARK GRID, CONTAINER, THANOS SNAP & GLOWING STONE BADGE CSS
 st.markdown(
     f"""
 <style>
@@ -94,19 +94,20 @@ st.markdown(
     div[data-testid="column"] {{
         background: rgba(6, 9, 19, 0.75) !important;
         border: 1px solid rgba({active_theme['rgb']}, 0.3) !important;
-        border-radius: 6px;
+        border-radius: 8px;
         padding: 15px;
         margin-bottom: 10px;
-        backdrop-filter: blur(4px);
-        box-shadow: 0 0 15px rgba({active_theme['rgb']}, 0.05);
+        backdrop-filter: blur(6px);
+        box-shadow: 0 0 20px rgba({active_theme['rgb']}, 0.08);
     }}
     
     .stChatMessage {{
-        background-color: rgba(6, 9, 19, 0.85) !important;
-        border: 1px solid rgba({active_theme['rgb']}, 0.25) !important;
-        backdrop-filter: blur(4px);
+        background-color: rgba(6, 9, 19, 0.9) !important;
+        border: 1px solid rgba({active_theme['rgb']}, 0.35) !important;
+        backdrop-filter: blur(6px);
         color: {active_theme['primary']} !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }}
 
     h1, h2, h3, h4 {{
@@ -121,17 +122,32 @@ st.markdown(
         color: {active_theme['primary']} !important;
         font-family: 'Courier New', Courier, monospace !important;
         font-weight: bold !important;
-        border-radius: 4px !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease-in-out;
+    }}
+
+    .stButton > button:hover {{
+        background: rgba({active_theme['rgb']}, 0.2) !important;
+        box-shadow: 0 0 10px {active_theme['primary']};
+    }}
+
+    /* STARK CHATBAR OVERLAY */
+    .stChatInputContainer {{
+        border: 1.5px solid {active_theme['primary']} !important;
+        border-radius: 12px !important;
+        background: rgba(10, 14, 28, 0.95) !important;
+        box-shadow: 0 0 20px rgba({active_theme['rgb']}, 0.25) !important;
+        padding: 4px !important;
     }}
 
     /* BOTTOM INFINITY GAUNTLET HUD BAR */
     .bottom-gauntlet-hud {{
         border: 1px solid #FFD700;
-        border-radius: 10px;
+        border-radius: 12px;
         background: radial-gradient(circle, rgba(30, 20, 5, 0.95) 0%, rgba(10, 5, 2, 0.98) 100%);
-        padding: 10px;
+        padding: 12px;
         text-align: center;
-        box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.35);
         margin-top: 25px;
         margin-bottom: 15px;
     }}
@@ -139,10 +155,30 @@ st.markdown(
     .time-stone-vault {{
         border: 1px solid #00FF66;
         background: rgba(0, 255, 102, 0.05);
-        padding: 12px;
+        padding: 14px;
         border-radius: 8px;
         margin-bottom: 15px;
+        box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
     }}
+
+    /* GLOWING INFINITY GEM BADGES */
+    .gem-badge {{
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        margin: 0 auto 8px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.8);
+    }}
+    .gem-time {{ background: radial-gradient(circle, #00ff88 0%, #006622 100%); box-shadow: 0 0 15px #00ff88; border: 1px solid #00ff88; }}
+    .gem-mind {{ background: radial-gradient(circle, #ffea00 0%, #998c00 100%); box-shadow: 0 0 15px #ffea00; border: 1px solid #ffea00; }}
+    .gem-power {{ background: radial-gradient(circle, #cc00ff 0%, #660088 100%); box-shadow: 0 0 15px #cc00ff; border: 1px solid #cc00ff; }}
+    .gem-space {{ background: radial-gradient(circle, #00bfff 0%, #004488 100%); box-shadow: 0 0 15px #00bfff; border: 1px solid #00bfff; }}
+    .gem-reality {{ background: radial-gradient(circle, #ff0044 0%, #880022 100%); box-shadow: 0 0 15px #ff0044; border: 1px solid #ff0044; }}
+    .gem-soul {{ background: radial-gradient(circle, #ff8800 0%, #884400 100%); box-shadow: 0 0 15px #ff8800; border: 1px solid #ff8800; }}
+    .gem-snap {{ background: radial-gradient(circle, #ffd700 0%, #886600 100%); box-shadow: 0 0 18px #ffd700; border: 1px solid #ffd700; font-size: 16px; }}
 </style>
 
 <!-- GOOGLE THANOS SNAP DISINTEGRATION SCRIPT -->
@@ -349,8 +385,8 @@ with col_right:
             if chat.get("audio") and st.session_state.tts_enabled:
                 st.audio(chat["audio"], format="audio/mp3")
 
-    # NATIVE STREAMLIT CHAT INPUT (Fast, pinned to bottom, clears automatically)
-    active_query = st.chat_input("Enter command manually (Type ~~ for Infinity Gauntlet)...")
+    # STARK-THEMED STYLISH NATIVE CHAT INPUT
+    active_query = st.chat_input("💬 Transmit command to mainframe (Type ~~ for Gauntlet)...")
 
     if active_query:
         if active_query.strip() == "~~":
@@ -370,7 +406,6 @@ with col_right:
                 ai_reply = "🚨 Transmission error: No active key found."
             else:
                 try:
-                    # Using the active gemini-3.8-flash endpoint
                     response = client.models.generate_content(
                         model="gemini-3.8-flash",
                         contents=active_query,
@@ -405,7 +440,7 @@ with col_right:
         st.markdown(
             """
             <div class="bottom-gauntlet-hud">
-                <h4 style="color: #FFD700; margin: 0 0 5px 0; font-size: 14px;">🥊 INFINITY GAUNTLET HUD BAR (Summoned via '~~')</h4>
+                <h4 style="color: #FFD700; margin: 0 0 10px 0; font-size: 14px;">🥊 INFINITY GAUNTLET HUD BAR (Summoned via '~~')</h4>
             </div>
             """,
             unsafe_allow_html=True
@@ -414,39 +449,39 @@ with col_right:
         stone_cols = st.columns(7)
 
         with stone_cols[0]:
-            st.image("https://image.pollinations.ai/prompt/glowing%20green%20time%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            st.markdown('<div class="gem-badge gem-time"></div>', unsafe_allow_html=True)
             if st.button("Time", key="time_stone"):
                 st.session_state.show_time_log = not st.session_state.show_time_log
                 st.session_state.stone_status = "🟢 TIME STONE: Toggled chronological chat logs view."
                 st.rerun()
 
         with stone_cols[1]:
-            st.image("https://image.pollinations.ai/prompt/glowing%20yellow%20mind%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            st.markdown('<div class="gem-badge gem-mind"></div>', unsafe_allow_html=True)
             if st.button("Mind", key="mind_stone"):
                 st.session_state.stone_status = f"🟡 MIND STONE: Active persona is {st.session_state.ai_persona}"
 
         with stone_cols[2]:
-            st.image("https://image.pollinations.ai/prompt/glowing%20purple%20power%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            st.markdown('<div class="gem-badge gem-power"></div>', unsafe_allow_html=True)
             if st.button("Power", key="power_stone"):
                 st.session_state.stone_status = f"🟣 POWER STONE: CPU Load at {psutil.cpu_percent()}%"
 
         with stone_cols[3]:
-            st.image("https://image.pollinations.ai/prompt/glowing%20blue%20space%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            st.markdown('<div class="gem-badge gem-space"></div>', unsafe_allow_html=True)
             if st.button("Space", key="space_stone"):
                 st.session_state.stone_status = f"🔵 SPACE STONE: Session `{st.session_state.session_id}`"
 
         with stone_cols[4]:
-            st.image("https://image.pollinations.ai/prompt/glowing%20red%20reality%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            st.markdown('<div class="gem-badge gem-reality"></div>', unsafe_allow_html=True)
             if st.button("Reality", key="reality_stone"):
                 st.session_state.stone_status = "🔴 REALITY STONE: Matrix styling warped."
 
         with stone_cols[5]:
-            st.image("https://image.pollinations.ai/prompt/glowing%20orange%20soul%20stone%20marvel%20gem%20icon%20small?width=60&height=60&nologo=true", width=40)
+            st.markdown('<div class="gem-badge gem-soul"></div>', unsafe_allow_html=True)
             if st.button("Soul", key="soul_stone"):
                 st.session_state.stone_status = "🟠 SOUL STONE: Core synchronized."
 
         with stone_cols[6]:
-            st.image("https://image.pollinations.ai/prompt/golden%20infinity%20gauntlet%20icon%20small?width=60&height=60&nologo=true", width=40)
+            st.markdown('<div class="gem-badge gem-snap">🫰</div>', unsafe_allow_html=True)
             if st.button("SNAP", key="snap_btn"):
                 st.markdown(
                     "<script>triggerGoogleThanosSnap();</script>",
