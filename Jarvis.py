@@ -41,7 +41,7 @@ st.session_state.chat_history = st.session_state.all_chats[st.session_state.sess
 if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "VISION"
 if "tts_enabled" not in st.session_state:
-    st.session_state.tts_enabled = True
+    st.session_state.tts_enabled = False
 if "processing_query" not in st.session_state:
     st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
@@ -80,7 +80,7 @@ active_theme = theme_palettes.get(
 # CHECK CATARACT STATE
 is_cataract = (st.session_state.ai_persona == "VISION" and st.session_state.cataract_active)
 
-# VISIBLE WHITE VISION CATARACT STYLING
+# STARK GRID, CONTAINER, THANOS SNAP & DYNAMIC STYLING
 st.markdown(
     f"""
 <style>
@@ -168,15 +168,16 @@ st.markdown(
         margin-bottom: 15px;
     }}
 
-    /* GLOWING INFINITY GEM BADGES */
+    /* PURE CSS GLOWING INFINITY GEM BADGES */
     .gem-badge {{
-        width: 38px;
-        height: 38px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
         margin: 0 auto 8px auto;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 18px;
         box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.8);
     }}
     .gem-time {{ background: radial-gradient(circle, #00ff88 0%, #006622 100%); box-shadow: 0 0 15px #00ff88; border: 1px solid #00ff88; }}
@@ -185,7 +186,7 @@ st.markdown(
     .gem-space {{ background: radial-gradient(circle, #00bfff 0%, #004488 100%); box-shadow: 0 0 15px #00bfff; border: 1px solid #00bfff; }}
     .gem-reality {{ background: radial-gradient(circle, #ff0044 0%, #880022 100%); box-shadow: 0 0 15px #ff0044; border: 1px solid #ff0044; }}
     .gem-soul {{ background: radial-gradient(circle, #ff8800 0%, #884400 100%); box-shadow: 0 0 15px #ff8800; border: 1px solid #ff8800; }}
-    .gem-snap {{ background: radial-gradient(circle, #ffd700 0%, #886600 100%); box-shadow: 0 0 18px #ffd700; border: 1px solid #ffd700; font-size: 16px; }}
+    .gem-snap {{ background: radial-gradient(circle, #ffd700 0%, #886600 100%); box-shadow: 0 0 18px #ffd700; border: 1px solid #ffd700; font-size: 18px; }}
 </style>
 
 <!-- GOOGLE THANOS SNAP DISINTEGRATION SCRIPT -->
@@ -310,20 +311,24 @@ with col_left:
         ["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO SYNTHESIS"]
     )
 
+    # REPAIRED BLUEPRINT GENERATOR
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
         img_query = st.text_input("Blueprint description...", key="blueprint_input")
         if st.button("Synthesize Blueprint", use_container_width=True):
             if img_query:
-                formatted_prompt = img_query.replace(" ", "%20")
-                st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{formatted_prompt} (cyberpunk sci-fi hud blueprint style)"
+                # Clean URL encoding for Pollinations API
+                encoded_prompt = urllib.parse.quote(f"{img_query}, cyberpunk sci-fi hud blueprint style")
+                st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true"
                 log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
             else:
                 st.warning("Please enter a blueprint prompt first, Sir.")
 
         if st.session_state.generated_blueprint:
-            pure_url = st.session_state.generated_blueprint.split(" ")[0]
-            st.image(pure_url, caption=img_query, use_container_width=True)
+            try:
+                st.image(st.session_state.generated_blueprint, caption=img_query or "Synthesized Blueprint", use_container_width=True)
+            except Exception as img_err:
+                st.error("Failed to render image from blueprint engine.")
 
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
@@ -338,9 +343,7 @@ with col_left:
                 st.warning("Please enter a video description, Sir.")
 
         if st.session_state.active_ai_video_url:
-            st.markdown('<div class="ai-video-box">', unsafe_allow_html=True)
             st.video(st.session_state.active_ai_video_url, format="video/mp4", autoplay=True, loop=True, muted=True)
-            st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
     protocols = ["VISION", "ULTRON", "F.R.I.D.A.Y.", "E.D.I.T.H.", "BOTH"]
@@ -396,11 +399,10 @@ with col_right:
             if chat.get("audio") and st.session_state.tts_enabled:
                 st.audio(chat["audio"], format="audio/mp3")
 
-    # STARK-THEMED STYLISH NATIVE CHAT INPUT
+    # NATIVE STREAMLIT CHAT INPUT
     active_query = st.chat_input("💬 Transmit command to mainframe (Type ~~ for Gauntlet)...")
 
     if active_query:
-        # Check for Cataract command in Vision persona
         if "cataract" in active_query.lower() and st.session_state.ai_persona == "VISION":
             st.session_state.cataract_active = not st.session_state.cataract_active
             log_event("OPACIFICATION: Cataract whiteout layer toggled in Vision mode.")
@@ -423,18 +425,21 @@ with col_right:
             else:
                 try:
                     response = client.models.generate_content(
-                        model="gemini-3.8-flash",
+                        model="gemini-3.5-flash-lite",
                         contents=active_query,
                     )
                     ai_reply = response.text
 
                     audio_bytes = None
                     if st.session_state.tts_enabled:
-                        tts = gTTS(text=ai_reply, lang="en")
-                        fp = io.BytesIO()
-                        tts.write_to_fp(fp)
-                        fp.seek(0)
-                        audio_bytes = fp.read()
+                        try:
+                            tts = gTTS(text=ai_reply[:250], lang="en")
+                            fp = io.BytesIO()
+                            tts.write_to_fp(fp)
+                            fp.seek(0)
+                            audio_bytes = fp.read()
+                        except Exception:
+                            audio_bytes = None
 
                     with st.chat_message("assistant", avatar="🟡"):
                         st.write(ai_reply)
@@ -465,34 +470,34 @@ with col_right:
         stone_cols = st.columns(7)
 
         with stone_cols[0]:
-            st.markdown('<div class="gem-badge gem-time"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="gem-badge gem-time">💎</div>', unsafe_allow_html=True)
             if st.button("Time", key="time_stone"):
                 st.session_state.show_time_log = not st.session_state.show_time_log
                 st.session_state.stone_status = "🟢 TIME STONE: Toggled chronological chat logs view."
                 st.rerun()
 
         with stone_cols[1]:
-            st.markdown('<div class="gem-badge gem-mind"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="gem-badge gem-mind">💎</div>', unsafe_allow_html=True)
             if st.button("Mind", key="mind_stone"):
                 st.session_state.stone_status = f"🟡 MIND STONE: Active persona is {st.session_state.ai_persona}"
 
         with stone_cols[2]:
-            st.markdown('<div class="gem-badge gem-power"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="gem-badge gem-power">💎</div>', unsafe_allow_html=True)
             if st.button("Power", key="power_stone"):
                 st.session_state.stone_status = f"🟣 POWER STONE: CPU Load at {psutil.cpu_percent()}%"
 
         with stone_cols[3]:
-            st.markdown('<div class="gem-badge gem-space"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="gem-badge gem-space">💎</div>', unsafe_allow_html=True)
             if st.button("Space", key="space_stone"):
                 st.session_state.stone_status = f"🔵 SPACE STONE: Session `{st.session_state.session_id}`"
 
         with stone_cols[4]:
-            st.markdown('<div class="gem-badge gem-reality"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="gem-badge gem-reality">💎</div>', unsafe_allow_html=True)
             if st.button("Reality", key="reality_stone"):
                 st.session_state.stone_status = "🔴 REALITY STONE: Matrix styling warped."
 
         with stone_cols[5]:
-            st.markdown('<div class="gem-badge gem-soul"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="gem-badge gem-soul">💎</div>', unsafe_allow_html=True)
             if st.button("Soul", key="soul_stone"):
                 st.session_state.stone_status = "🟠 SOUL STONE: Core synchronized."
 
