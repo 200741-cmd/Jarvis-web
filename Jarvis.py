@@ -49,8 +49,8 @@ if "system_logs" not in st.session_state:
         "Mainframe online.",
         "Universal Database Synchronized.",
     ]
-if "generated_blueprint" not in st.session_state:
-    st.session_state.generated_blueprint = None
+if "generated_blueprint_bytes" not in st.session_state:
+    st.session_state.generated_blueprint_bytes = None
 if "active_ai_video_url" not in st.session_state:
     st.session_state.active_ai_video_url = None
 if "stone_status" not in st.session_state:
@@ -204,14 +204,12 @@ st.markdown(
 # 4. MULTI-KEY FAILOVER ROTATION ENGINE (`API_KEY_1` to `API_KEY_4`)
 def get_ordered_api_keys():
     keys = []
-    # Strictly check keys 1 through 4 in sequence
     for i in range(1, 5):
         k_name = f"API_KEY_{i}"
         val = st.secrets.get(k_name)
         if val and val not in keys:
             keys.append(val)
             
-    # Fallback keys
     for key_name in ["API_KEY", "GROQ_API_KEY"]:
         val = st.secrets.get(key_name)
         if val and val not in keys:
@@ -247,6 +245,33 @@ def call_gemini_with_failover(contents):
                 return None, f"🚨 Mainframe Refused: {str(e)}"
                 
     return None, "🚨 Mainframe Critical: All configured API keys (1 through 4) have exhausted their quotas."
+
+def generate_image_with_failover(prompt_text):
+    keys = get_ordered_api_keys()
+    if not keys:
+        return None, "No API keys configured."
+
+    attempts = len(keys)
+    for _ in range(attempts):
+        current_key = keys[st.session_state.api_key_index % len(keys)]
+        try:
+            client = genai.Client(api_key=current_key)
+            result = client.models.generate_images(
+                model="imagen-3.0-generate-002",
+                prompt=f"{prompt_text}, sci-fi HUD cyberpunk blueprint style",
+                config=dict(number_of_images=1, aspect_ratio="1:1"),
+            )
+            for generated_image in result.generated_images:
+                return generated_image.image.image_bytes, None
+        except Exception as e:
+            err_msg = str(e).lower()
+            if any(term in err_msg for term in ["quota", "rate limit", "429", "exhausted", "limit", "permission"]):
+                st.session_state.api_key_index = (st.session_state.api_key_index + 1) % len(keys)
+                log_event(f"IMAGE GENERATION FAILOVER: Rotating to API Key Slot #{st.session_state.api_key_index + 1}")
+                continue
+            else:
+                return None, str(e)
+    return None, "All API keys failed for image synthesis."
 
 
 def log_event(message):
@@ -338,16 +363,16 @@ with col_left:
             submit_blueprint = st.form_submit_button("Synthesize Blueprint", use_container_width=True)
 
         if submit_blueprint and img_query:
-            seed = int(time.time())
-            encoded_prompt = urllib.parse.quote(f"{img_query}, cyberpunk sci-fi hud blueprint style")
-            st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=flux&width=1024&height=1024&nologo=true&seed={seed}"
-            log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
+            with st.spinner("Synthesizing high-res image via Gemini API..."):
+                img_bytes, err_img = generate_image_with_failover(img_query)
+                if img_bytes:
+                    st.session_state.generated_blueprint_bytes = img_bytes
+                    log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
+                else:
+                    st.error(f"Image generation error: {err_img}")
 
-        if st.session_state.generated_blueprint:
-            try:
-                st.image(st.session_state.generated_blueprint, use_container_width=True)
-            except Exception:
-                st.error("⚠️ Image generation server busy. Try again.")
+        if st.session_state.generated_blueprint_bytes:
+            st.image(st.session_state.generated_blueprint_bytes, use_container_width=True)
 
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
@@ -364,7 +389,7 @@ with col_left:
             try:
                 st.video(st.session_state.active_ai_video_url, format="video/mp4")
             except Exception:
-                st.error("⚠️ Video generation format processing. Try a different prompt.")
+                st.error("⚠️ Video generation processing error.")
 
     st.markdown("---")
     protocols = ["VISION", "ULTRON", "F.R.I.D.A.Y.", "E.D.I.T.H.", "BOTH"]
@@ -441,32 +466,20 @@ with col_right:
             if len(st.session_state.chat_history) == 0:
                 st.session_state.all_chats[st.session_state.session_id]["title"] = active_query[:25] + "..."
 
-            # Execute model generation using automatic failover across API_KEY_1 through API_KEY_4
+            # INSTANT TEXT GENERATION VIA GEMINI 3.5 FLASH LITE WITH MULTI-KEY FAILOVER
             ai_reply, err = call_gemini_with_failover(active_query)
-
-            audio_bytes = None
-            if not err and ai_reply and st.session_state.tts_enabled:
-                try:
-                    tts = gTTS(text=ai_reply[:250], lang="en")
-                    fp = io.BytesIO()
-                    tts.write_to_fp(fp)
-                    fp.seek(0)
-                    audio_bytes = fp.read()
-                except Exception:
-                    audio_bytes = None
 
             if err:
                 ai_reply = err
 
             with st.chat_message("assistant", avatar="🟡"):
                 st.write(ai_reply)
-                if audio_bytes:
-                    st.audio(audio_bytes, format="audio/mp3")
 
+            # SAVE HISTORY INSTANTLY
             st.session_state.chat_history.append({
                 "user": active_query,
                 "bot": ai_reply,
-                "audio": audio_bytes,
+                "audio": None,
             })
             st.session_state.processing_query = None
             st.rerun()
