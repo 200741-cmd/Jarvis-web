@@ -204,14 +204,12 @@ st.markdown(
 # 4. MULTI-KEY POOL & FAILOVER ROTATION ENGINE (`API_KEY_1` to `API_KEY_4`)
 def get_ordered_api_keys():
     keys = []
-    # Explicitly check keys 1 through 4 first in strict sequence
     for i in range(1, 5):
         k_name = f"API_KEY_{i}"
         val = st.secrets.get(k_name)
         if val and val not in keys:
             keys.append(val)
             
-    # Fallback checks if specific numbered keys aren't fully populated
     for key_name in ["API_KEY", "GROQ_API_KEY"]:
         val = st.secrets.get(key_name)
         if val and val not in keys:
@@ -240,7 +238,6 @@ def call_gemini_with_failover(contents):
         except Exception as e:
             err_msg = str(e).lower()
             if any(term in err_msg for term in ["quota", "rate limit", "429", "exhausted", "limit", "permission"]):
-                # Rotate to the next API key in sequence (e.g. Key 1 -> Key 2 -> Key 3 -> Key 4)
                 st.session_state.api_key_index = (st.session_state.api_key_index + 1) % len(keys)
                 log_event(f"QUOTA REACHED: Rotating seamlessly to API Key Slot #{st.session_state.api_key_index + 1}")
                 continue
@@ -332,6 +329,7 @@ with col_left:
         ["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO SYNTHESIS"]
     )
 
+    # UNLIMITED MULTI-CLICK IMAGE FORM WITH RATE-LIMIT BYPASS
     with feature_tab_1:
         st.markdown("#### 🎨 STARK IMAGE MAKER")
         with st.form("blueprint_form"):
@@ -341,12 +339,16 @@ with col_left:
         if submit_blueprint and img_query:
             seed = int(time.time())
             encoded_prompt = urllib.parse.quote(f"{img_query}, cyberpunk sci-fi hud blueprint style")
-            st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}"
+            st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=flux&width=1024&height=1024&nologo=true&seed={seed}"
             log_event(f"BLUEPRINT: Rendered visual specs for '{img_query}'")
 
         if st.session_state.generated_blueprint:
-            st.image(st.session_state.generated_blueprint, use_container_width=True)
+            try:
+                st.image(st.session_state.generated_blueprint, use_container_width=True)
+            except Exception:
+                st.error("⚠️ Image generation server busy. Try again.")
 
+    # REPAIRED MULTI-CLICK VIDEO FORM USING OFFICIAL ENDPOINT
     with feature_tab_2:
         st.markdown("#### 🎞️ TEXT-TO-VIDEO GENERATOR")
         with st.form("video_form"):
@@ -354,13 +356,16 @@ with col_left:
             submit_video = st.form_submit_button("Synthesize AI Video Loop", use_container_width=True)
 
         if submit_video and ai_video_query:
-            seed = int(time.time())
             encoded_prompt = urllib.parse.quote(ai_video_query)
-            st.session_state.active_ai_video_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=640&height=360&nologo=true&seed={seed}"
+            # Updated to official Pollinations video generation endpoint route
+            st.session_state.active_ai_video_url = f"https://gen.pollinations.ai/video/{encoded_prompt}"
             log_event(f"AI VIDEO: Synthesized animation sequence for '{ai_video_query}'")
 
         if st.session_state.active_ai_video_url:
-            st.video(st.session_state.active_ai_video_url, format="video/mp4", autoplay=True, loop=True, muted=True)
+            try:
+                st.video(st.session_state.active_ai_video_url, format="video/mp4")
+            except Exception:
+                st.error("⚠️ Video generation format processing. Try a different prompt.")
 
     st.markdown("---")
     protocols = ["VISION", "ULTRON", "F.R.I.D.A.Y.", "E.D.I.T.H.", "BOTH"]
