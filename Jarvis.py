@@ -61,6 +61,8 @@ if "show_gauntlet" not in st.session_state:
     st.session_state.show_gauntlet = False
 if "show_time_log" not in st.session_state:
     st.session_state.show_time_log = False
+if "cataract_active" not in st.session_state:
+    st.session_state.cataract_active = False
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
@@ -75,68 +77,79 @@ active_theme = theme_palettes.get(
     st.session_state.ai_persona, theme_palettes["VISION"]
 )
 
-# STARK GRID, CONTAINER, THANOS SNAP & GLOWING STONE BADGE CSS
+# CHECK CATARACT STATE
+is_cataract = (st.session_state.ai_persona == "VISION" and st.session_state.cataract_active)
+
+# STARK GRID & PURE WHITE CATARACT EFFECT OVERLAY
 st.markdown(
     f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
     
     .stApp {{
-        background-color: {active_theme['bg']};
-        background-image: 
-            linear-gradient(rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px);
+        background-color: { "#FFFFFF" if is_cataract else active_theme['bg'] } !important;
+        background-image: { 
+            "none" if is_cataract else 
+            f"linear-gradient(rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px)" 
+        } !important;
         background-size: 30px 30px;
-        color: {active_theme['primary']};
+        color: { "#111111" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Courier New', Courier, monospace;
     }}
+
+    /* WHITE VISION OVERLAY FLASH */
+    { f'''
+    .stApp::before {{
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(25px) contrast(0.5);
+        z-index: 99999;
+        pointer-events: none;
+        box-shadow: inset 0 0 100px rgba(200, 200, 250, 0.5);
+    }}
+    ''' if is_cataract else "" }
     
     div[data-testid="column"] {{
-        background: rgba(6, 9, 19, 0.75) !important;
-        border: 1px solid rgba({active_theme['rgb']}, 0.3) !important;
+        background: { "rgba(245, 245, 245, 0.95)" if is_cataract else "rgba(6, 9, 19, 0.75)" } !important;
+        border: 1px solid { "#CCCCCC" if is_cataract else f"rgba({active_theme['rgb']}, 0.3)" } !important;
         border-radius: 8px;
         padding: 15px;
         margin-bottom: 10px;
         backdrop-filter: blur(6px);
-        box-shadow: 0 0 20px rgba({active_theme['rgb']}, 0.08);
+        box-shadow: { "0 0 20px rgba(255, 255, 255, 1)" if is_cataract else f"0 0 20px rgba({active_theme['rgb']}, 0.08)" };
     }}
     
     .stChatMessage {{
-        background-color: rgba(6, 9, 19, 0.9) !important;
-        border: 1px solid rgba({active_theme['rgb']}, 0.35) !important;
+        background-color: { "rgba(255, 255, 255, 0.98)" if is_cataract else "rgba(6, 9, 19, 0.9)" } !important;
+        border: 1px solid { "#DDDDDD" if is_cataract else f"rgba({active_theme['rgb']}, 0.35)" } !important;
         backdrop-filter: blur(6px);
-        color: {active_theme['primary']} !important;
+        color: { "#222222" if is_cataract else active_theme['primary'] } !important;
         border-radius: 8px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }}
 
     h1, h2, h3, h4 {{
-        color: {active_theme['primary']} !important;
+        color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Courier New', Courier, monospace !important;
         letter-spacing: 1px;
     }}
 
     .stButton > button {{
-        background: rgba(6, 9, 19, 0.9) !important;
-        border: 1px solid {active_theme['primary']} !important;
-        color: {active_theme['primary']} !important;
+        background: { "#FFFFFF" if is_cataract else "rgba(6, 9, 19, 0.9)" } !important;
+        border: 1px solid { "#111111" if is_cataract else active_theme['primary'] } !important;
+        color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Courier New', Courier, monospace !important;
         font-weight: bold !important;
         border-radius: 6px !important;
-        transition: all 0.2s ease-in-out;
-    }}
-
-    .stButton > button:hover {{
-        background: rgba({active_theme['rgb']}, 0.2) !important;
-        box-shadow: 0 0 10px {active_theme['primary']};
     }}
 
     /* STARK CHATBAR OVERLAY */
     .stChatInputContainer {{
-        border: 1.5px solid {active_theme['primary']} !important;
+        border: 1.5px solid { "#111111" if is_cataract else active_theme['primary'] } !important;
         border-radius: 12px !important;
-        background: rgba(10, 14, 28, 0.95) !important;
-        box-shadow: 0 0 20px rgba({active_theme['rgb']}, 0.25) !important;
+        background: { "#FFFFFF" if is_cataract else "rgba(10, 14, 28, 0.95)" } !important;
+        box-shadow: 0 0 25px rgba(255, 255, 255, 1) !important;
         padding: 4px !important;
     }}
 
@@ -158,7 +171,6 @@ st.markdown(
         padding: 14px;
         border-radius: 8px;
         margin-bottom: 15px;
-        box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
     }}
 
     /* GLOWING INFINITY GEM BADGES */
@@ -263,9 +275,12 @@ for s_id, s_data in list(st.session_state.all_chats.items()):
 
 # 6. HEADER
 st.markdown(
-    f"<h1>⚙️ {st.session_state.ai_persona.upper()} // DIAGNOSTICS MAINFRAME</h1>",
+    f"<h1>⚙️ { 'WHITE VISION' if is_cataract else st.session_state.ai_persona.upper() } // DIAGNOSTICS MAINFRAME</h1>",
     unsafe_allow_html=True,
 )
+if is_cataract:
+    st.info("👁️ PROJECT CATARACT ACTIVE: WHITE VISION PROTOCOL ENGAGED.")
+
 st.markdown(
     f"<hr style='border: 0.5px solid rgba({active_theme['rgb']}, 0.3); margin-bottom: 25px;'>",
     unsafe_allow_html=True,
@@ -338,6 +353,7 @@ with col_left:
     selected_persona = st.selectbox("Active Protocol", protocols, index=current_index)
     if selected_persona != st.session_state.ai_persona:
         st.session_state.ai_persona = selected_persona
+        st.session_state.cataract_active = False
         log_event(f"Protocol shifted to {selected_persona}.")
         st.rerun()
 
@@ -353,7 +369,7 @@ with col_right:
     if not st.session_state.chat_history and not st.session_state.show_time_log:
         st.info(f"Good day. {st.session_state.ai_persona} operational. Universal Session ID: `{st.session_state.session_id}`. Type `~~` to summon the Infinity Gauntlet.")
 
-    # TIME STONE CHAT LOG PANEL (Appears ONLY when Time Stone is clicked)
+    # TIME STONE CHAT LOG PANEL
     if st.session_state.show_time_log:
         st.markdown(
             """
@@ -376,7 +392,7 @@ with col_right:
                 if chat.get("audio") and st.session_state.tts_enabled:
                     st.audio(chat["audio"], format="audio/mp3")
 
-    # RENDER EXISTING CHAT HISTORY NORMALLY
+    # RENDER CHAT HISTORY NORMALLY
     for chat in reversed(st.session_state.chat_history):
         with st.chat_message("user", avatar="👤"):
             st.write(chat["user"])
@@ -389,7 +405,12 @@ with col_right:
     active_query = st.chat_input("💬 Transmit command to mainframe (Type ~~ for Gauntlet)...")
 
     if active_query:
-        if active_query.strip() == "~~":
+        # Check for Cataract command in Vision persona
+        if "cataract" in active_query.lower() and st.session_state.ai_persona == "VISION":
+            st.session_state.cataract_active = not st.session_state.cataract_active
+            log_event("OPACIFICATION: Cataract whiteout layer toggled in Vision mode.")
+            st.rerun()
+        elif active_query.strip() == "~~":
             st.session_state.show_gauntlet = not st.session_state.show_gauntlet
             log_event("REALITY: Infinity Stones portal toggled via '~~'.")
             st.rerun()
@@ -435,7 +456,7 @@ with col_right:
             st.session_state.processing_query = None
             st.rerun()
 
-    # --- BOTTOM SCREEN: INFINITY GAUNTLET HUD BAR (Appears ONLY when activated by typing `~~`) ---
+    # --- BOTTOM SCREEN: INFINITY GAUNTLET HUD BAR ---
     if st.session_state.show_gauntlet:
         st.markdown(
             """
