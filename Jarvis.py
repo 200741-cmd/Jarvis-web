@@ -80,65 +80,56 @@ active_theme = theme_palettes.get(
 # CHECK CATARACT STATE
 is_cataract = (st.session_state.ai_persona == "VISION" and st.session_state.cataract_active)
 
-# STARK GRID & PURE WHITE CATARACT EFFECT OVERLAY
+# VISIBLE WHITE VISION CATARACT STYLING
 st.markdown(
     f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
     
     .stApp {{
-        background-color: { "#FFFFFF" if is_cataract else active_theme['bg'] } !important;
+        background-color: { "#F0F4F8" if is_cataract else active_theme['bg'] } !important;
         background-image: { 
-            "none" if is_cataract else 
+            "radial-gradient(circle, #FFFFFF 0%, #E2E8F0 100%)" if is_cataract else 
             f"linear-gradient(rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px)" 
         } !important;
         background-size: 30px 30px;
-        color: { "#111111" if is_cataract else active_theme['primary'] } !important;
+        color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Courier New', Courier, monospace;
     }}
-
-    /* WHITE VISION OVERLAY FLASH */
-    { f'''
-    .stApp::before {{
-        content: "";
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(255, 255, 255, 0.96);
-        backdrop-filter: blur(25px) contrast(0.5);
-        z-index: 99999;
-        pointer-events: none;
-        box-shadow: inset 0 0 100px rgba(200, 200, 250, 0.5);
-    }}
-    ''' if is_cataract else "" }
     
     div[data-testid="column"] {{
-        background: { "rgba(245, 245, 245, 0.95)" if is_cataract else "rgba(6, 9, 19, 0.75)" } !important;
-        border: 1px solid { "#CCCCCC" if is_cataract else f"rgba({active_theme['rgb']}, 0.3)" } !important;
+        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(6, 9, 19, 0.75)" } !important;
+        border: 1.5px solid { "#94A3B8" if is_cataract else f"rgba({active_theme['rgb']}, 0.3)" } !important;
         border-radius: 8px;
         padding: 15px;
         margin-bottom: 10px;
-        backdrop-filter: blur(6px);
-        box-shadow: { "0 0 20px rgba(255, 255, 255, 1)" if is_cataract else f"0 0 20px rgba({active_theme['rgb']}, 0.08)" };
+        backdrop-filter: blur(8px);
+        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 0 20px rgba({active_theme['rgb']}, 0.08)" };
     }}
     
     .stChatMessage {{
-        background-color: { "rgba(255, 255, 255, 0.98)" if is_cataract else "rgba(6, 9, 19, 0.9)" } !important;
-        border: 1px solid { "#DDDDDD" if is_cataract else f"rgba({active_theme['rgb']}, 0.35)" } !important;
+        background-color: { "rgba(255, 255, 255, 0.95)" if is_cataract else "rgba(6, 9, 19, 0.9)" } !important;
+        border: 1px solid { "#CBD5E1" if is_cataract else f"rgba({active_theme['rgb']}, 0.35)" } !important;
         backdrop-filter: blur(6px);
-        color: { "#222222" if is_cataract else active_theme['primary'] } !important;
+        color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         border-radius: 8px !important;
     }}
 
-    h1, h2, h3, h4 {{
+    .stChatMessage p, .stChatMessage div {{
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
+        font-weight: { "bold" if is_cataract else "normal" };
+    }}
+
+    h1, h2, h3, h4 {{
+        color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Courier New', Courier, monospace !important;
         letter-spacing: 1px;
     }}
 
     .stButton > button {{
         background: { "#FFFFFF" if is_cataract else "rgba(6, 9, 19, 0.9)" } !important;
-        border: 1px solid { "#111111" if is_cataract else active_theme['primary'] } !important;
-        color: { "#000000" if is_cataract else active_theme['primary'] } !important;
+        border: 1.5px solid { "#0F172A" if is_cataract else active_theme['primary'] } !important;
+        color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Courier New', Courier, monospace !important;
         font-weight: bold !important;
         border-radius: 6px !important;
@@ -146,11 +137,15 @@ st.markdown(
 
     /* STARK CHATBAR OVERLAY */
     .stChatInputContainer {{
-        border: 1.5px solid { "#111111" if is_cataract else active_theme['primary'] } !important;
+        border: 2px solid { "#0F172A" if is_cataract else active_theme['primary'] } !important;
         border-radius: 12px !important;
         background: { "#FFFFFF" if is_cataract else "rgba(10, 14, 28, 0.95)" } !important;
         box-shadow: 0 0 25px rgba(255, 255, 255, 1) !important;
         padding: 4px !important;
+    }}
+
+    .stChatInputContainer input {{
+        color: { "#000000" if is_cataract else "#FFFFFF" } !important;
     }}
 
     /* BOTTOM INFINITY GAUNTLET HUD BAR */
