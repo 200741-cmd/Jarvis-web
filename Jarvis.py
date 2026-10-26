@@ -12,7 +12,7 @@ from google.genai import types
 from gtts import gTTS
 @@ -18,49 +17,30 @@
     layout="wide",
-)
+
 
 # 2. SESSION STATE & UNIVERSAL PERSISTENCE SETUP
 if "session_id" not in st.session_state:
