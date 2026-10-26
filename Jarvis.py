@@ -1,3 +1,8 @@
+import io
+import time
+import urllib.parse
+import datetime
+import psutil
 import speech_recognition as sr
 import streamlit as st
 import wikipedia
@@ -7,7 +12,7 @@ from google.genai import types
 from gtts import gTTS
 @@ -18,49 +17,30 @@
     layout="wide",
-
+)
 
 # 2. SESSION STATE & UNIVERSAL PERSISTENCE SETUP
 if "session_id" not in st.session_state:
@@ -70,7 +75,7 @@ if "time_stone_index" not in st.session_state:
 theme_palettes = {
 @@ -75,145 +55,96 @@
     st.session_state.ai_persona, theme_palettes["VISION"]
-
+)
 
 # CHECK CATARACT STATE
 is_cataract = (st.session_state.ai_persona == "VISION" and st.session_state.cataract_active)
@@ -261,7 +266,7 @@ def get_ordered_api_keys():
 
     return keys
 
-@@ -223,11 +154,12 @@ def get_ordered_api_keys():
+@@ -223,11 +154,12 @@
 def call_gemini_with_failover(contents, config=None, model_name="gemini-3.5-flash-lite"):
     keys = get_ordered_api_keys()
     if not keys:
@@ -276,7 +281,7 @@ def call_gemini_with_failover(contents, config=None, model_name="gemini-3.5-flas
         try:
             client = genai.Client(api_key=current_key)
             response = client.models.generate_content(
-@@ -238,14 +170,14 @@ def call_gemini_with_failover(contents, config=None, model_name="gemini-3.5-flas
+@@ -238,14 +170,14 @@
             return response, None
         except Exception as e:
             err_msg = str(e).lower()
@@ -295,7 +300,7 @@ def call_gemini_with_failover(contents, config=None, model_name="gemini-3.5-flas
 
 
 def log_event(message):
-@@ -255,56 +187,25 @@ def log_event(message):
+@@ -255,56 +187,25 @@
         st.session_state.system_logs.pop()
 
 
@@ -361,7 +366,7 @@ col_left, col_right = st.columns([1, 1.5], gap="large")
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
 
-@@ -325,212 +226,341 @@ def log_event(message):
+@@ -325,212 +226,341 @@
 
     st.markdown("---")
 
