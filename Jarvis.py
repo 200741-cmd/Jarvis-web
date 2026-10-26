@@ -213,7 +213,7 @@ def get_ordered_api_keys():
 
 
 def call_gemini_with_failover(
-    contents, config=None, model_name="gemini-2.5-flash"
+    contents, config=None, model_name="gemini-3.5-flash-lite"
 ):
     keys = get_ordered_api_keys()
     if not keys:
