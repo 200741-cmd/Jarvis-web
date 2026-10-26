@@ -75,7 +75,7 @@ if "time_stone_index" not in st.session_state:
 theme_palettes = {
 @@ -75,145 +55,96 @@
     st.session_state.ai_persona, theme_palettes["VISION"]
-)
+
 
 # CHECK CATARACT STATE
 is_cataract = (st.session_state.ai_persona == "VISION" and st.session_state.cataract_active)
