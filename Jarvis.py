@@ -564,3 +564,4 @@ with col_right:
         })
         st.session_state.processing_query = None
         st.rerun()
+
