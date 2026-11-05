@@ -77,9 +77,13 @@ if "show_time_log" not in st.session_state:
 if "cataract_active" not in st.session_state:
     st.session_state.cataract_active = False
 
+# UI LAYOUT MODE STATE ("3D_HOLOGRAM" or "CLASSIC")
+if "ui_mode" not in st.session_state:
+    st.session_state.ui_mode = "3D_HOLOGRAM"
+
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
-    "VISION": {"primary": "#FF9900", "bg": "#0D0701", "rgb": "255, 153, 0"},
+    "VISION": {"primary": "#FF9900", "bg": "#0B0501", "rgb": "255, 153, 0"},
     "ULTRON": {"primary": "#FF0055", "bg": "#140207", "rgb": "255, 0, 85"},
     "F.R.I.D.A.Y.": {"primary": "#FFB700", "bg": "#140F02", "rgb": "255, 183, 0"},
     "E.D.I.T.H.": {"primary": "#00FF99", "bg": "#02140D", "rgb": "0, 255, 153"},
@@ -94,7 +98,9 @@ is_cataract = (
     st.session_state.ai_persona == "VISION" and st.session_state.cataract_active
 )
 
-# MOVIE GOLDEN MANDALA CIRCLE STYLING
+is_3d = (st.session_state.ui_mode == "3D_HOLOGRAM")
+
+# 4. FULL 3D HOLOGRAPHIC & MANDALA HUD STYLING
 st.markdown(
     f"""
 <style>
@@ -104,78 +110,89 @@ st.markdown(
         background-color: { "#F0F4F8" if is_cataract else active_theme['bg'] } !important;
         background-image: { 
             "radial-gradient(circle, #FFFFFF 0%, #E2E8F0 100%)" if is_cataract else 
-            f"radial-gradient(circle at 50% 20%, rgba(255, 150, 0, 0.25) 0%, transparent 65%), linear-gradient(rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px)" 
+            f"radial-gradient(ellipse at 50% 25%, rgba({active_theme['rgb']}, 0.28) 0%, rgba(5, 2, 0, 0.95) 75%), linear-gradient(rgba({active_theme['rgb']}, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.05) 1px, transparent 1px)" 
         } !important;
-        background-size: 100% 100%, 40px 40px, 40px 40px;
+        background-size: 100% 100%, 35px 35px, 35px 35px;
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Share Tech Mono', monospace;
+        perspective: { "1200px" if is_3d else "none" };
     }}
     
-    /* ACCURATE GOLDEN SPARK MANDALA HUD */
-    .golden-hud-container {{
+    /* 3D MANDALA HOLOGRAM CORE ENGINE */
+    .hologram-3d-stage {{
         position: relative;
-        width: 200px;
-        height: 200px;
-        margin: 10px auto 15px auto;
+        width: 240px;
+        height: 240px;
+        margin: 5px auto 10px auto;
         display: flex;
         align-items: center;
         justify-content: center;
+        transform-style: preserve-3d;
+        transform: { "rotateX(28deg) rotateY(-8deg)" if is_3d else "none" };
+        transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
     }}
 
-    .mandala-ring {{
+    .hologram-3d-stage:hover {{
+        transform: { "rotateX(10deg) rotateY(15deg) scale(1.08)" if is_3d else "none" };
+    }}
+
+    .mandala-3d-layer {{
         position: absolute;
         border-radius: 50%;
-        box-shadow: 0 0 20px #FF9900, inset 0 0 15px #FF5500;
+        transform-style: preserve-3d;
     }}
 
-    .mandala-outer {{
-        width: 190px;
-        height: 190px;
+    .layer-outer-glyph {{
+        width: 220px;
+        height: 220px;
         border: 3px dashed #FFAA00;
-        animation: spin-mandala-right 16s linear infinite;
-        filter: drop-shadow(0 0 10px #FF7700);
+        box-shadow: 0 0 30px #FF9900, inset 0 0 20px #FF5500;
+        animation: spin-3d-right 14s linear infinite;
+        transform: { "translateZ(40px)" if is_3d else "none" };
     }}
 
-    .mandala-glyph-ring {{
-        width: 155px;
-        height: 155px;
+    .layer-mid-mandala {{
+        width: 175px;
+        height: 175px;
         border: 2px solid #FFCC00;
-        border-top: 4px solid transparent;
-        border-bottom: 4px solid transparent;
-        animation: spin-mandala-left 10s linear infinite;
-        box-shadow: 0 0 25px rgba(255, 150, 0, 0.8);
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+        box-shadow: 0 0 35px rgba(255, 150, 0, 0.9);
+        animation: spin-3d-left 9s linear infinite;
+        transform: { "translateZ(20px)" if is_3d else "none" };
     }}
 
-    .mandala-inner-geo {{
-        width: 115px;
-        height: 115px;
+    .layer-geo-ring {{
+        width: 130px;
+        height: 130px;
         border: 2px dashed #FFDD55;
-        transform: rotate(45deg);
-        animation: spin-mandala-right 6s linear infinite;
+        transform: { "rotate(45deg) translateZ(0px)" if is_3d else "rotate(45deg)" };
+        animation: spin-3d-right 5s linear infinite;
     }}
 
-    .mandala-core-flare {{
-        width: 65px;
-        height: 65px;
-        background: radial-gradient(circle, #FFFFFF 0%, #FFCC00 45%, #FF5500 80%, transparent 100%);
+    .layer-3d-core {{
+        width: 75px;
+        height: 75px;
+        background: radial-gradient(circle, #FFFFFF 0%, #FFCC00 40%, #FF5500 80%, transparent 100%);
         border-radius: 50%;
-        box-shadow: 0 0 50px #FF9900, 0 0 80px #FF3300, inset 0 0 20px #FFFFFF;
-        animation: flare-pulse 1.8s ease-in-out infinite alternate;
+        box-shadow: 0 0 60px #FF9900, 0 0 100px #FF3300, inset 0 0 25px #FFFFFF;
+        animation: core-flare-pulse 1.6s ease-in-out infinite alternate;
+        transform: { "translateZ(65px)" if is_3d else "none" };
     }}
 
-    @keyframes spin-mandala-right {{
-        0% {{ transform: rotate(0deg); }}
-        100% {{ transform: rotate(360deg); }}
+    @keyframes spin-3d-right {{
+        0% {{ transform: { "translateZ(30px) rotate(0deg)" if is_3d else "rotate(0deg)" }; }}
+        100% {{ transform: { "translateZ(30px) rotate(360deg)" if is_3d else "rotate(360deg)" }; }}
     }}
 
-    @keyframes spin-mandala-left {{
-        0% {{ transform: rotate(0deg); }}
-        100% {{ transform: rotate(-360deg); }}
+    @keyframes spin-3d-left {{
+        0% {{ transform: { "translateZ(15px) rotate(0deg)" if is_3d else "rotate(0deg)" }; }}
+        100% {{ transform: { "translateZ(15px) rotate(-360deg)" if is_3d else "rotate(-360deg)" }; }}
     }}
 
-    @keyframes flare-pulse {{
-        0% {{ transform: scale(0.85); opacity: 0.85; filter: brightness(1); }}
-        100% {{ transform: scale(1.15); opacity: 1; filter: brightness(1.4); }}
+    @keyframes core-flare-pulse {{
+        0% {{ transform: { "translateZ(65px) scale(0.85)" if is_3d else "scale(0.85)" }; opacity: 0.85; filter: brightness(1); }}
+        100% {{ transform: { "translateZ(75px) scale(1.2)" if is_3d else "scale(1.2)" }; opacity: 1; filter: brightness(1.5); }}
     }}
 
     .vision-title {{
@@ -185,20 +202,29 @@ st.markdown(
         letter-spacing: 4px;
         text-transform: uppercase;
         color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
-        text-shadow: { "none" if is_cataract else f"0 0 20px rgba(255, 153, 0, 0.9)" };
+        text-shadow: { "none" if is_cataract else f"0 0 25px rgba(255, 153, 0, 0.95)" };
         margin-bottom: 5px;
     }}
 
+    /* 3D CARDS & CONTAINERS */
     div[data-testid="column"] {{
-        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(18, 9, 2, 0.75)" } !important;
+        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(18, 9, 2, 0.78)" } !important;
         border: 1px solid { "#94A3B8" if is_cataract else f"rgba({active_theme['rgb']}, 0.45)" } !important;
         border-radius: 12px;
         padding: 18px;
         margin-bottom: 10px;
-        backdrop-filter: blur(12px);
-        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 0 25px rgba({active_theme['rgb']}, 0.15)" };
+        backdrop-filter: blur(14px);
+        transform-style: preserve-3d;
+        transform: { "translateZ(10px) rotateX(1.5deg)" if is_3d else "none" };
+        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba({active_theme['rgb']}, 0.2)" };
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
     }}
-    
+
+    div[data-testid="column"]:hover {{
+        transform: { "translateZ(25px) rotateX(0deg)" if is_3d else "none" };
+        box-shadow: { "none" if is_cataract else f"0 20px 45px rgba(0,0,0,0.8), 0 0 35px rgba({active_theme['rgb']}, 0.35)" };
+    }}
+
     .stChatMessage {{
         background-color: { "rgba(255, 255, 255, 0.95)" if is_cataract else "rgba(25, 12, 3, 0.88)" } !important;
         border: 1px solid { "#CBD5E1" if is_cataract else f"rgba({active_theme['rgb']}, 0.45)" } !important;
@@ -206,6 +232,8 @@ st.markdown(
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         border-radius: 10px !important;
         margin-bottom: 10px !important;
+        transform: { "translateZ(15px)" if is_3d else "none" };
+        box-shadow: { "none" if is_cataract else f"0 8px 20px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba({active_theme['rgb']}, 0.08)" };
     }}
 
     .stChatMessage p, .stChatMessage div {{
@@ -227,12 +255,14 @@ st.markdown(
         font-weight: 700 !important;
         border-radius: 6px !important;
         transition: all 0.3s ease !important;
+        transform: { "translateZ(5px)" if is_3d else "none" };
     }}
 
     .stButton > button:hover {{
         background: { "#CBD5E1" if is_cataract else active_theme['primary'] } !important;
         color: #000000 !important;
         box-shadow: 0 0 25px rgba(255, 153, 0, 0.9) !important;
+        transform: { "translateZ(15px) scale(1.02)" if is_3d else "none" };
     }}
 
     .bottom-gauntlet-hud {{
@@ -244,6 +274,7 @@ st.markdown(
         box-shadow: 0 0 35px rgba(255, 215, 0, 0.35);
         margin-top: 25px;
         margin-bottom: 15px;
+        transform: { "rotateX(15deg) translateZ(20px)" if is_3d else "none" };
     }}
 
     .time-stone-vault {{
@@ -293,7 +324,7 @@ st.markdown(
 )
 
 
-# 4. SECURE MULTI-KEY FAILOVER ENGINE (`API_KEY_1` to `API_KEY_4`)
+# 5. SECURE MULTI-KEY FAILOVER ENGINE (`API_KEY_1` to `API_KEY_4`)
 def get_ordered_api_keys():
     keys = []
     for i in range(1, 5):
@@ -389,7 +420,7 @@ def log_event(message):
         st.session_state.system_logs.pop()
 
 
-# 5. SIDEBAR: UNIVERSAL CHAT VAULT
+# 6. SIDEBAR: UNIVERSAL CHAT VAULT & UI TOGGLE
 st.sidebar.markdown("### 🌐 UNIVERSAL CHAT VAULT")
 if st.sidebar.button("➕ New Universal Session", use_container_width=True):
     new_id = f"session_{int(time.time())}"
@@ -399,6 +430,21 @@ if st.sidebar.button("➕ New Universal Session", use_container_width=True):
     }
     st.session_state.session_id = new_id
     st.query_params["chat_id"] = new_id
+    st.rerun()
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("#### 🎛️ UI ENGINE MODE")
+ui_mode_selection = st.sidebar.radio(
+    "Interface Matrix",
+    ["3D Hologram Stage", "Classic Mainframe Grid"],
+    index=0 if is_3d else 1,
+    help="Type 'ui_change' in the chat to toggle between 3D layout and Classic Mode."
+)
+
+new_ui_mode = "3D_HOLOGRAM" if "3D" in ui_mode_selection else "CLASSIC"
+if new_ui_mode != st.session_state.ui_mode:
+    st.session_state.ui_mode = new_ui_mode
+    log_event(f"UI Mode shifted to {st.session_state.ui_mode}.")
     st.rerun()
 
 st.sidebar.markdown("---")
@@ -432,14 +478,14 @@ for s_id, s_data in list(st.session_state.all_chats.items()):
                     st.query_params["chat_id"] = new_id
             st.rerun()
 
-# 6. HEADER WITH GOLDEN MANDALA HUD MATCHING THE IMAGE
+# 7. HEADER WITH 3D GOLDEN MANDALA STAGE
 st.markdown(
     """
-    <div class="golden-hud-container">
-        <div class="mandala-ring mandala-outer"></div>
-        <div class="mandala-ring mandala-glyph-ring"></div>
-        <div class="mandala-ring mandala-inner-geo"></div>
-        <div class="mandala-core-flare"></div>
+    <div class="hologram-3d-stage">
+        <div class="mandala-3d-layer layer-outer-glyph"></div>
+        <div class="mandala-3d-layer layer-mid-mandala"></div>
+        <div class="mandala-3d-layer layer-geo-ring"></div>
+        <div class="mandala-3d-layer layer-3d-core"></div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -458,7 +504,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 7. MASTER TWO-COLUMN LAYOUT
+# 8. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
 # --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, VIDEO & TEXT SYNTHESIS ---
@@ -619,7 +665,7 @@ with col_right:
         
         # Display history
         if not track_history:
-            st.info(f"Chat Track `{track_name}` initialized and ready for input.")
+            st.info(f"Chat Track `{track_name}` initialized and ready for input. (Type `ui_change` to toggle 3D mode)")
         else:
             for chat in reversed(track_history):
                 with st.chat_message("user", avatar="👤"):
@@ -631,15 +677,21 @@ with col_right:
 
         # Chat Input Field
         user_input = st.chat_input(
-            f"💬 Transmit command to Track {track_name} (Type ~~ for Gauntlet)...",
+            f"💬 Transmit command to Track {track_name} (Type ui_change to switch UI)...",
             key=f"input_{track_name}"
         )
 
         if user_input:
-            if "cataract" in user_input.lower() and st.session_state.ai_persona == "VISION":
+            clean_input = user_input.strip().lower()
+            if clean_input == "ui_change":
+                st.session_state.ui_mode = "CLASSIC" if is_3d else "3D_HOLOGRAM"
+                log_event(f"UI Mode shifted to {st.session_state.ui_mode} via keyword 'ui_change'.")
+                st.toast(f"UI Mode changed to {st.session_state.ui_mode}", icon="🎛️")
+                st.rerun()
+            elif "cataract" in clean_input and st.session_state.ai_persona == "VISION":
                 st.session_state.cataract_active = not st.session_state.cataract_active
                 st.rerun()
-            elif user_input.strip() == "~~":
+            elif clean_input == "~~":
                 st.session_state.show_gauntlet = not st.session_state.show_gauntlet
                 st.rerun()
             else:
