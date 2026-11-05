@@ -29,7 +29,7 @@ if "session_id" not in st.session_state:
         st.session_state.session_id = f"session_{int(time.time())}"
         st.query_params["chat_id"] = st.session_state.session_id
 
-# Ensure active session exists in storage with multi-track history
+# Ensure active session exists in storage
 if st.session_state.session_id not in st.session_state.all_chats:
     st.session_state.all_chats[st.session_state.session_id] = {
         "title": f"Workspace {time.strftime('%H:%M')}",
@@ -40,10 +40,18 @@ if st.session_state.session_id not in st.session_state.all_chats:
         },
     }
 
-# Dynamic reference to active tracks map
-active_tracks = st.session_state.all_chats[st.session_state.session_id][
-    "tracks"
-]
+# BACKWARD COMPATIBILITY & DYNAMIC POINTER (Fixes KeyError on old session structures)
+session_data = st.session_state.all_chats[st.session_state.session_id]
+
+if "tracks" not in session_data:
+    old_history = session_data.get("history", [])
+    session_data["tracks"] = {
+        "Alpha": old_history,
+        "Beta": [],
+        "Gamma": [],
+    }
+
+active_tracks = session_data["tracks"]
 
 if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "VISION"
