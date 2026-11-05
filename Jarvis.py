@@ -5,6 +5,7 @@ import urllib.parse
 import psutil
 import speech_recognition as sr
 import streamlit as st
+import streamlit.components.v1 as components
 from google import genai
 from google.genai import types
 from gtts import gTTS
@@ -83,9 +84,9 @@ if "ui_mode" not in st.session_state:
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
-    "VISION": {"primary": "#FF9900", "bg": "#0B0501", "rgb": "255, 153, 0"},
+    "VISION": {"primary": "#FFB700", "bg": "#070401", "rgb": "255, 183, 0"},
     "ULTRON": {"primary": "#FF0055", "bg": "#140207", "rgb": "255, 0, 85"},
-    "F.R.I.D.A.Y.": {"primary": "#FFB700", "bg": "#140F02", "rgb": "255, 183, 0"},
+    "F.R.I.D.A.Y.": {"primary": "#FF9900", "bg": "#140F02", "rgb": "255, 153, 0"},
     "E.D.I.T.H.": {"primary": "#00FF99", "bg": "#02140D", "rgb": "0, 255, 153"},
     "BOTH": {"primary": "#B000FF", "bg": "#0E0214", "rgb": "176, 0, 255"},
 }
@@ -100,7 +101,7 @@ is_cataract = (
 
 is_3d = (st.session_state.ui_mode == "3D_HOLOGRAM")
 
-# 4. FULL 3D HOLOGRAPHIC & MANDALA HUD STYLING
+# 4. STREAMLIT APP STYLING
 st.markdown(
     f"""
 <style>
@@ -110,130 +111,49 @@ st.markdown(
         background-color: { "#F0F4F8" if is_cataract else active_theme['bg'] } !important;
         background-image: { 
             "radial-gradient(circle, #FFFFFF 0%, #E2E8F0 100%)" if is_cataract else 
-            f"radial-gradient(ellipse at 50% 25%, rgba({active_theme['rgb']}, 0.28) 0%, rgba(5, 2, 0, 0.95) 75%), linear-gradient(rgba({active_theme['rgb']}, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.05) 1px, transparent 1px)" 
+            f"radial-gradient(ellipse at 50% 25%, rgba(255, 140, 0, 0.35) 0%, rgba(3, 1, 0, 0.98) 70%), linear-gradient(rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px)" 
         } !important;
         background-size: 100% 100%, 35px 35px, 35px 35px;
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Share Tech Mono', monospace;
-        perspective: { "1200px" if is_3d else "none" };
-    }}
-    
-    /* 3D MANDALA HOLOGRAM CORE ENGINE */
-    .hologram-3d-stage {{
-        position: relative;
-        width: 240px;
-        height: 240px;
-        margin: 5px auto 10px auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transform-style: preserve-3d;
-        transform: { "rotateX(28deg) rotateY(-8deg)" if is_3d else "none" };
-        transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }}
-
-    .hologram-3d-stage:hover {{
-        transform: { "rotateX(10deg) rotateY(15deg) scale(1.08)" if is_3d else "none" };
-    }}
-
-    .mandala-3d-layer {{
-        position: absolute;
-        border-radius: 50%;
-        transform-style: preserve-3d;
-    }}
-
-    .layer-outer-glyph {{
-        width: 220px;
-        height: 220px;
-        border: 3px dashed #FFAA00;
-        box-shadow: 0 0 30px #FF9900, inset 0 0 20px #FF5500;
-        animation: spin-3d-right 14s linear infinite;
-        transform: { "translateZ(40px)" if is_3d else "none" };
-    }}
-
-    .layer-mid-mandala {{
-        width: 175px;
-        height: 175px;
-        border: 2px solid #FFCC00;
-        border-top: 5px solid transparent;
-        border-bottom: 5px solid transparent;
-        box-shadow: 0 0 35px rgba(255, 150, 0, 0.9);
-        animation: spin-3d-left 9s linear infinite;
-        transform: { "translateZ(20px)" if is_3d else "none" };
-    }}
-
-    .layer-geo-ring {{
-        width: 130px;
-        height: 130px;
-        border: 2px dashed #FFDD55;
-        transform: { "rotate(45deg) translateZ(0px)" if is_3d else "rotate(45deg)" };
-        animation: spin-3d-right 5s linear infinite;
-    }}
-
-    .layer-3d-core {{
-        width: 75px;
-        height: 75px;
-        background: radial-gradient(circle, #FFFFFF 0%, #FFCC00 40%, #FF5500 80%, transparent 100%);
-        border-radius: 50%;
-        box-shadow: 0 0 60px #FF9900, 0 0 100px #FF3300, inset 0 0 25px #FFFFFF;
-        animation: core-flare-pulse 1.6s ease-in-out infinite alternate;
-        transform: { "translateZ(65px)" if is_3d else "none" };
-    }}
-
-    @keyframes spin-3d-right {{
-        0% {{ transform: { "translateZ(30px) rotate(0deg)" if is_3d else "rotate(0deg)" }; }}
-        100% {{ transform: { "translateZ(30px) rotate(360deg)" if is_3d else "rotate(360deg)" }; }}
-    }}
-
-    @keyframes spin-3d-left {{
-        0% {{ transform: { "translateZ(15px) rotate(0deg)" if is_3d else "rotate(0deg)" }; }}
-        100% {{ transform: { "translateZ(15px) rotate(-360deg)" if is_3d else "rotate(-360deg)" }; }}
-    }}
-
-    @keyframes core-flare-pulse {{
-        0% {{ transform: { "translateZ(65px) scale(0.85)" if is_3d else "scale(0.85)" }; opacity: 0.85; filter: brightness(1); }}
-        100% {{ transform: { "translateZ(75px) scale(1.2)" if is_3d else "scale(1.2)" }; opacity: 1; filter: brightness(1.5); }}
     }}
 
     .vision-title {{
         text-align: center;
         font-family: 'Orbitron', sans-serif !important;
         font-weight: 900;
-        letter-spacing: 4px;
+        letter-spacing: 5px;
         text-transform: uppercase;
         color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
-        text-shadow: { "none" if is_cataract else f"0 0 25px rgba(255, 153, 0, 0.95)" };
+        text-shadow: { "none" if is_cataract else f"0 0 25px rgba(255, 180, 0, 0.95), 0 0 40px rgba(255, 80, 0, 0.6)" };
+        margin-top: -10px;
         margin-bottom: 5px;
     }}
 
-    /* 3D CARDS & CONTAINERS */
     div[data-testid="column"] {{
-        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(18, 9, 2, 0.78)" } !important;
-        border: 1px solid { "#94A3B8" if is_cataract else f"rgba({active_theme['rgb']}, 0.45)" } !important;
+        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(16, 8, 2, 0.78)" } !important;
+        border: 1.5px solid { "#94A3B8" if is_cataract else f"rgba({active_theme['rgb']}, 0.45)" } !important;
         border-radius: 12px;
         padding: 18px;
         margin-bottom: 10px;
         backdrop-filter: blur(14px);
         transform-style: preserve-3d;
-        transform: { "translateZ(10px) rotateX(1.5deg)" if is_3d else "none" };
-        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba({active_theme['rgb']}, 0.2)" };
+        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba({active_theme['rgb']}, 0.2)" };
         transition: transform 0.4s ease, box-shadow 0.4s ease;
     }}
 
     div[data-testid="column"]:hover {{
-        transform: { "translateZ(25px) rotateX(0deg)" if is_3d else "none" };
-        box-shadow: { "none" if is_cataract else f"0 20px 45px rgba(0,0,0,0.8), 0 0 35px rgba({active_theme['rgb']}, 0.35)" };
+        box-shadow: { "none" if is_cataract else f"0 20px 45px rgba(0,0,0,0.85), 0 0 35px rgba({active_theme['rgb']}, 0.4)" };
     }}
 
     .stChatMessage {{
-        background-color: { "rgba(255, 255, 255, 0.95)" if is_cataract else "rgba(25, 12, 3, 0.88)" } !important;
+        background-color: { "rgba(255, 255, 255, 0.95)" if is_cataract else "rgba(24, 11, 3, 0.92)" } !important;
         border: 1px solid { "#CBD5E1" if is_cataract else f"rgba({active_theme['rgb']}, 0.45)" } !important;
         backdrop-filter: blur(8px);
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         border-radius: 10px !important;
         margin-bottom: 10px !important;
-        transform: { "translateZ(15px)" if is_3d else "none" };
-        box-shadow: { "none" if is_cataract else f"0 8px 20px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba({active_theme['rgb']}, 0.08)" };
+        box-shadow: { "none" if is_cataract else f"0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba({active_theme['rgb']}, 0.1)" };
     }}
 
     .stChatMessage p, .stChatMessage div {{
@@ -255,14 +175,12 @@ st.markdown(
         font-weight: 700 !important;
         border-radius: 6px !important;
         transition: all 0.3s ease !important;
-        transform: { "translateZ(5px)" if is_3d else "none" };
     }}
 
     .stButton > button:hover {{
         background: { "#CBD5E1" if is_cataract else active_theme['primary'] } !important;
         color: #000000 !important;
-        box-shadow: 0 0 25px rgba(255, 153, 0, 0.9) !important;
-        transform: { "translateZ(15px) scale(1.02)" if is_3d else "none" };
+        box-shadow: 0 0 25px rgba(255, 180, 0, 0.95) !important;
     }}
 
     .bottom-gauntlet-hud {{
@@ -274,7 +192,6 @@ st.markdown(
         box-shadow: 0 0 35px rgba(255, 215, 0, 0.35);
         margin-top: 25px;
         margin-bottom: 15px;
-        transform: { "rotateX(15deg) translateZ(20px)" if is_3d else "none" };
     }}
 
     .time-stone-vault {{
@@ -322,7 +239,6 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
 
 # 5. SECURE MULTI-KEY FAILOVER ENGINE (`API_KEY_1` to `API_KEY_4`)
 def get_ordered_api_keys():
@@ -436,7 +352,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("#### 🎛️ UI ENGINE MODE")
 ui_mode_selection = st.sidebar.radio(
     "Interface Matrix",
-    ["3D Hologram Stage", "Classic Mainframe Grid"],
+    ["Eldritch Hologram 3D", "Classic Mainframe Grid"],
     index=0 if is_3d else 1,
     help="Type 'ui_change' in the chat to toggle between 3D layout and Classic Mode."
 )
@@ -478,18 +394,152 @@ for s_id, s_data in list(st.session_state.all_chats.items()):
                     st.query_params["chat_id"] = new_id
             st.rerun()
 
-# 7. HEADER WITH 3D GOLDEN MANDALA STAGE
-st.markdown(
-    """
-    <div class="hologram-3d-stage">
-        <div class="mandala-3d-layer layer-outer-glyph"></div>
-        <div class="mandala-3d-layer layer-mid-mandala"></div>
-        <div class="mandala-3d-layer layer-geo-ring"></div>
-        <div class="mandala-3d-layer layer-3d-core"></div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# 7. HIGH-FIDELITY CANVAS & HTML5 3D ELDRITCH MANDALA ENGINE
+if is_3d:
+    components.html(
+        """
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 270px;
+                perspective: 1000px;
+            }
+            .stage {
+                position: relative;
+                width: 250px;
+                height: 250px;
+                transform-style: preserve-3d;
+                transform: rotateX(25deg) rotateY(-5deg);
+                animation: floatStage 6s ease-in-out infinite alternate;
+            }
+            @keyframes floatStage {
+                0% { transform: rotateX(25deg) rotateY(-5deg) translateY(0px); }
+                100% { transform: rotateX(15deg) rotateY(10deg) translateY(-10px); }
+            }
+            canvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 250px;
+                height: 250px;
+                pointer-events: none;
+            }
+            .mandala-layer {
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                margin: auto;
+                border-radius: 50%;
+                transform-style: preserve-3d;
+            }
+            .ring-outer-sparks {
+                width: 230px; height: 230px;
+                border: 3px dashed #FF9900;
+                box-shadow: 0 0 35px #FF7700, inset 0 0 25px #FF3300;
+                animation: spinR 16s linear infinite;
+                transform: translateZ(30px);
+            }
+            .ring-runes {
+                width: 190px; height: 190px;
+                border: 2.5px solid #FFCC00;
+                border-top: 6px solid transparent;
+                border-bottom: 6px solid transparent;
+                box-shadow: 0 0 40px #FF9900;
+                animation: spinL 10s linear infinite;
+                transform: translateZ(50px);
+            }
+            .ring-square-geo {
+                width: 135px; height: 135px;
+                border: 2px dashed #FFE577;
+                transform: rotate(45deg) translateZ(20px);
+                animation: spinR 6s linear infinite;
+                box-shadow: 0 0 20px #FF8800;
+            }
+            .core-flare {
+                width: 75px; height: 75px;
+                background: radial-gradient(circle, #FFFFFF 0%, #FFE500 35%, #FF4400 75%, transparent 100%);
+                border-radius: 50%;
+                box-shadow: 0 0 70px #FF9900, 0 0 110px #FF2200, inset 0 0 30px #FFFFFF;
+                animation: pulseCore 1.5s ease-in-out infinite alternate;
+                transform: translateZ(75px);
+            }
+            @keyframes spinR { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            @keyframes spinL { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+            @keyframes pulseCore {
+                0% { transform: translateZ(75px) scale(0.85); opacity: 0.85; }
+                100% { transform: translateZ(90px) scale(1.25); opacity: 1; }
+            }
+        </style>
+        </head>
+        <body>
+            <div class="stage">
+                <canvas id="sparkCanvas" width="250" height="250"></canvas>
+                <div class="mandala-layer ring-outer-sparks"></div>
+                <div class="mandala-layer ring-runes"></div>
+                <div class="mandala-layer ring-square-geo"></div>
+                <div class="mandala-layer core-flare"></div>
+            </div>
+            <script>
+                const canvas = document.getElementById('sparkCanvas');
+                const ctx = canvas.getContext('2d');
+                const particles = [];
+
+                for(let i = 0; i < 45; i++) {
+                    particles.push({
+                        x: 125,
+                        y: 125,
+                        angle: Math.random() * Math.PI * 2,
+                        radius: 70 + Math.random() * 45,
+                        size: 1 + Math.random() * 2.5,
+                        speed: 0.01 + Math.random() * 0.03,
+                        alpha: Math.random()
+                    });
+                }
+
+                function draw() {
+                    ctx.clearRect(0, 0, 250, 250);
+                    particles.forEach(p => {
+                        p.angle += p.speed;
+                        p.alpha += (Math.random() - 0.5) * 0.08;
+                        if(p.alpha < 0) p.alpha = 0.1;
+                        if(p.alpha > 1) p.alpha = 1;
+
+                        const px = 125 + Math.cos(p.angle) * p.radius;
+                        const py = 125 + Math.sin(p.angle) * p.radius;
+
+                        ctx.beginPath();
+                        ctx.arc(px, py, p.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, ${Math.floor(140 + Math.random()*115)}, 0, ${p.alpha})`;
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = '#FF9900';
+                        ctx.fill();
+                    });
+                    requestAnimationFrame(draw);
+                }
+                draw();
+            </script>
+        </body>
+        </html>
+        """,
+        height=275,
+    )
+else:
+    st.markdown(
+        """
+        <div style="text-align: center; margin: 15px 0;">
+            <div style="font-size: 50px;">⚙️</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 st.markdown(
     f"<h1 class='vision-title'>⚙️ { 'WHITE VISION' if is_cataract else st.session_state.ai_persona.upper() } // DIAGNOSTICS MAINFRAME</h1>",
