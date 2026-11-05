@@ -11,7 +11,7 @@ from gtts import gTTS
 
 # 1. PAGE CONFIG
 st.set_page_config(
-    page_title="VISION // Diagnostics Mainframe",
+    page_title="VISION // Synthezoid Mainframe",
     page_icon="🟡",
     layout="wide",
 )
@@ -40,7 +40,7 @@ if st.session_state.session_id not in st.session_state.all_chats:
         },
     }
 
-# BACKWARD COMPATIBILITY & DYNAMIC POINTER (Fixes KeyError on old session structures)
+# BACKWARD COMPATIBILITY & DYNAMIC POINTER
 session_data = st.session_state.all_chats[st.session_state.session_id]
 
 if "tracks" not in session_data:
@@ -59,8 +59,8 @@ if "tts_enabled" not in st.session_state:
     st.session_state.tts_enabled = False
 if "system_logs" not in st.session_state:
     st.session_state.system_logs = [
-        "Mainframe online.",
-        "Universal Database Synchronized.",
+        "Vision Mainframe Online.",
+        "Mind Stone Matrix Synchronized.",
     ]
 if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
@@ -79,11 +79,11 @@ if "cataract_active" not in st.session_state:
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
-    "VISION": {"primary": "#8E24AA", "bg": "#0B0410", "rgb": "142, 36, 170"},
-    "ULTRON": {"primary": "#FF0000", "bg": "#120000", "rgb": "255, 0, 0"},
-    "F.R.I.D.A.Y.": {"primary": "#FF9900", "bg": "#120B04", "rgb": "255, 153, 0"},
-    "E.D.I.T.H.": {"primary": "#FF3333", "bg": "#120404", "rgb": "255, 51, 51"},
-    "BOTH": {"primary": "#BF00FF", "bg": "#0D0412", "rgb": "191, 0, 255"},
+    "VISION": {"primary": "#00F0FF", "bg": "#030A16", "rgb": "0, 240, 255"},
+    "ULTRON": {"primary": "#FF0055", "bg": "#140207", "rgb": "255, 0, 85"},
+    "F.R.I.D.A.Y.": {"primary": "#FFB700", "bg": "#140F02", "rgb": "255, 183, 0"},
+    "E.D.I.T.H.": {"primary": "#00FF99", "bg": "#02140D", "rgb": "0, 255, 153"},
+    "BOTH": {"primary": "#B000FF", "bg": "#0E0214", "rgb": "176, 0, 255"},
 }
 
 active_theme = theme_palettes.get(
@@ -94,69 +94,154 @@ is_cataract = (
     st.session_state.ai_persona == "VISION" and st.session_state.cataract_active
 )
 
-# STARK GRID, CONTAINER, THANOS SNAP & GAUNTLET HUD STYLING
+# HOLOGRAPHIC CIRCLE ARC REACTOR & HUD STYLING
 st.markdown(
     f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
     
     .stApp {{
         background-color: { "#F0F4F8" if is_cataract else active_theme['bg'] } !important;
         background-image: { 
             "radial-gradient(circle, #FFFFFF 0%, #E2E8F0 100%)" if is_cataract else 
-            f"linear-gradient(rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px)" 
+            f"radial-gradient(circle at 50% 25%, rgba({active_theme['rgb']}, 0.18) 0%, transparent 70%), linear-gradient(rgba({active_theme['rgb']}, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.05) 1px, transparent 1px)" 
         } !important;
-        background-size: 30px 30px;
+        background-size: 100% 100%, 40px 40px, 40px 40px;
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
-        font-family: 'Courier New', Courier, monospace;
+        font-family: 'Share Tech Mono', monospace;
     }}
     
+    /* MOVIE-ACCURATE CIRCULAR HOLOGRAPHIC HUD HEADER */
+    .hud-circle-container {{
+        position: relative;
+        width: 170px;
+        height: 170px;
+        margin: 10px auto 15px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }}
+
+    .hud-ring {{
+        position: absolute;
+        border-radius: 50%;
+        border: 2px dashed rgba({active_theme['rgb']}, 0.6);
+        box-shadow: 0 0 15px rgba({active_theme['rgb']}, 0.4);
+    }}
+
+    .hud-ring-outer {{
+        width: 160px;
+        height: 160px;
+        animation: spin-right 12s linear infinite;
+        border-top: 3px solid rgba({active_theme['rgb']}, 0.9);
+        border-bottom: 3px solid rgba({active_theme['rgb']}, 0.9);
+    }}
+
+    .hud-ring-mid {{
+        width: 120px;
+        height: 120px;
+        animation: spin-left 8s linear infinite;
+        border: 2px solid rgba({active_theme['rgb']}, 0.8);
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+    }}
+
+    .hud-ring-inner {{
+        width: 80px;
+        height: 80px;
+        animation: spin-right 5s linear infinite;
+        border: 1px dashed rgba({active_theme['rgb']}, 1);
+    }}
+
+    .hud-core {{
+        width: 45px;
+        height: 45px;
+        background: radial-gradient(circle, #FFFFFF 0%, rgba({active_theme['rgb']}, 0.9) 60%, transparent 100%);
+        border-radius: 50%;
+        box-shadow: 0 0 35px rgba({active_theme['rgb']}, 1), inset 0 0 15px #FFFFFF;
+        animation: pulse-core 2s ease-in-out infinite alternate;
+    }}
+
+    @keyframes spin-right {{
+        0% {{ transform: rotate(0deg); }}
+        100% {{ transform: rotate(360deg); }}
+    }}
+
+    @keyframes spin-left {{
+        0% {{ transform: rotate(0deg); }}
+        100% {{ transform: rotate(-360deg); }}
+    }}
+
+    @keyframes pulse-core {{
+        0% {{ transform: scale(0.85); opacity: 0.8; }}
+        100% {{ transform: scale(1.15); opacity: 1; }}
+    }}
+
+    .vision-title {{
+        text-align: center;
+        font-family: 'Orbitron', sans-serif !important;
+        font-weight: 900;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
+        text-shadow: { "none" if is_cataract else f"0 0 15px rgba({active_theme['rgb']}, 0.8)" };
+        margin-bottom: 5px;
+    }}
+
     div[data-testid="column"] {{
-        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(6, 9, 19, 0.75)" } !important;
-        border: 1.5px solid { "#94A3B8" if is_cataract else f"rgba({active_theme['rgb']}, 0.3)" } !important;
-        border-radius: 8px;
-        padding: 15px;
+        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(4, 14, 28, 0.65)" } !important;
+        border: 1px solid { "#94A3B8" if is_cataract else f"rgba({active_theme['rgb']}, 0.4)" } !important;
+        border-radius: 12px;
+        padding: 18px;
         margin-bottom: 10px;
-        backdrop-filter: blur(8px);
-        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 0 20px rgba({active_theme['rgb']}, 0.08)" };
+        backdrop-filter: blur(12px);
+        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 0 25px rgba({active_theme['rgb']}, 0.12)" };
     }}
     
     .stChatMessage {{
-        background-color: { "rgba(255, 255, 255, 0.95)" if is_cataract else "rgba(6, 9, 19, 0.9)" } !important;
-        border: 1px solid { "#CBD5E1" if is_cataract else f"rgba({active_theme['rgb']}, 0.35)" } !important;
-        backdrop-filter: blur(6px);
+        background-color: { "rgba(255, 255, 255, 0.95)" if is_cataract else "rgba(5, 18, 36, 0.85)" } !important;
+        border: 1px solid { "#CBD5E1" if is_cataract else f"rgba({active_theme['rgb']}, 0.4)" } !important;
+        backdrop-filter: blur(8px);
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         margin-bottom: 10px !important;
+        box-shadow: { "none" if is_cataract else f"inset 0 0 12px rgba({active_theme['rgb']}, 0.05)" };
     }}
 
     .stChatMessage p, .stChatMessage div {{
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
-        font-weight: { "bold" if is_cataract else "normal" };
+        font-family: 'Share Tech Mono', monospace !important;
     }}
 
     h1, h2, h3, h4 {{
         color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
-        font-family: 'Courier New', Courier, monospace !important;
-        letter-spacing: 1px;
+        font-family: 'Orbitron', sans-serif !important;
+        letter-spacing: 2px;
     }}
 
-    .stButton > button, div[data-testid="stForm"] button {{
-        background: { "#FFFFFF" if is_cataract else "rgba(6, 9, 19, 0.9)" } !important;
-        border: 1.5px solid { "#0F172A" if is_cataract else active_theme['primary'] } !important;
+    .stButton > button {{
+        background: { "#FFFFFF" if is_cataract else f"rgba({active_theme['rgb']}, 0.1)" } !important;
+        border: 1px solid { "#0F172A" if is_cataract else active_theme['primary'] } !important;
         color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
-        font-family: 'Courier New', Courier, monospace !important;
-        font-weight: bold !important;
+        font-family: 'Orbitron', sans-serif !important;
+        font-weight: 700 !important;
         border-radius: 6px !important;
+        transition: all 0.3s ease !important;
+    }}
+
+    .stButton > button:hover {{
+        background: { "#CBD5E1" if is_cataract else active_theme['primary'] } !important;
+        color: #000000 !important;
+        box-shadow: 0 0 20px rgba({active_theme['rgb']}, 0.8) !important;
     }}
 
     .bottom-gauntlet-hud {{
         border: 1px solid #FFD700;
-        border-radius: 12px;
+        border-radius: 14px;
         background: radial-gradient(circle, rgba(30, 20, 5, 0.95) 0%, rgba(10, 5, 2, 0.98) 100%);
         padding: 12px;
         text-align: center;
-        box-shadow: 0 0 30px rgba(255, 215, 0, 0.35);
+        box-shadow: 0 0 35px rgba(255, 215, 0, 0.35);
         margin-top: 25px;
         margin-bottom: 15px;
     }}
@@ -347,11 +432,24 @@ for s_id, s_data in list(st.session_state.all_chats.items()):
                     st.query_params["chat_id"] = new_id
             st.rerun()
 
-# 6. HEADER
+# 6. HEADER WITH MOVIE-ACCURATE CIRCULAR HOLOGRAPHIC HUD
 st.markdown(
-    f"<h1>⚙️ { 'WHITE VISION' if is_cataract else st.session_state.ai_persona.upper() } // DIAGNOSTICS MAINFRAME</h1>",
+    """
+    <div class="hud-circle-container">
+        <div class="hud-ring hud-ring-outer"></div>
+        <div class="hud-ring hud-ring-mid"></div>
+        <div class="hud-ring hud-ring-inner"></div>
+        <div class="hud-core"></div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
+
+st.markdown(
+    f"<h1 class='vision-title'>⚙️ { 'WHITE VISION' if is_cataract else st.session_state.ai_persona.upper() } // DIAGNOSTICS MAINFRAME</h1>",
+    unsafe_allow_html=True,
+)
+
 if is_cataract:
     st.info("👁️ PROJECT CATARACT ACTIVE: WHITE VISION PROTOCOL ENGAGED.")
 
@@ -371,7 +469,7 @@ with col_left:
     ram = psutil.virtual_memory().percent
 
     st.markdown(
-        "<span style='font-size: 12px; color: #888;'>ARMOR / CORE INTEGRITY</span>",
+        "<span style='font-size: 12px; color: #888;'>SYNTHEZOID INTEGRITY</span>",
         unsafe_allow_html=True,
     )
     st.markdown("<h2>100%</h2>", unsafe_allow_html=True)
@@ -389,7 +487,7 @@ with col_left:
     )
 
     with feature_tab_1:
-        st.markdown("#### 🎨 STARK IMAGE MAKER")
+        st.markdown("#### 🎨 BLUEPRINT GENERATOR")
         img_query = st.text_input(
             "Blueprint description...", key="blueprint_input"
         )
@@ -401,7 +499,7 @@ with col_left:
                     f"BLUEPRINT: Rendered visual specs for '{img_query}'"
                 )
             else:
-                st.warning("Please enter a blueprint prompt first, Sir.")
+                st.warning("Please enter a blueprint prompt first.")
 
         if st.session_state.generated_blueprint:
             pure_url = st.session_state.generated_blueprint.split(" ")[0]
@@ -434,7 +532,7 @@ with col_left:
                 )
             else:
                 st.warning(
-                    "Please enter a video description to synthesize, Sir."
+                    "Please enter a video description to synthesize."
                 )
 
         if st.session_state.active_ai_video_url:
@@ -444,7 +542,7 @@ with col_left:
             )
 
     with feature_tab_3:
-        st.markdown("#### ✍️ NEW TEXT SYNTHESIZER")
+        st.markdown("#### ✍️ TEXT SYNTHESIZER")
         st.caption("Generate custom reports or specialized technical text.")
         
         text_type = st.selectbox(
@@ -533,7 +631,7 @@ with col_right:
 
         # Chat Input Field
         user_input = st.chat_input(
-            f"💬 Send message to Track {track_name} (Type ~~ for Gauntlet)...",
+            f"💬 Transmit command to Track {track_name} (Type ~~ for Gauntlet)...",
             key=f"input_{track_name}"
         )
 
