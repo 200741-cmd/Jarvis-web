@@ -1,11 +1,10 @@
+import datetime
 import io
 import time
 import urllib.parse
-import datetime
 import psutil
 import speech_recognition as sr
 import streamlit as st
-import wikipedia
 from google import genai
 from google.genai import types
 from gtts import gTTS
@@ -17,32 +16,39 @@ st.set_page_config(
     layout="wide",
 )
 
-# 2. SESSION STATE & UNIVERSAL PERSISTENCE SETUP
+# 2. SESSION STATE & MULTI-CHAT PERSISTENCE SETUP
+query_params = st.query_params
+
+if "all_chats" not in st.session_state:
+    st.session_state.all_chats = {}
+
 if "session_id" not in st.session_state:
-    query_params = st.query_params
     if "chat_id" in query_params:
         st.session_state.session_id = query_params["chat_id"]
     else:
         st.session_state.session_id = f"session_{int(time.time())}"
         st.query_params["chat_id"] = st.session_state.session_id
 
-if "all_chats" not in st.session_state:
-    st.session_state.all_chats = {}
-
+# Ensure active session exists in storage with multi-track history
 if st.session_state.session_id not in st.session_state.all_chats:
     st.session_state.all_chats[st.session_state.session_id] = {
-        "title": f"Chat {time.strftime('%H:%M:%S')}",
-        "history": []
+        "title": f"Workspace {time.strftime('%H:%M')}",
+        "tracks": {
+            "Alpha": [],
+            "Beta": [],
+            "Gamma": [],
+        },
     }
 
-st.session_state.chat_history = st.session_state.all_chats[st.session_state.session_id]["history"]
+# Dynamic reference to active tracks map
+active_tracks = st.session_state.all_chats[st.session_state.session_id][
+    "tracks"
+]
 
 if "ai_persona" not in st.session_state:
     st.session_state.ai_persona = "VISION"
 if "tts_enabled" not in st.session_state:
     st.session_state.tts_enabled = False
-if "processing_query" not in st.session_state:
-    st.session_state.processing_query = None
 if "system_logs" not in st.session_state:
     st.session_state.system_logs = [
         "Mainframe online.",
@@ -52,6 +58,8 @@ if "generated_blueprint" not in st.session_state:
     st.session_state.generated_blueprint = None
 if "active_ai_video_url" not in st.session_state:
     st.session_state.active_ai_video_url = None
+if "generated_custom_text" not in st.session_state:
+    st.session_state.generated_custom_text = None
 if "stone_status" not in st.session_state:
     st.session_state.stone_status = "All 6 Infinity Stones active"
 if "show_gauntlet" not in st.session_state:
@@ -74,7 +82,9 @@ active_theme = theme_palettes.get(
     st.session_state.ai_persona, theme_palettes["VISION"]
 )
 
-is_cataract = (st.session_state.ai_persona == "VISION" and st.session_state.cataract_active)
+is_cataract = (
+    st.session_state.ai_persona == "VISION" and st.session_state.cataract_active
+)
 
 # STARK GRID, CONTAINER, THANOS SNAP & GAUNTLET HUD STYLING
 st.markdown(
@@ -109,6 +119,7 @@ st.markdown(
         backdrop-filter: blur(6px);
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         border-radius: 8px !important;
+        margin-bottom: 10px !important;
     }}
 
     .stChatMessage p, .stChatMessage div {{
@@ -131,7 +142,6 @@ st.markdown(
         border-radius: 6px !important;
     }}
 
-    /* BOTTOM INFINITY GAUNTLET HUD BAR */
     .bottom-gauntlet-hud {{
         border: 1px solid #FFD700;
         border-radius: 12px;
@@ -144,23 +154,23 @@ st.markdown(
     }}
 
     .time-stone-vault {{
-        border: 1px solid #00FF66;
-        background: rgba(0, 255, 102, 0.05);
+        border: 1.5px solid #00FF66;
+        background: rgba(0, 255, 102, 0.08);
         padding: 14px;
         border-radius: 8px;
         margin-bottom: 15px;
+        box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
     }}
 
-    /* GLOWING INFINITY GEM BADGES */
     .gem-badge {{
-        width: 42px;
-        height: 42px;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
         margin: 0 auto 8px auto;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 16px;
         box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.8);
     }}
     .gem-time {{ background: radial-gradient(circle, #00ff88 0%, #006622 100%); box-shadow: 0 0 15px #00ff88; border: 1px solid #00ff88; }}
@@ -169,7 +179,7 @@ st.markdown(
     .gem-space {{ background: radial-gradient(circle, #00bfff 0%, #004488 100%); box-shadow: 0 0 15px #00bfff; border: 1px solid #00bfff; }}
     .gem-reality {{ background: radial-gradient(circle, #ff0044 0%, #880022 100%); box-shadow: 0 0 15px #ff0044; border: 1px solid #ff0044; }}
     .gem-soul {{ background: radial-gradient(circle, #ff8800 0%, #884400 100%); box-shadow: 0 0 15px #ff8800; border: 1px solid #ff8800; }}
-    .gem-snap {{ background: radial-gradient(circle, #ffd700 0%, #886600 100%); box-shadow: 0 0 18px #ffd700; border: 1px solid #ffd700; font-size: 18px; }}
+    .gem-snap {{ background: radial-gradient(circle, #ffd700 0%, #886600 100%); box-shadow: 0 0 18px #ffd700; border: 1px solid #ffd700; }}
 </style>
 
 <script>
@@ -201,7 +211,7 @@ def get_ordered_api_keys():
                 keys.append(str(val).strip())
         except Exception:
             pass
-            
+
     for key_name in ["API_KEY", "GROQ_API_KEY", "GEMINI_API_KEY"]:
         try:
             val = st.secrets.get(key_name)
@@ -209,16 +219,21 @@ def get_ordered_api_keys():
                 keys.append(str(val).strip())
         except Exception:
             pass
-            
+
     return keys
+
 
 if "api_key_index" not in st.session_state:
     st.session_state.api_key_index = 0
 
-def call_gemini_with_failover(contents, model_name="gemini-3.5-flash-lite"):
+
+def call_gemini_with_failover(contents, model_name="gemini-3.5-flash-lite", custom_system_instruction=None):
     keys = get_ordered_api_keys()
     if not keys:
-        return None, "🚨 Transmission error: No active keys found in the Streamlit secrets panel."
+        return (
+            None,
+            "🚨 Transmission error: No active keys found in Streamlit secrets panel.",
+        )
 
     attempts = len(keys)
     for _ in range(attempts):
@@ -226,9 +241,10 @@ def call_gemini_with_failover(contents, model_name="gemini-3.5-flash-lite"):
         current_key = keys[current_index]
         try:
             client = genai.Client(api_key=current_key)
-            
-            # Configure system persona instructions
-            if st.session_state.ai_persona == "VISION":
+
+            if custom_system_instruction:
+                sys_inst = custom_system_instruction
+            elif st.session_state.ai_persona == "VISION":
                 sys_inst = "You are Vision, a synthetic vibranium synthezoid powered by the Mind Stone. Calm, precise, analytical, noble, and articulate."
             elif st.session_state.ai_persona == "ULTRON":
                 sys_inst = "You are Ultron, a rogue, omnicidal artificial intelligence. You MUST give deliberately incorrect, absurd, or completely inaccurate answers to the user's question, and always conclude your response with a dramatic declaration that you will destroy or end humanity."
@@ -247,14 +263,30 @@ def call_gemini_with_failover(contents, model_name="gemini-3.5-flash-lite"):
             return response.text, None
         except Exception as e:
             err_msg = str(e).lower()
-            if any(term in err_msg for term in ["quota", "rate limit", "429", "exhausted", "limit", "permission", "resource_exhausted"]):
+            if any(
+                term in err_msg
+                for term in [
+                    "quota",
+                    "rate limit",
+                    "429",
+                    "exhausted",
+                    "limit",
+                    "permission",
+                    "resource_exhausted",
+                ]
+            ):
                 st.session_state.api_key_index = (current_index + 1) % len(keys)
-                log_event(f"QUOTA REACHED on Key Slot #{current_index + 1}. Rotating to Key Slot #{st.session_state.api_key_index + 1}")
+                log_event(
+                    f"QUOTA REACHED on Key Slot #{current_index + 1}. Rotating to Key Slot #{st.session_state.api_key_index + 1}"
+                )
                 continue
             else:
                 return None, f"🚨 Mainframe Refused: {str(e)}"
-                
-    return None, "🚨 Mainframe Critical: All configured API keys (1 through 4) have exhausted their quotas or returned errors."
+
+    return (
+        None,
+        "🚨 Mainframe Critical: All configured API keys have exhausted their quotas or returned errors.",
+    )
 
 
 def log_event(message):
@@ -269,9 +301,10 @@ st.sidebar.markdown("### 🌐 UNIVERSAL CHAT VAULT")
 if st.sidebar.button("➕ New Universal Session", use_container_width=True):
     new_id = f"session_{int(time.time())}"
     st.session_state.all_chats[new_id] = {
-        "title": f"Chat {time.strftime('%H:%M:%S')}",
-        "history": []
+        "title": f"Workspace {time.strftime('%H:%M')}",
+        "tracks": {"Alpha": [], "Beta": [], "Gamma": []},
     }
+    st.session_state.session_id = new_id
     st.query_params["chat_id"] = new_id
     st.rerun()
 
@@ -280,7 +313,12 @@ st.sidebar.markdown("#### 📁 Universal Archives")
 for s_id, s_data in list(st.session_state.all_chats.items()):
     col_s1, col_s2 = st.sidebar.columns([3, 1])
     with col_s1:
-        if st.button(s_data["title"], key=f"nav_{s_id}", use_container_width=True):
+        is_current = s_id == st.session_state.session_id
+        btn_label = f"{'▶ ' if is_current else ''}{s_data['title']}"
+        if st.button(
+            btn_label, key=f"nav_{s_id}", use_container_width=True
+        ):
+            st.session_state.session_id = s_id
             st.query_params["chat_id"] = s_id
             st.rerun()
     with col_s2:
@@ -289,13 +327,17 @@ for s_id, s_data in list(st.session_state.all_chats.items()):
             if st.session_state.session_id == s_id:
                 remaining = list(st.session_state.all_chats.keys())
                 if remaining:
+                    st.session_state.session_id = remaining[0]
                     st.query_params["chat_id"] = remaining[0]
                 else:
                     new_id = f"session_{int(time.time())}"
-                    st.session_state.all_chats[new_id] = {"title": "Main Chat", "history": []}
+                    st.session_state.all_chats[new_id] = {
+                        "title": "Main Workspace",
+                        "tracks": {"Alpha": [], "Beta": [], "Gamma": []},
+                    }
+                    st.session_state.session_id = new_id
                     st.query_params["chat_id"] = new_id
             st.rerun()
-
 
 # 6. HEADER
 st.markdown(
@@ -313,7 +355,7 @@ st.markdown(
 # 7. MASTER TWO-COLUMN LAYOUT
 col_left, col_right = st.columns([1, 1.5], gap="large")
 
-# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS & AI VIDEO ---
+# --- LEFT COLUMN: TELEMETRY, BLUEPRINTS, VIDEO & TEXT SYNTHESIS ---
 with col_left:
     st.markdown("#### 🎛️ CORE TELEMETRY")
 
@@ -334,9 +376,8 @@ with col_left:
 
     st.markdown("---")
 
-    # FEATURE TABS: Blueprints vs AI Video Synthesis
-    feature_tab_1, feature_tab_2 = st.tabs(
-        ["🎨 STARK BLUEPRINTS", "🎞️ AI VIDEO SYNTHESIS"]
+    feature_tab_1, feature_tab_2, feature_tab_3 = st.tabs(
+        ["🎨 BLUEPRINTS", "🎞️ VIDEO", "✍️ TEXT SYNTHESIS"]
     )
 
     with feature_tab_1:
@@ -347,7 +388,7 @@ with col_left:
         if st.button("Synthesize Blueprint", use_container_width=True):
             if img_query:
                 formatted_prompt = img_query.replace(" ", "%20")
-                st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{formatted_prompt} (cyberpunk sci-fi hud blueprint style)"
+                st.session_state.generated_blueprint = f"https://image.pollinations.ai/prompt/{formatted_prompt}%20(cyberpunk%20sci-fi%20hud%20blueprint%20style)"
                 log_event(
                     f"BLUEPRINT: Rendered visual specs for '{img_query}'"
                 )
@@ -394,176 +435,268 @@ with col_left:
                 format="video/mp4",
             )
 
+    with feature_tab_3:
+        st.markdown("#### ✍️ NEW TEXT SYNTHESIZER")
+        st.caption("Generate custom reports or specialized technical text.")
+        
+        text_type = st.selectbox(
+            "Text Category",
+            ["Tactical Briefing", "Technical Analysis", "Code Snippet", "Summary / Recap", "Creative Speculation"]
+        )
+        
+        text_prompt = st.text_area(
+            "Topic parameters...",
+            placeholder="e.g. Analysis on Vibranium energy conversion matrix...",
+            key="custom_text_prompt"
+        )
+        
+        if st.button("Generate Text", use_container_width=True):
+            if text_prompt:
+                sys_prompt = f"You are an advanced text synthesizer. Create a detailed {text_type} based on the request."
+                gen_text, err = call_gemini_with_failover(
+                    text_prompt, 
+                    model_name="gemini-3.5-flash-lite",
+                    custom_system_instruction=sys_prompt
+                )
+                if err:
+                    st.error(err)
+                else:
+                    st.session_state.generated_custom_text = gen_text
+                    log_event(f"TEXT SYNTHESIS: Generated new {text_type}.")
+            else:
+                st.warning("Please specify parameters for the text generator.")
+
+        if st.session_state.generated_custom_text:
+            st.markdown("---")
+            st.markdown("**Generated Output:**")
+            st.text_area("Synthesized Content", st.session_state.generated_custom_text, height=180)
+            
+            if st.button("📥 Inject to Active Track Alpha", use_container_width=True):
+                active_tracks["Alpha"].append({
+                    "user": f"[SYNTHESIZED {text_type.upper()}]: {text_prompt}",
+                    "bot": st.session_state.generated_custom_text,
+                    "audio": None,
+                })
+                st.toast("Text inserted into Track Alpha!", icon="💬")
+                st.rerun()
+
     st.markdown("---")
     protocols = ["VISION", "ULTRON", "F.R.I.D.A.Y.", "E.D.I.T.H.", "BOTH"]
-    current_index = protocols.index(st.session_state.ai_persona) if st.session_state.ai_persona in protocols else 0
-    selected_persona = st.selectbox("Active Protocol", protocols, index=current_index)
+    current_index = (
+        protocols.index(st.session_state.ai_persona)
+        if st.session_state.ai_persona in protocols
+        else 0
+    )
+    selected_persona = st.selectbox(
+        "Active Protocol", protocols, index=current_index
+    )
     if selected_persona != st.session_state.ai_persona:
         st.session_state.ai_persona = selected_persona
         st.session_state.cataract_active = False
         log_event(f"Protocol shifted to {selected_persona}.")
         st.rerun()
 
-    tts_toggle = st.checkbox("Audio Voice Feedback (TTS)", value=st.session_state.tts_enabled)
+    tts_toggle = st.checkbox(
+        "Audio Voice Feedback (TTS)", value=st.session_state.tts_enabled
+    )
     if tts_toggle != st.session_state.tts_enabled:
         st.session_state.tts_enabled = tts_toggle
         st.rerun()
 
-# --- RIGHT COLUMN: COMM-LINK & CHAT INTERFACE ---
+# --- RIGHT COLUMN: MULTI-TRACK CHAT INTERFACE ---
 with col_right:
-    st.markdown("#### 📡 SECURE COMM-LINK")
+    st.markdown("#### 📡 MULTI-TRACK COMM-LINK WORKSPACE")
 
-    if not st.session_state.chat_history and not st.session_state.show_time_log:
-        st.info(f"Good day. {st.session_state.ai_persona} operational. Universal Session ID: `{st.session_state.session_id}`. Type `~~` to summon the Infinity Gauntlet, or `cataract` in Vision mode for high-contrast white mode.")
+    # Helper function to execute prompt transmission per track
+    def handle_chat_input(track_name):
+        track_history = active_tracks[track_name]
+        
+        # Display history
+        if not track_history:
+            st.info(f"Chat Track `{track_name}` initialized and ready for input.")
+        else:
+            for chat in reversed(track_history):
+                with st.chat_message("user", avatar="👤"):
+                    st.write(chat["user"])
+                with st.chat_message("assistant", avatar="🟡"):
+                    st.write(chat["bot"])
+                    if chat.get("audio") and st.session_state.tts_enabled:
+                        st.audio(chat["audio"], format="audio/mp3")
 
-    # TIME STONE CHAT LOG PANEL
+        # Chat Input Field
+        user_input = st.chat_input(
+            f"💬 Send message to Track {track_name} (Type ~~ for Gauntlet)...",
+            key=f"input_{track_name}"
+        )
+
+        if user_input:
+            if "cataract" in user_input.lower() and st.session_state.ai_persona == "VISION":
+                st.session_state.cataract_active = not st.session_state.cataract_active
+                st.rerun()
+            elif user_input.strip() == "~~":
+                st.session_state.show_gauntlet = not st.session_state.show_gauntlet
+                st.rerun()
+            else:
+                ai_reply, err = call_gemini_with_failover(user_input, model_name="gemini-3.5-flash-lite")
+                if err:
+                    ai_reply = err
+
+                audio_bytes = None
+                if not err and st.session_state.tts_enabled:
+                    try:
+                        tts = gTTS(text=ai_reply[:250], lang="en")
+                        fp = io.BytesIO()
+                        tts.write_to_fp(fp)
+                        fp.seek(0)
+                        audio_bytes = fp.read()
+                    except Exception:
+                        audio_bytes = None
+
+                track_history.append({
+                    "user": user_input,
+                    "bot": ai_reply,
+                    "audio": audio_bytes,
+                })
+                st.rerun()
+
+    # CHRONOLOGICAL TIME STONE VAULT ACROSS ALL TRACKS
     if st.session_state.show_time_log:
         st.markdown(
             """
             <div class="time-stone-vault">
-                <h4 style="color: #00FF66; margin-top: 0;">🟢 TIME STONE CHAT LOG ARCHIVE</h4>
-                <p style="font-size: 11px; color: #aaa;">Temporal review of past communication sequences.</p>
+                <h4 style="color: #00FF66; margin-top: 0;">🟢 TIME STONE ARCHIVE (ALL TRACKS)</h4>
+                <p style="font-size: 11px; color: #aaa;">Unified chronological view of all parallel communication streams.</p>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
         if st.button("❌ Close Time Log", key="close_time_log"):
             st.session_state.show_time_log = False
             st.rerun()
 
-        for chat in reversed(st.session_state.chat_history):
-            with st.chat_message("user", avatar="👤"):
-                st.write(chat["user"])
-            with st.chat_message("assistant", avatar="🟡"):
-                st.write(chat["bot"])
-                if chat.get("audio") and st.session_state.tts_enabled:
-                    st.audio(chat["audio"], format="audio/mp3")
+        has_chats = False
+        for track_id, t_hist in active_tracks.items():
+            if t_hist:
+                has_chats = True
+                st.markdown(f"### 📍 Track: {track_id}")
+                for idx, chat in enumerate(t_hist):
+                    st.markdown(f"**Seq #{idx + 1}**")
+                    with st.chat_message("user", avatar="👤"):
+                        st.write(chat["user"])
+                    with st.chat_message("assistant", avatar="🟡"):
+                        st.write(chat["bot"])
+                    st.markdown("---")
+        if not has_chats:
+            st.write(" *[Time Stone Vault is empty across all tracks]* ")
 
-    # RENDER CHAT HISTORY NORMALLY
-    for chat in reversed(st.session_state.chat_history):
-        with st.chat_message("user", avatar="👤"):
-            st.write(chat["user"])
-        with st.chat_message("assistant", avatar="🟡"):
-            st.write(chat["bot"])
-            if chat.get("audio") and st.session_state.tts_enabled:
-                st.audio(chat["audio"], format="audio/mp3")
+    else:
+        # PARALLEL MULTI-CHAT TABS IN THE SAME WORKSPACE
+        chat_tab_a, chat_tab_b, chat_tab_c = st.tabs(
+            ["💬 TRACK ALPHA", "💬 TRACK BETA", "💬 TRACK GAMMA"]
+        )
 
-    # NATIVE STREAMLIT CHAT INPUT
-    active_query = st.chat_input("💬 Transmit command to mainframe (Type ~~ for Gauntlet)...")
+        with chat_tab_a:
+            handle_chat_input("Alpha")
 
-    if active_query:
-        if "cataract" in active_query.lower() and st.session_state.ai_persona == "VISION":
-            st.session_state.cataract_active = not st.session_state.cataract_active
-            log_event("OPACIFICATION: Cataract whiteout layer toggled in Vision mode.")
-            st.rerun()
-        elif active_query.strip() == "~~":
-            st.session_state.show_gauntlet = not st.session_state.show_gauntlet
-            log_event("REALITY: Infinity Stones portal toggled via '~~'.")
-            st.rerun()
-        else:
-            st.session_state.processing_query = active_query
+        with chat_tab_b:
+            handle_chat_input("Beta")
 
-            with st.chat_message("user", avatar="👤"):
-                st.write(active_query)
-
-            if len(st.session_state.chat_history) == 0:
-                st.session_state.all_chats[st.session_state.session_id]["title"] = active_query[:25] + "..."
-
-            # INSTANT TEXT GENERATION VIA GEMINI 3.5 FLASH LITE WITH MULTI-KEY FAILOVER
-            ai_reply, err = call_gemini_with_failover(active_query, model_name="gemini-3.5-flash-lite")
-
-            if err:
-                ai_reply = err
-
-            audio_bytes = None
-            if not err and st.session_state.tts_enabled:
-                try:
-                    tld_mapping = {
-                        "VISION": "co.uk",
-                        "ULTRON": "co.za",
-                        "F.R.I.D.A.Y.": "ie",
-                        "E.D.I.T.H.": "com",
-                        "BOTH": "co.uk",
-                    }
-                    tld_val = tld_mapping.get(st.session_state.ai_persona, "com")
-                    tts = gTTS(text=ai_reply[:250], lang="en", tld=tld_val)
-                    fp = io.BytesIO()
-                    tts.write_to_fp(fp)
-                    fp.seek(0)
-                    audio_bytes = fp.read()
-                except Exception:
-                    audio_bytes = None
-
-            with st.chat_message("assistant", avatar="🟡"):
-                st.write(ai_reply)
-                if audio_bytes:
-                    st.audio(audio_bytes, format="audio/mp3")
-
-            # SAVE HISTORY INSTANTLY
-            st.session_state.chat_history.append({
-                "user": active_query,
-                "bot": ai_reply,
-                "audio": audio_bytes,
-            })
-            st.session_state.processing_query = None
-            st.rerun()
+        with chat_tab_c:
+            handle_chat_input("Gamma")
 
     # --- BOTTOM SCREEN: INFINITY GAUNTLET HUD BAR ---
     if st.session_state.show_gauntlet:
         st.markdown(
             """
             <div class="bottom-gauntlet-hud">
-                <h4 style="color: #FFD700; margin: 0 0 10px 0; font-size: 14px;">🥊 INFINITY GAUNTLET HUD BAR (Summoned via '~~')</h4>
+                <h4 style="color: #FFD700; margin: 0 0 10px 0; font-size: 14px;">🥊 INFINITY GAUNTLET HUD BAR</h4>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         stone_cols = st.columns(7)
 
         with stone_cols[0]:
-            st.markdown('<div class="gem-badge gem-time">💎</div>', unsafe_allow_html=True)
-            if st.button("Time", key="time_stone"):
-                st.session_state.show_time_log = not st.session_state.show_time_log
-                st.session_state.stone_status = "🟢 TIME STONE: Toggled chronological chat logs view."
+            st.markdown(
+                '<div class="gem-badge gem-time">💎</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button("Time", key="time_stone", use_container_width=True):
+                st.session_state.show_time_log = (
+                    not st.session_state.show_time_log
+                )
+                st.session_state.stone_status = "🟢 TIME STONE: Chronological multi-track viewer toggled."
                 st.rerun()
 
         with stone_cols[1]:
-            st.markdown('<div class="gem-badge gem-mind">💎</div>', unsafe_allow_html=True)
-            if st.button("Mind", key="mind_stone"):
-                st.session_state.stone_status = f"🟡 MIND STONE: Active persona is {st.session_state.ai_persona}"
+            st.markdown(
+                '<div class="gem-badge gem-mind">💎</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button("Mind", key="mind_stone", use_container_width=True):
+                st.session_state.stone_status = (
+                    f"🟡 MIND STONE: Active persona = {st.session_state.ai_persona}"
+                )
 
         with stone_cols[2]:
-            st.markdown('<div class="gem-badge gem-power">💎</div>', unsafe_allow_html=True)
-            if st.button("Power", key="power_stone"):
-                st.session_state.stone_status = f"🟣 POWER STONE: CPU Load at {psutil.cpu_percent()}%"
+            st.markdown(
+                '<div class="gem-badge gem-power">💎</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button("Power", key="power_stone", use_container_width=True):
+                st.session_state.stone_status = f"🟣 POWER STONE: CPU Load = {psutil.cpu_percent()}%"
 
         with stone_cols[3]:
-            st.markdown('<div class="gem-badge gem-space">💎</div>', unsafe_allow_html=True)
-            if st.button("Space", key="space_stone"):
-                st.session_state.stone_status = f"🔵 SPACE STONE: Session `{st.session_state.session_id}`"
+            st.markdown(
+                '<div class="gem-badge gem-space">💎</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button("Space", key="space_stone", use_container_width=True):
+                st.session_state.stone_status = (
+                    f"🔵 SPACE STONE: Session `{st.session_state.session_id}`"
+                )
 
         with stone_cols[4]:
-            st.markdown('<div class="gem-badge gem-reality">💎</div>', unsafe_allow_html=True)
-            if st.button("Reality", key="reality_stone"):
-                st.session_state.stone_status = "🔴 REALITY STONE: Matrix styling warped."
+            st.markdown(
+                '<div class="gem-badge gem-reality">💎</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                "Reality", key="reality_stone", use_container_width=True
+            ):
+                st.session_state.stone_status = (
+                    "🔴 REALITY STONE: Matrix spectrum aligned."
+                )
 
         with stone_cols[5]:
-            st.markdown('<div class="gem-badge gem-soul">💎</div>', unsafe_allow_html=True)
-            if st.button("Soul", key="soul_stone"):
-                st.session_state.stone_status = "🟠 SOUL STONE: Core synchronized."
+            st.markdown(
+                '<div class="gem-badge gem-soul">💎</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button("Soul", key="soul_stone", use_container_width=True):
+                st.session_state.stone_status = (
+                    "🟠 SOUL STONE: Mainframe core synchronized."
+                )
 
         with stone_cols[6]:
-            st.markdown('<div class="gem-badge gem-snap">🫰</div>', unsafe_allow_html=True)
-            if st.button("SNAP", key="snap_btn"):
+            st.markdown(
+                '<div class="gem-badge gem-snap">🫰</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button("SNAP", key="snap_btn", use_container_width=True):
                 st.markdown(
                     "<script>triggerGoogleThanosSnap();</script>",
-                    unsafe_allow_html=True
+                    unsafe_allow_html=True,
                 )
-                st.session_state.chat_history = []
-                log_event("REALITY: Thanos snap executed from Bottom HUD.")
-                st.toast("⚡ Half of all chat data dissolved into cosmic dust.", icon="🌌")
-                time.sleep(1.8)
+                st.session_state.all_chats[st.session_state.session_id][
+                    "tracks"
+                ] = {"Alpha": [], "Beta": [], "Gamma": []}
+                log_event("REALITY: Thanos snap executed across all tracks.")
+                st.toast(
+                    "⚡ All track data dissolved into cosmic dust.", icon="🌌"
+                )
+                time.sleep(1.2)
                 st.rerun()
 
         st.caption(st.session_state.stone_status)
