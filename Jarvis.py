@@ -79,7 +79,7 @@ if "cataract_active" not in st.session_state:
 
 # 3. DYNAMIC THEME ENGINE MAPPING
 theme_palettes = {
-    "VISION": {"primary": "#00F0FF", "bg": "#030A16", "rgb": "0, 240, 255"},
+    "VISION": {"primary": "#FF9900", "bg": "#0D0701", "rgb": "255, 153, 0"},
     "ULTRON": {"primary": "#FF0055", "bg": "#140207", "rgb": "255, 0, 85"},
     "F.R.I.D.A.Y.": {"primary": "#FFB700", "bg": "#140F02", "rgb": "255, 183, 0"},
     "E.D.I.T.H.": {"primary": "#00FF99", "bg": "#02140D", "rgb": "0, 255, 153"},
@@ -94,7 +94,7 @@ is_cataract = (
     st.session_state.ai_persona == "VISION" and st.session_state.cataract_active
 )
 
-# HOLOGRAPHIC CIRCLE ARC REACTOR & HUD STYLING
+# MOVIE GOLDEN MANDALA CIRCLE STYLING
 st.markdown(
     f"""
 <style>
@@ -104,77 +104,78 @@ st.markdown(
         background-color: { "#F0F4F8" if is_cataract else active_theme['bg'] } !important;
         background-image: { 
             "radial-gradient(circle, #FFFFFF 0%, #E2E8F0 100%)" if is_cataract else 
-            f"radial-gradient(circle at 50% 25%, rgba({active_theme['rgb']}, 0.18) 0%, transparent 70%), linear-gradient(rgba({active_theme['rgb']}, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.05) 1px, transparent 1px)" 
+            f"radial-gradient(circle at 50% 20%, rgba(255, 150, 0, 0.25) 0%, transparent 65%), linear-gradient(rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba({active_theme['rgb']}, 0.04) 1px, transparent 1px)" 
         } !important;
         background-size: 100% 100%, 40px 40px, 40px 40px;
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Share Tech Mono', monospace;
     }}
     
-    /* MOVIE-ACCURATE CIRCULAR HOLOGRAPHIC HUD HEADER */
-    .hud-circle-container {{
+    /* ACCURATE GOLDEN SPARK MANDALA HUD */
+    .golden-hud-container {{
         position: relative;
-        width: 170px;
-        height: 170px;
+        width: 200px;
+        height: 200px;
         margin: 10px auto 15px auto;
         display: flex;
         align-items: center;
         justify-content: center;
     }}
 
-    .hud-ring {{
+    .mandala-ring {{
         position: absolute;
         border-radius: 50%;
-        border: 2px dashed rgba({active_theme['rgb']}, 0.6);
-        box-shadow: 0 0 15px rgba({active_theme['rgb']}, 0.4);
+        box-shadow: 0 0 20px #FF9900, inset 0 0 15px #FF5500;
     }}
 
-    .hud-ring-outer {{
-        width: 160px;
-        height: 160px;
-        animation: spin-right 12s linear infinite;
-        border-top: 3px solid rgba({active_theme['rgb']}, 0.9);
-        border-bottom: 3px solid rgba({active_theme['rgb']}, 0.9);
+    .mandala-outer {{
+        width: 190px;
+        height: 190px;
+        border: 3px dashed #FFAA00;
+        animation: spin-mandala-right 16s linear infinite;
+        filter: drop-shadow(0 0 10px #FF7700);
     }}
 
-    .hud-ring-mid {{
-        width: 120px;
-        height: 120px;
-        animation: spin-left 8s linear infinite;
-        border: 2px solid rgba({active_theme['rgb']}, 0.8);
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
+    .mandala-glyph-ring {{
+        width: 155px;
+        height: 155px;
+        border: 2px solid #FFCC00;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+        animation: spin-mandala-left 10s linear infinite;
+        box-shadow: 0 0 25px rgba(255, 150, 0, 0.8);
     }}
 
-    .hud-ring-inner {{
-        width: 80px;
-        height: 80px;
-        animation: spin-right 5s linear infinite;
-        border: 1px dashed rgba({active_theme['rgb']}, 1);
+    .mandala-inner-geo {{
+        width: 115px;
+        height: 115px;
+        border: 2px dashed #FFDD55;
+        transform: rotate(45deg);
+        animation: spin-mandala-right 6s linear infinite;
     }}
 
-    .hud-core {{
-        width: 45px;
-        height: 45px;
-        background: radial-gradient(circle, #FFFFFF 0%, rgba({active_theme['rgb']}, 0.9) 60%, transparent 100%);
+    .mandala-core-flare {{
+        width: 65px;
+        height: 65px;
+        background: radial-gradient(circle, #FFFFFF 0%, #FFCC00 45%, #FF5500 80%, transparent 100%);
         border-radius: 50%;
-        box-shadow: 0 0 35px rgba({active_theme['rgb']}, 1), inset 0 0 15px #FFFFFF;
-        animation: pulse-core 2s ease-in-out infinite alternate;
+        box-shadow: 0 0 50px #FF9900, 0 0 80px #FF3300, inset 0 0 20px #FFFFFF;
+        animation: flare-pulse 1.8s ease-in-out infinite alternate;
     }}
 
-    @keyframes spin-right {{
+    @keyframes spin-mandala-right {{
         0% {{ transform: rotate(0deg); }}
         100% {{ transform: rotate(360deg); }}
     }}
 
-    @keyframes spin-left {{
+    @keyframes spin-mandala-left {{
         0% {{ transform: rotate(0deg); }}
         100% {{ transform: rotate(-360deg); }}
     }}
 
-    @keyframes pulse-core {{
-        0% {{ transform: scale(0.85); opacity: 0.8; }}
-        100% {{ transform: scale(1.15); opacity: 1; }}
+    @keyframes flare-pulse {{
+        0% {{ transform: scale(0.85); opacity: 0.85; filter: brightness(1); }}
+        100% {{ transform: scale(1.15); opacity: 1; filter: brightness(1.4); }}
     }}
 
     .vision-title {{
@@ -184,28 +185,27 @@ st.markdown(
         letter-spacing: 4px;
         text-transform: uppercase;
         color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
-        text-shadow: { "none" if is_cataract else f"0 0 15px rgba({active_theme['rgb']}, 0.8)" };
+        text-shadow: { "none" if is_cataract else f"0 0 20px rgba(255, 153, 0, 0.9)" };
         margin-bottom: 5px;
     }}
 
     div[data-testid="column"] {{
-        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(4, 14, 28, 0.65)" } !important;
-        border: 1px solid { "#94A3B8" if is_cataract else f"rgba({active_theme['rgb']}, 0.4)" } !important;
+        background: { "rgba(255, 255, 255, 0.88)" if is_cataract else "rgba(18, 9, 2, 0.75)" } !important;
+        border: 1px solid { "#94A3B8" if is_cataract else f"rgba({active_theme['rgb']}, 0.45)" } !important;
         border-radius: 12px;
         padding: 18px;
         margin-bottom: 10px;
         backdrop-filter: blur(12px);
-        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 0 25px rgba({active_theme['rgb']}, 0.12)" };
+        box-shadow: { "0 0 25px rgba(255, 255, 255, 0.9)" if is_cataract else f"0 0 25px rgba({active_theme['rgb']}, 0.15)" };
     }}
     
     .stChatMessage {{
-        background-color: { "rgba(255, 255, 255, 0.95)" if is_cataract else "rgba(5, 18, 36, 0.85)" } !important;
-        border: 1px solid { "#CBD5E1" if is_cataract else f"rgba({active_theme['rgb']}, 0.4)" } !important;
+        background-color: { "rgba(255, 255, 255, 0.95)" if is_cataract else "rgba(25, 12, 3, 0.88)" } !important;
+        border: 1px solid { "#CBD5E1" if is_cataract else f"rgba({active_theme['rgb']}, 0.45)" } !important;
         backdrop-filter: blur(8px);
         color: { "#000000" if is_cataract else active_theme['primary'] } !important;
         border-radius: 10px !important;
         margin-bottom: 10px !important;
-        box-shadow: { "none" if is_cataract else f"inset 0 0 12px rgba({active_theme['rgb']}, 0.05)" };
     }}
 
     .stChatMessage p, .stChatMessage div {{
@@ -220,7 +220,7 @@ st.markdown(
     }}
 
     .stButton > button {{
-        background: { "#FFFFFF" if is_cataract else f"rgba({active_theme['rgb']}, 0.1)" } !important;
+        background: { "#FFFFFF" if is_cataract else f"rgba({active_theme['rgb']}, 0.12)" } !important;
         border: 1px solid { "#0F172A" if is_cataract else active_theme['primary'] } !important;
         color: { "#0F172A" if is_cataract else active_theme['primary'] } !important;
         font-family: 'Orbitron', sans-serif !important;
@@ -232,7 +232,7 @@ st.markdown(
     .stButton > button:hover {{
         background: { "#CBD5E1" if is_cataract else active_theme['primary'] } !important;
         color: #000000 !important;
-        box-shadow: 0 0 20px rgba({active_theme['rgb']}, 0.8) !important;
+        box-shadow: 0 0 25px rgba(255, 153, 0, 0.9) !important;
     }}
 
     .bottom-gauntlet-hud {{
@@ -432,14 +432,14 @@ for s_id, s_data in list(st.session_state.all_chats.items()):
                     st.query_params["chat_id"] = new_id
             st.rerun()
 
-# 6. HEADER WITH MOVIE-ACCURATE CIRCULAR HOLOGRAPHIC HUD
+# 6. HEADER WITH GOLDEN MANDALA HUD MATCHING THE IMAGE
 st.markdown(
     """
-    <div class="hud-circle-container">
-        <div class="hud-ring hud-ring-outer"></div>
-        <div class="hud-ring hud-ring-mid"></div>
-        <div class="hud-ring hud-ring-inner"></div>
-        <div class="hud-core"></div>
+    <div class="golden-hud-container">
+        <div class="mandala-ring mandala-outer"></div>
+        <div class="mandala-ring mandala-glyph-ring"></div>
+        <div class="mandala-ring mandala-inner-geo"></div>
+        <div class="mandala-core-flare"></div>
     </div>
     """,
     unsafe_allow_html=True,
